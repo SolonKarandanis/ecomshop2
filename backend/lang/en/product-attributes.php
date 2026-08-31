@@ -1,0 +1,32 @@
+<?php
+
+return [
+    'attribute.hard.drive'=>'Hard Drive',
+    'attribute.keyboard'=>'Keyboard',
+    'attribute.color'=>'Color',
+    'attribute.panel.type'=>'Panel Type',
+    'attribute.ram'=>'Ram',
+    'attribute.gpu'=>'Gpu',
+    'attribute.option.hd.gb.256'=>'HD 256 GB',
+    'attribute.option.hd.gb.512'=>'HD 512 GB',
+    'attribute.option.hd.gb.1000'=>'HD 1000 GB',
+    'attribute.option.keyboard.us'=>'US Keyboard',
+    'attribute.option.keyboard.uk'=>'UK Keyboard',
+    'attribute.option.keyboard.gr'=>'GR Keyboard',
+    'attribute.option.color.sky-blue'=>'Sky Blue',
+    'attribute.option.color.midnight'=>'Midnight',
+    'attribute.option.color.starlight'=>'Starlight',
+    'attribute.option.color.silver'=>'Silver',
+    'attribute.option.color.space-gray'=>'Space Gray',
+    'attribute.option.color.gray'=>'Gray',
+    'attribute.option.color.black'=>'Black',
+    'attribute.option.panel.ips'=>'IPS',
+    'attribute.option.panel.led'=>'LED',
+    'attribute.option.ram.gb.16'=>'RAM 16 GB',
+    'attribute.option.ram.gb.24'=>'RAM 24 GB',
+    'attribute.option.ram.gb.32'=>'RAM 32 GB',
+    'attribute.option.ram.gb.64'=>'RAM 64 GB',
+    'attribute.option.gpu.8-core'=>'8-Core',
+    'attribute.option.gpu.10-core'=>'10-Core',
+
+];
