@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Exceptions\PaymentException;
+use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Stripe;
 
+#[Singleton]
 class StripeService
 {
 

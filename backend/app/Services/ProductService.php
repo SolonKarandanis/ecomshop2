@@ -6,9 +6,11 @@ use App\Dtos\ProductSearchFilterDto;
 use App\Models\Product;
 use App\Repositories\ProductRepository;
 use App\Search\ProductSearchEngineFactory;
+use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
+#[Singleton]
 class ProductService
 {
 

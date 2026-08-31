@@ -21,6 +21,7 @@ use App\Repositories\AddressRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\PaymentMethodRepository;
 use App\Repositories\ProductRepository;
+use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -31,6 +32,7 @@ use PhpOffice\PhpSpreadsheet\Exception;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
+#[Singleton]
 class OrderService
 {
     public function __construct(

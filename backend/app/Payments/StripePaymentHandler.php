@@ -6,8 +6,10 @@ use App\Exceptions\PaymentException;
 use App\Models\Order;
 use App\Repositories\StripeOrderDetailRepository;
 use App\Services\StripeService;
+use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Support\Facades\Log;
 
+#[Singleton]
 readonly class StripePaymentHandler implements PaymentHandlerInterface
 {
     public function __construct(

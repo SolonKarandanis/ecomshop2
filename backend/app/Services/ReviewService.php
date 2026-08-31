@@ -9,12 +9,14 @@ use App\Exceptions\ReviewException;
 use App\Models\Review;
 use App\Repositories\OrderRepository;
 use App\Repositories\ReviewRepository;
+use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
+#[Singleton]
 class ReviewService
 {
     public function __construct(

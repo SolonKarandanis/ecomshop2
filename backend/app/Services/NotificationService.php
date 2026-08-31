@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Repositories\NotificationRepository;
+use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
+#[Singleton]
 class NotificationService
 {
 
