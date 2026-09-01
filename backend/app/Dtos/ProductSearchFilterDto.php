@@ -2,21 +2,40 @@
 
 namespace App\Dtos;
 
+use App\Http\Requests\ProductSearchRequest;
+
 class ProductSearchFilterDto
 {
-
     private array $selected_categories;
+
     private array $selected_brands;
 
-    private bool $featured=false;
-    private bool $on_sale=false;
+    private bool $featured = false;
 
-    private int|null $price_from;
-    private int|null $price_to;
+    private bool $on_sale = false;
+
+    private ?int $price_from;
+
+    private ?int $price_to;
 
     private string $sort;
 
-    private string $search='';
+    private string $search = '';
+
+    public static function fromRequest(ProductSearchRequest $request): self
+    {
+        $instance = new self;
+        $instance->setSelectedCategories($request->input('categories', []));
+        $instance->setSelectedBrands($request->input('brands', []));
+        $instance->setFeatured($request->boolean('featured'));
+        $instance->setOnSale($request->boolean('on_sale'));
+        $instance->setPriceFrom($request->integer('price_from', 0));
+        $instance->setPriceTo($request->integer('price_to', 3000));
+        $instance->setSort($request->input('sort', 'latest'));
+        $instance->setSearch($request->input('q', ''));
+
+        return $instance;
+    }
 
     public function getSelectedCategories(): array
     {
@@ -97,6 +116,4 @@ class ProductSearchFilterDto
     {
         $this->search = $search;
     }
-
-
 }
