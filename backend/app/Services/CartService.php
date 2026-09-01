@@ -548,6 +548,12 @@ class CartService
     {
         $cookieCart = $this->getCartFromCookies();
         if ($cookieCart->cartItems->isEmpty()) {
+            // getCartFromCookies() recalculates the cart it just built, which as a
+            // side effect caches it as $cachedCart regardless of Auth state. Undo
+            // that here so a later getCart() call in this same request correctly
+            // re-resolves from the database instead of this stale empty guest cart.
+            $this->cachedCart = null;
+
             return;
         }
         $dbCart = $this->getCartFromDatabase();

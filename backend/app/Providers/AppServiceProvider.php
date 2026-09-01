@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Models\Order;
+use App\Models\User;
 use App\Observers\OrderObserver;
 use App\Search\ProductSearchEngineFactory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -36,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerConfig();
         $this->registerObservers();
+        $this->registerGates();
 
         Schema::defaultStringLength(191);
     }
@@ -43,6 +46,13 @@ class AppServiceProvider extends ServiceProvider
     private function registerObservers(): void
     {
         Order::observe(OrderObserver::class);
+    }
+
+    private function registerGates(): void
+    {
+        Gate::define('buyer-action', function (?User $user) {
+            return $user === null || $user->isBuyer();
+        });
     }
 
     private function registerConfig(): void
