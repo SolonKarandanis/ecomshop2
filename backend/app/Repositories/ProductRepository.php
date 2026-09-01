@@ -8,12 +8,13 @@ use Illuminate\Support\Collection;
 
 class ProductRepository
 {
-
-    public function modelQuery(): Builder| Product{
+    public function modelQuery(): Builder|Product
+    {
         return Product::query();
     }
 
-    public function getProductById(int $id): Product{
+    public function getProductById(int $id): Product
+    {
         return $this->modelQuery()
             ->with([
                 'productAttributeValues.attribute',
@@ -23,9 +24,12 @@ class ProductRepository
             ->where('id', '=', $id)->firstOrFail();
     }
 
-    public function getProductBySlug($slug): Product{
+    public function getProductBySlug($slug): Product
+    {
         $product = $this->modelQuery()
             ->with([
+                'category',
+                'brand',
                 'productAttributeValues.attribute',
                 'productAttributeValues.attributeOption',
             ])
@@ -39,23 +43,25 @@ class ProductRepository
     }
 
     /**
-     * @param int[] $productIds
+     * @param  int[]  $productIds
      */
-    public function findProductsByIdsWithDefaultAttributes(array $productIds): Collection{
+    public function findProductsByIdsWithDefaultAttributes(array $productIds): Collection
+    {
         return $this->modelQuery()
             ->with([
                 'attributes.attributeOptions' => function ($query) {
                     $query->orderBy('id')->limit(1);
-                }
+                },
             ])
             ->whereIn('id', $productIds)
             ->get();
     }
 
     /**
-     * @param int[] $productIds
+     * @param  int[]  $productIds
      */
-    public function findProductsByIds(array $productIds): Collection{
+    public function findProductsByIds(array $productIds): Collection
+    {
         return $this->modelQuery()
             ->with([
                 'attributes.attributeOptions',
@@ -71,7 +77,8 @@ class ProductRepository
      * @param  int[]  $productIds
      * @return array<int, int>
      */
-    public function getDistinctSupplierIds(array $productIds): array{
+    public function getDistinctSupplierIds(array $productIds): array
+    {
         return $this->modelQuery()
             ->whereIn('id', $productIds)
             ->distinct()
