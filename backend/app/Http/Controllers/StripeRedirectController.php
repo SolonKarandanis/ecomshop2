@@ -2,23 +2,45 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
+use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/**
- * Placeholder targets for StripeService's success_url/cancel_url — real order
- * status handling lands in issue #8 (Stripe success/cancel -> Order Paid/Failed).
- * These exist now only so route('success')/route('cancel') resolve during checkout.
- */
 class StripeRedirectController extends Controller
 {
+    public function __construct(
+        private readonly OrderService $orderService,
+    ) {}
+
     public function success(Request $request): JsonResponse
     {
-        return response()->json(['session_id' => $request->query('session_id')]);
+        $order = $this->orderService->getUsersLatestOrder($request->user()->id);
+
+        $sessionId = $request->query('session_id');
+        if (! empty($sessionId)) {
+            $order = $this->orderService->successOrFailStripeOrder($sessionId, $order);
+        }
+
+        return response()->json($this->orderStatusPayload($order));
     }
 
-    public function cancel(): JsonResponse
+    public function cancel(Request $request): JsonResponse
     {
-        return response()->json([]);
+        $order = $this->orderService->getUsersLatestOrder($request->user()->id);
+
+        return response()->json($this->orderStatusPayload($order));
+    }
+
+    /**
+     * @return array{order_id: int, order_status: string, payment_status: string|null}
+     */
+    private function orderStatusPayload(Order $order): array
+    {
+        return [
+            'order_id' => $order->id,
+            'order_status' => $order->order_status,
+            'payment_status' => $order->payment_status,
+        ];
     }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StripeRedirectController;
 use Illuminate\Support\Facades\Route;
@@ -22,11 +23,11 @@ Route::post('/cart/items', [CartController::class, 'store']);
 Route::patch('/cart/items/{cartItemId}', [CartController::class, 'update']);
 Route::delete('/cart/items/{cartItemId}', [CartController::class, 'destroy']);
 
-Route::get('/success', [StripeRedirectController::class, 'success'])->name('success');
-Route::get('/cancel', [StripeRedirectController::class, 'cancel'])->name('cancel');
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('/checkout', [CheckoutController::class, 'store']);
+    Route::get('/success', [StripeRedirectController::class, 'success'])->name('success');
+    Route::get('/cancel', [StripeRedirectController::class, 'cancel'])->name('cancel');
+    Route::get('/my-orders/{order}', [OrderController::class, 'show'])->name('my-orders.detail');
 });

@@ -272,6 +272,13 @@ class OrderService
      */
     public function successOrFailStripeOrder(string $sessionId, Order $latestOrder): Order
     {
+        // Stripe/the Buyer's browser can hit the success endpoint more than once for the
+        // same session (redirect retries, page refresh); the Order's own PENDING payment
+        // status is the idempotency key so the transition and its Notifications fire once.
+        if ($latestOrder->payment_status !== OrderPaymentStatusEnum::PENDING->value) {
+            return $latestOrder;
+        }
+
         try {
             DB::beginTransaction();
             $sessionInfo = $this->stripeService->retrieveSession($sessionId);
