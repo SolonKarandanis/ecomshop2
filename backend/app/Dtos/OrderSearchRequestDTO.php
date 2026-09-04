@@ -42,6 +42,8 @@ class OrderSearchRequestDTO
         $instance->withToDate($request->input('toDate'));
         $instance->withMinPrice($request->filled('minPrice') ? (float) $request->input('minPrice') : null);
         $instance->withMaxPrice($request->filled('maxPrice') ? (float) $request->input('maxPrice') : null);
+        $instance->withSortColumn($request->input('sortColumn', $instance->getSortColumn()));
+        $instance->withSortDirection($request->input('sortDirection', $instance->getSortDirection()));
 
         return $instance;
     }
