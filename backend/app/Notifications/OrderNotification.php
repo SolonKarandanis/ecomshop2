@@ -10,7 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class OrderNotification extends Notification implements ShouldQueue, ShouldBroadcast
+class OrderNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
@@ -38,16 +38,16 @@ class OrderNotification extends Notification implements ShouldQueue, ShouldBroad
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('user.' . $this->userId);
+        return new PrivateChannel('user.'.$this->userId);
     }
 
     private function payload(): array
     {
         return [
             'event_type' => $this->eventType->value,
-            'order_id'   => $this->orderId,
-            'order_url'  => route('my-orders.detail', $this->orderId),
-            'message'    => $this->message,
+            'order_id' => $this->orderId,
+            'order_url' => route('orders.show', $this->orderId),
+            'message' => $this->message,
         ];
     }
 }

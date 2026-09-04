@@ -2,16 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
+use App\Dtos\OrderSearchRequestDTO;
+use App\Http\Requests\OrderSearchRequest;
+use App\Http\Resources\OrderResource;
+use App\Services\OrderService;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Placeholder detail route so OrderNotification::payload()'s route('my-orders.detail', ...)
- * resolves — the real Buyer order list/detail lands in issue #9 (Buyer's My Orders (list & detail)).
- */
 class OrderController extends Controller
 {
-    public function show(int $order): JsonResponse
+    public function __construct(
+        private readonly OrderService $orderService,
+    ) {}
+
+    public function index(OrderSearchRequest $request): AnonymousResourceCollection
     {
-        return response()->json(['order_id' => $order]);
+        $dto = OrderSearchRequestDTO::fromRequest($request);
+
+        return OrderResource::collection($this->orderService->getUsersOrders($dto));
+    }
+
+    public function show(int $order, Request $request): OrderResource
+    {
+        return new OrderResource($this->orderService->getOrderById($order, $request->user()));
     }
 }

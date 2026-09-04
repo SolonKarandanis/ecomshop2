@@ -29,5 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store']);
     Route::get('/success', [StripeRedirectController::class, 'success'])->name('success');
     Route::get('/cancel', [StripeRedirectController::class, 'cancel'])->name('cancel');
-    Route::get('/my-orders/{order}', [OrderController::class, 'show'])->name('my-orders.detail');
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });

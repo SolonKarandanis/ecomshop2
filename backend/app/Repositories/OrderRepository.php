@@ -55,6 +55,7 @@ class OrderRepository
         return $this->modelQuery()
             ->with([
                 'address',
+                'paymentMethod',
                 'items',
                 'items.product',
                 'items.product.productAttributeValues.attribute',
