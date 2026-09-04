@@ -12,9 +12,11 @@ use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 use Stripe\Checkout\Session;
 
+use function Pest\Laravel\mock;
+
 function fakeStripeSession(string $paymentStatus): void
 {
-    test()->mock(StripeService::class, function ($mock) use ($paymentStatus) {
+    mock(StripeService::class, function ($mock) use ($paymentStatus) {
         $mock->shouldReceive('retrieveSession')
             ->andReturn(Session::constructFrom(['id' => 'cs_test_123', 'payment_status' => $paymentStatus]));
     });
