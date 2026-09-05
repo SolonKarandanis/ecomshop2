@@ -8,6 +8,7 @@ use App\Http\Resources\OrderResource;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class OrderController extends Controller
 {
@@ -25,5 +26,12 @@ class OrderController extends Controller
     public function show(int $order, Request $request): OrderResource
     {
         return new OrderResource($this->orderService->getOrderById($order, $request->user()));
+    }
+
+    public function export(OrderSearchRequest $request): BinaryFileResponse
+    {
+        $dto = OrderSearchRequestDTO::fromRequest($request);
+
+        return $this->orderService->exportOrders($dto);
     }
 }

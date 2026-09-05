@@ -2,6 +2,7 @@
 
 use App\Exceptions\CartException;
 use App\Exceptions\EmptyCartException;
+use App\Exceptions\OrderCountException;
 use App\Exceptions\OrderException;
 use App\Exceptions\PaymentException;
 use App\Exceptions\ProductNotFoundException;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $status = match (get_class($e)) {
                 OrderException::class,
+                OrderCountException::class,
                 CartException::class,
                 EmptyCartException::class,
                 PaymentException::class,

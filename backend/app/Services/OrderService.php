@@ -9,6 +9,7 @@ use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Enums\StripePaymentStatusEnum;
 use App\Exceptions\EmptyCartException;
+use App\Exceptions\OrderCountException;
 use App\Exceptions\OrderException;
 use App\Exceptions\PaymentException;
 use App\Exports\OrdersExport;
@@ -175,11 +176,17 @@ class OrderService
     }
 
     /**
+     * @throws OrderCountException
      * @throws Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     public function exportOrders(OrderSearchRequestDTO $dto): BinaryFileResponse
     {
+        $count = $this->orderRepository->countOrders($dto);
+        if ($count > 10000) {
+            throw OrderCountException::limitExceeded($count);
+        }
+
         return Excel::download(new OrdersExport($this->orderRepository, $dto), 'orders.xlsx');
     }
 
