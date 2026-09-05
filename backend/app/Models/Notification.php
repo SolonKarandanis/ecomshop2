@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\DatabaseNotification as BaseNotification;
 
@@ -41,6 +42,8 @@ use Illuminate\Notifications\DatabaseNotification as BaseNotification;
  */
 class Notification extends BaseNotification
 {
+    use HasFactory;
+
     /**
      * The table associated with the model.
      *

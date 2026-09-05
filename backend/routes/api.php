@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StripeRedirectController;
@@ -36,4 +37,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/supplier-orders/{order}/ship', [SupplierOrderController::class, 'ship']);
     Route::post('/supplier-orders/{order}/deliver', [SupplierOrderController::class, 'deliver']);
     Route::post('/supplier-orders/{order}/cancel', [SupplierOrderController::class, 'cancel']);
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread', [NotificationController::class, 'unread']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
 });
