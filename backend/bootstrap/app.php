@@ -5,6 +5,7 @@ use App\Exceptions\EmptyCartException;
 use App\Exceptions\OrderException;
 use App\Exceptions\PaymentException;
 use App\Exceptions\ProductNotFoundException;
+use App\Exceptions\ProfileException;
 use App\Exceptions\ReviewException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -37,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 EmptyCartException::class,
                 PaymentException::class,
                 ProductNotFoundException::class,
+                ProfileException::class,
                 ReviewException::class => $e->getCode(),
                 default => null,
             };
