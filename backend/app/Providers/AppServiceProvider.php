@@ -57,6 +57,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('supplier-action', function (?User $user) {
             return config('features.suppliers_enabled') && ($user === null || $user->isSupplier());
         });
+
+        Gate::define('admin-action', function (?User $user) {
+            return $user === null || $user->isAdmin();
+        });
     }
 
     private function registerConfig(): void

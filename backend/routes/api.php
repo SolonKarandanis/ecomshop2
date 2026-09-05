@@ -7,6 +7,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StripeRedirectController;
 use App\Http\Controllers\SupplierOrderController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,7 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);
+Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
 
 Route::get('/cart', [CartController::class, 'index']);
@@ -41,4 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread', [NotificationController::class, 'unread']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+
+    Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
+    Route::patch('/products/{product}/reviews/{review}/hide', [ReviewController::class, 'hide']);
 });

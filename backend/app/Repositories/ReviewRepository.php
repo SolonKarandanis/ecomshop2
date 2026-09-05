@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Dtos\ReviewRatingStatsDto;
 use App\Dtos\SubmitReviewDto;
 use App\Dtos\UpdateReviewDTO;
+use App\Enums\ReviewStatusEnum;
 use App\Models\Review;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -34,6 +35,7 @@ class ReviewRepository
             'product_id' => $dto->getProductId(),
             'rating' => $dto->getRating(),
             'comment' => $dto->getComment(),
+            'status' => ReviewStatusEnum::PUBLISHED->value,
         ]);
     }
 

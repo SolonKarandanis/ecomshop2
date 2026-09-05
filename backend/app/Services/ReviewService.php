@@ -44,6 +44,14 @@ class ReviewService
         return $this->reviewRepository->findByUserAndProduct($userId, $productId);
     }
 
+    public function getReviewOrFail(int $reviewId): Review
+    {
+        $review = $this->reviewRepository->getReviewById($reviewId);
+        abort_if($review === null, 404);
+
+        return $review;
+    }
+
     /**
      * @throws ReviewException|Throwable
      */
