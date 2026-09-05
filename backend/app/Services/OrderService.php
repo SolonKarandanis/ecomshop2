@@ -68,6 +68,14 @@ class OrderService
             && in_array($order->order_status, [OrderStatusEnum::Paid->value, OrderStatusEnum::Shipped->value], true);
     }
 
+    public function getOrderForSupplierAction(int $orderId, User $user): Order
+    {
+        $order = $this->orderRepository->getOrderById($orderId);
+        abort_unless($this->canSupplierActOn($order, $user), 403);
+
+        return $order;
+    }
+
     /**
      * @throws OrderException
      */

@@ -33,4 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::get('/supplier-orders', [SupplierOrderController::class, 'index']);
+    Route::post('/supplier-orders/{order}/ship', [SupplierOrderController::class, 'ship']);
+    Route::post('/supplier-orders/{order}/deliver', [SupplierOrderController::class, 'deliver']);
+    Route::post('/supplier-orders/{order}/cancel', [SupplierOrderController::class, 'cancel']);
 });
