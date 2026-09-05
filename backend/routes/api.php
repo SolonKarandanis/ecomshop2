@@ -7,6 +7,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StripeRedirectController;
 use App\Http\Controllers\SupplierOrderController;
@@ -46,4 +47,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
     Route::patch('/products/{product}/reviews/{review}/hide', [ReviewController::class, 'hide']);
+
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::patch('/profile', [ProfileController::class, 'update']);
+    Route::patch('/profile/password', [ProfileController::class, 'changePassword']);
+    Route::get('/profile/addresses', [ProfileController::class, 'addresses']);
 });
