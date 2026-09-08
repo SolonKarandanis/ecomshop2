@@ -1,0 +1,20 @@
+# ecomshop2's Nuxt frontend uses route-based hybrid rendering, Pinia, Nuxt UI, and Vitest + Playwright
+
+ADR-0001 deferred all Nuxt-internal decisions to a follow-up, flagging that several — SSR-vs-CSR per route above all — are downstream of the Sanctum SPA cookie-session auth decision. This ADR makes those calls so frontend scaffolding (tracked separately in GitHub issues) can begin.
+
+Rendering is **hybrid via Nuxt's `routeRules`**, split along the same public/authenticated line the backend's routes already draw. Public, SEO-relevant, unauthenticated routes — `/`, `/products`, `/products/[slug]`, `/categories`, `/categories/[slug]` — render with SSR (or are prerendered where content changes rarely, e.g. the homepage), since they're what search engines and shared links hit and have no session to worry about. Every route that requires (or benefits from) the Sanctum session — `/cart`, `/checkout`, the Stripe redirect handling, `/orders/**`, `/profile/**`, `/supplier/**`, `/notifications`, and the review-write flow — is `ssr: false` (CSR-only). This is what resolves ADR-0001's open question: because none of the authenticated routes render on the server, Nuxt's server never needs to forward the browser's Sanctum session cookie to the Laravel API in a server-side `$fetch` — that whole class of problem doesn't arise in v1. The only server-side API calls Nuxt makes are the anonymous, cookie-free product/category reads.
+
+**State management is Pinia.** Auth/user state, cart contents, and the notifications unread-count badge are cross-page and benefit from Pinia's devtools support and persistence plugins (e.g. surviving a page reload for an in-progress guest cart); store actions map naturally onto the backend's verb-named endpoints (`checkout`, `ship`, `deliver`, `cancel`), keeping the same action-oriented shape on both sides of the API.
+
+**UI kit is Nuxt UI** (Tailwind + Reka UI under the hood). It's the first-party Nuxt module, ships accessible form/modal/table/dropdown primitives out of the box, and its `UTable` covers the data-grid needs of the supplier and orders-export views without pulling in a heavier enterprise kit.
+
+**Testing is Vitest for unit/component tests, and Playwright for end-to-end flows**, both set up from the start rather than bolting e2e on later. Per ADR-0001, the pre-merge CI gate on `frontend/**` stays lint + Vitest only, since it needs to stay fast on every PR; Playwright's e2e suite (register/login, browse → cart → checkout, supplier ship/deliver/cancel) runs separately (post-merge or scheduled) rather than blocking PRs, since e2e runs are slower and more flake-prone than unit tests.
+
+## Considered options
+
+- **Full SSR for every route, including authenticated ones (rejected)** — would require solving Sanctum session-cookie forwarding through Nuxt's server-side `$fetch` for every authenticated page, real complexity for pages (cart, checkout, orders, supplier dashboards) that gain nothing from SEO.
+- **Full CSR/SPA for every route, including the catalogue (rejected)** — simplest to build, but gives up crawlability/SEO and slower first paint for the product and category pages, which is where it matters most for a storefront.
+- **Plain `useState`/composables instead of Pinia (rejected)** — fine for small per-page state, but cart/auth/notifications state is cross-cutting and benefits from Pinia's devtools, persistence plugins, and action-based stores mirroring the backend's own action endpoints.
+- **Tailwind only, no component kit (rejected)** — maximum control, but means hand-building forms, modals, dropdowns, and tables from scratch across every feature area (auth, checkout, orders, supplier, profile, reviews).
+- **PrimeVue (rejected)** — a heavier, more enterprise-oriented kit; its complex data-grid features aren't needed enough to justify weaker first-party Nuxt integration than Nuxt UI.
+- **Playwright in the blocking pre-merge CI gate (rejected)** — e2e suites are slower and flakier than unit tests; keeping the PR gate to lint + Vitest (per ADR-0001) preserves fast feedback, with Playwright run separately.
