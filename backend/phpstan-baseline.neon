@@ -1,0 +1,457 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Property App\\Dtos\\ProductSearchFilterDto\:\:\$price_from \(int\|null\) is never assigned null so it can be removed from the property type\.$#'
+			identifier: property.unusedType
+			count: 1
+			path: app/Dtos/ProductSearchFilterDto.php
+
+		-
+			message: '#^Property App\\Dtos\\ProductSearchFilterDto\:\:\$price_to \(int\|null\) is never assigned null so it can be removed from the property type\.$#'
+			identifier: property.unusedType
+			count: 1
+			path: app/Dtos/ProductSearchFilterDto.php
+
+		-
+			message: '#^Comparison operation "\>\=" between 200\|201\|204\|400\|401\|403\|404\|405\|500\|502\|503\|504 and 200 is always true\.$#'
+			identifier: greaterOrEqual.alwaysTrue
+			count: 1
+			path: app/Enums/HttpStatusCodeEnum.php
+
+		-
+			message: '#^Function maxLength not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: app/Filament/Resources/AttributeOptions/Schemas/AttributeOptionForm.php
+
+		-
+			message: '#^Method App\\Filament\\Resources\\Orders\\OrderResource\:\:getNavigationBadge\(\) should return string\|null but returns int\<0, max\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Filament/Resources/Orders/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$order_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/EditOrder.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Resources/Orders/RelationManagers/AddressRelationManager.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>price" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Filament/Resources/Orders/Schemas/OrderForm.php
+
+		-
+			message: '#^Method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Order\>\:\:select\(\) invoked with 4 parameters, 0\-1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: app/Filament/Resources/Orders/Widgets/OrderStatsWidget.php
+
+		-
+			message: '#^Cannot access property \$id on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Filament/Resources/Users/Pages/ViewUser.php
+
+		-
+			message: '#^Cannot access property \$status on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Filament/Resources/Users/Pages/ViewUser.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Services\\UserService\:\:activateUser\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Users/Pages/ViewUser.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Services\\UserService\:\:deactivateUser\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Users/Pages/ViewUser.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 2
+			path: app/Filament/Resources/Users/RelationManagers/OrdersRelationManager.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\UserStatusEnum\:\:ACTIVE will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Filament/Resources/Users/Tables/UsersTable.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\UserStatusEnum\:\:INACTIVE will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Filament/Resources/Users/Tables/UsersTable.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 2
+			path: app/Filament/Widgets/LatestOrdersWidget.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CartItemResource\:\:\$id_from_cookie\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CartItemResource.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Product\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Resources/CartItemResource.php
+
+		-
+			message: '#^Parameter \$markdown of class Illuminate\\Mail\\Mailables\\Content constructor expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Mail/OrderPlaced.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperAddress\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Address.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperAttribute\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Attribute.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperAttributeOptions\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/AttributeOptions.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperBrand\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Brand.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperCart\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Cart.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperCartItem\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/CartItem.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperCategory\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Category.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperNotification\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Notification.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperOrder\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Order.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 1
+			path: app/Models/OrderItem.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperOrderItem\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/OrderItem.php
+
+		-
+			message: '#^Result of \|\| is always true\.$#'
+			identifier: booleanOr.alwaysTrue
+			count: 1
+			path: app/Models/OrderItem.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Models/OrderItem.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperPaymentMethod\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/PaymentMethod.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperProduct\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Product.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperProductAttributeValues\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/ProductAttributeValues.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperReview\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Review.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperStripeOrderDetail\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/StripeOrderDetail.php
+
+		-
+			message: '#^Loose comparison using \=\= between string and App\\Enums\\UserStatusEnum\:\:ACTIVE will always evaluate to false\.$#'
+			identifier: equal.alwaysFalse
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperUser\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Return type \(Illuminate\\Broadcasting\\PrivateChannel\) of method App\\Notifications\\OrderNotification\:\:broadcastOn\(\) should be compatible with return type \(array\) of method Illuminate\\Notifications\\Notification\:\:broadcastOn\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: app/Notifications/OrderNotification.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Repositories/CartRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\CartRepository\:\:findItemByProductIdAndAttributes\(\) should return App\\Models\\CartItem\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/CartRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\CartRepository\:\:getCart\(\) should return App\\Models\\Cart but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/CartRepository.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:items\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Repositories/OrderRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\OrderRepository\:\:createOrder\(\) should return App\\Models\\Order but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/OrderRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\OrderRepository\:\:getLatestOrder\(\) should return App\\Models\\Order but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/OrderRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\OrderRepository\:\:getOrderById\(\) should return App\\Models\\Order but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/OrderRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\PaymentMethodRepository\:\:findByResourceKey\(\) should return App\\Models\\PaymentMethod but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/PaymentMethodRepository.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$productAttributeValues\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Repositories/ProductRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\ProductRepository\:\:getProductById\(\) should return App\\Models\\Product but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/ProductRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\ProductRepository\:\:getProductBySlug\(\) should return App\\Models\\Product but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/ProductRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\ProductRepository\:\:lockForUpdate\(\) should return App\\Models\\Product but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/ProductRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\ProductRepository\:\:updateRatingStats\(\) should return bool but returns int\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/ProductRepository.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:published\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Repositories/ReviewRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\ReviewRepository\:\:createReview\(\) should return App\\Models\\Review but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/ReviewRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\ReviewRepository\:\:findByUserAndProduct\(\) should return App\\Models\\Review\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/ReviewRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\ReviewRepository\:\:getReviewById\(\) should return App\\Models\\Review\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/ReviewRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\RoleRepository\:\:getRoleById\(\) should return Spatie\\Permission\\Models\\Role but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/RoleRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\RoleRepository\:\:getRoleByName\(\) should return Spatie\\Permission\\Models\\Role but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/RoleRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\StripeOrderDetailRepository\:\:createStripeOrderDetail\(\) should return App\\Models\\StripeOrderDetail but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/StripeOrderDetailRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\UserRepository\:\:createUser\(\) should return App\\Models\\User but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/UserRepository.php
+
+		-
+			message: '#^Method App\\Repositories\\UserRepository\:\:getUserWithAddresses\(\) should return App\\Models\\User\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Repositories/UserRepository.php
+
+		-
+			message: '#^Method App\\Search\\MeilisearchProductSearchEngine\:\:search\(\) should return Illuminate\\Pagination\\LengthAwarePaginator but returns Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Search/MeilisearchProductSearchEngine.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\CartItem\:\:\$id_from_cookie\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Services/CartService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Support\\Collection\:\:find\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Services/CartService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Support\\Collection\<int, App\\Models\\Product\>\:\:find\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/CartService.php
+
+		-
+			message: '#^Parameter \#1 \$price of method App\\Dtos\\AddToCartDto\:\:setPrice\(\) expects int, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/CartService.php
+
+		-
+			message: '#^Parameter \#3 \$price of static method App\\Dtos\\AddToCartDto\:\:withAttributes\(\) expects int, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/CartService.php
+
+		-
+			message: '#^Property App\\Models\\CartItem\:\:\$attributes \(string\|null\) does not accept array\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Services/CartService.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Product\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/CartService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/NotificationHandlerService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:notify\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/NotificationHandlerService.php
+
+		-
+			message: '#^Property App\\Models\\User\:\:\$status \(string\) does not accept App\\Enums\\UserStatusEnum\:\:ACTIVE\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Services/UserService.php
+
+		-
+			message: '#^Property App\\Models\\User\:\:\$status \(string\) does not accept App\\Enums\\UserStatusEnum\:\:INACTIVE\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Services/UserService.php
