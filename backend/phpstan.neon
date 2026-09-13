@@ -7,3 +7,6 @@ parameters:
         - app
 
     level: 5
+
+    parallel:
+        maximumNumberOfProcesses: 1

@@ -13,11 +13,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property float $unit_price
  * @property int $quantity
  * @property float $total_price
- * @property string|null $attributes
+ * @property array|null $attributes
+ * @property string|null $id_from_cookie
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Cart $cart
- * @property-read \App\Models\Product $product
+ * @property-read \App\Models\Product|null $product
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CartItem newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CartItem newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CartItem query()

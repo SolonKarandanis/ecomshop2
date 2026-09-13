@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Data\ProductData;
 use App\Dtos\ProductSearchFilterDto;
 use App\Http\Requests\ProductSearchRequest;
-use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Spatie\LaravelData\PaginatedDataCollection;
 
 class ProductController extends Controller
 {
@@ -14,15 +14,15 @@ class ProductController extends Controller
         private readonly ProductService $productService,
     ) {}
 
-    public function index(ProductSearchRequest $request): AnonymousResourceCollection
+    public function index(ProductSearchRequest $request): PaginatedDataCollection|array
     {
         $dto = ProductSearchFilterDto::fromRequest($request);
 
-        return ProductResource::collection($this->productService->searchProducts($dto));
+        return ProductData::collect($this->productService->searchProducts($dto), PaginatedDataCollection::class);
     }
 
-    public function show(string $slug): ProductResource
+    public function show(string $slug): ProductData
     {
-        return new ProductResource($this->productService->getProductBySlug($slug));
+        return ProductData::from($this->productService->getProductBySlug($slug))->wrap('data');
     }
 }

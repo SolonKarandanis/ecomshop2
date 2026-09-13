@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Data\ReviewData;
 use App\Dtos\SubmitReviewDto;
 use App\Dtos\UpdateReviewDTO;
 use App\Enums\ReviewStatusEnum;
 use App\Http\Requests\SubmitReviewRequest;
-use App\Http\Resources\ReviewResource;
 use App\Services\ProductService;
 use App\Services\ReviewService;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Spatie\LaravelData\DataCollection;
 
 class ReviewController extends Controller
 {
@@ -19,14 +19,14 @@ class ReviewController extends Controller
         private readonly ProductService $productService,
     ) {}
 
-    public function index(int $product): AnonymousResourceCollection
+    public function index(int $product): DataCollection
     {
         $this->productService->getProductById($product);
 
-        return ReviewResource::collection($this->reviewService->getPublishedReviewsForProduct($product));
+        return ReviewData::collect($this->reviewService->getPublishedReviewsForProduct($product), DataCollection::class)->wrap('data');
     }
 
-    public function store(SubmitReviewRequest $request, int $product): ReviewResource
+    public function store(SubmitReviewRequest $request, int $product): ReviewData
     {
         Gate::authorize('buyer-action');
         $this->productService->getProductById($product);
@@ -42,16 +42,16 @@ class ReviewController extends Controller
             $review = $this->reviewService->submitReview($dto);
         }
 
-        return new ReviewResource($review);
+        return ReviewData::from($review)->wrap('data');
     }
 
-    public function hide(int $product, int $review): ReviewResource
+    public function hide(int $product, int $review): ReviewData
     {
         Gate::authorize('admin-action');
 
         $reviewModel = $this->reviewService->getReviewOrFail($review);
         abort_unless($reviewModel->product_id === $product, 404);
 
-        return new ReviewResource($this->reviewService->updateReviewStatus($reviewModel, ReviewStatusEnum::HIDDEN));
+        return ReviewData::from($this->reviewService->updateReviewStatus($reviewModel, ReviewStatusEnum::HIDDEN))->wrap('data');
     }
 }

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Data\OrderData;
 use App\Dtos\OrderSearchRequestDTO;
 use App\Http\Requests\OrderSearchRequest;
-use App\Http\Resources\OrderResource;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Spatie\LaravelData\PaginatedDataCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class OrderController extends Controller
@@ -16,16 +16,16 @@ class OrderController extends Controller
         private readonly OrderService $orderService,
     ) {}
 
-    public function index(OrderSearchRequest $request): AnonymousResourceCollection
+    public function index(OrderSearchRequest $request): PaginatedDataCollection|array
     {
         $dto = OrderSearchRequestDTO::fromRequest($request);
 
-        return OrderResource::collection($this->orderService->getUsersOrders($dto));
+        return OrderData::collect($this->orderService->getUsersOrders($dto), PaginatedDataCollection::class);
     }
 
-    public function show(int $order, Request $request): OrderResource
+    public function show(int $order, Request $request): OrderData
     {
-        return new OrderResource($this->orderService->getOrderById($order, $request->user()));
+        return OrderData::from($this->orderService->getOrderById($order, $request->user()))->wrap('data');
     }
 
     public function export(OrderSearchRequest $request): BinaryFileResponse

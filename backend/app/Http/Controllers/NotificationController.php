@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\NotificationResource;
+use App\Data\NotificationData;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Spatie\LaravelData\DataCollection;
 
 class NotificationController extends Controller
 {
@@ -13,20 +13,21 @@ class NotificationController extends Controller
         private readonly NotificationService $notificationService,
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): DataCollection
     {
-        return NotificationResource::collection(
-            $this->notificationService->getUsersNotifications($request->user()->id)
-        );
+        return NotificationData::collect(
+            $this->notificationService->getUsersNotifications($request->user()->id),
+            DataCollection::class,
+        )->wrap('data');
     }
 
-    public function unread(Request $request): AnonymousResourceCollection
+    public function unread(Request $request): DataCollection
     {
         $userId = $request->user()->id;
         $notifications = $this->notificationService->getUsersUnreadNotifications($userId);
         $this->notificationService->markNotificationsAsRead($userId, $notifications->pluck('id')->all());
 
-        return NotificationResource::collection($notifications);
+        return NotificationData::collect($notifications, DataCollection::class)->wrap('data');
     }
 
     public function unreadCount(Request $request): array

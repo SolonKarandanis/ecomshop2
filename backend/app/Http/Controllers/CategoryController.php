@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\CategoryResource;
+use App\Data\CategoryData;
 use App\Repositories\CategoryRepository;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Spatie\LaravelData\DataCollection;
 
 class CategoryController extends Controller
 {
@@ -12,8 +12,8 @@ class CategoryController extends Controller
         private readonly CategoryRepository $categoryRepository,
     ) {}
 
-    public function index(): AnonymousResourceCollection
+    public function index(): DataCollection
     {
-        return CategoryResource::collection($this->categoryRepository->getActiveCategories());
+        return CategoryData::collect($this->categoryRepository->getActiveCategories(), DataCollection::class)->wrap('data');
     }
 }

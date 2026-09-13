@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Dtos\CreateUserDTO;
+use App\Enums\UserStatusEnum;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -20,6 +21,7 @@ class UserRepository
             'name' => $dto->getName(),
             'email' => $dto->getEmail(),
             'password' => Hash::make($dto->getPassword()),
+            'status' => UserStatusEnum::ACTIVE,
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Data\UserData;
 use App\Dtos\CreateUserDTO;
 use App\Dtos\ResetPasswordDTO;
 use App\Enums\RolesEnum;
@@ -10,12 +11,12 @@ use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterUserRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
-use App\Http\Resources\UserResource;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
@@ -23,7 +24,7 @@ class AuthController extends Controller
         private readonly UserService $userService,
     ) {}
 
-    public function register(RegisterUserRequest $request): JsonResponse
+    public function register(RegisterUserRequest $request): Response
     {
         $dto = CreateUserDTO::fromRequest($request);
 
@@ -34,18 +35,19 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return (new UserResource($user->load('roles')))
-            ->response()
+        return UserData::from($user->load('roles'))
+            ->wrap('data')
+            ->toResponse($request)
             ->setStatusCode(201);
     }
 
-    public function login(LoginRequest $request): UserResource
+    public function login(LoginRequest $request): UserData
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        return new UserResource($request->user()->load('roles'));
+        return UserData::from($request->user()->load('roles'))->wrap('data');
     }
 
     public function logout(Request $request): JsonResponse
@@ -58,9 +60,9 @@ class AuthController extends Controller
         return response()->json(null, 204);
     }
 
-    public function me(Request $request): UserResource
+    public function me(Request $request): UserData
     {
-        return new UserResource($request->user()->load('roles'));
+        return UserData::from($request->user()->load('roles'))->wrap('data');
     }
 
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse

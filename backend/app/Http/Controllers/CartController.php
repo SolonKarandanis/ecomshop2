@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Data\CartData;
 use App\Dtos\AddToCartDto;
 use App\Dtos\UpdateCartItemsDTO;
 use App\Http\Requests\AddCartItemRequest;
 use App\Http\Requests\UpdateCartItemQuantityRequest;
-use App\Http\Resources\CartResource;
 use App\Services\CartService;
 use Illuminate\Support\Facades\Gate;
 
@@ -16,12 +16,12 @@ class CartController extends Controller
         private readonly CartService $cartService,
     ) {}
 
-    public function index(): CartResource
+    public function index(): CartData
     {
-        return new CartResource($this->cartService->getCart());
+        return CartData::from($this->cartService->getCart())->wrap('data');
     }
 
-    public function store(AddCartItemRequest $request): CartResource
+    public function store(AddCartItemRequest $request): CartData
     {
         Gate::authorize('buyer-action');
 
@@ -34,10 +34,10 @@ class CartController extends Controller
 
         $this->cartService->addItemsToCart([$dto]);
 
-        return new CartResource($this->cartService->getCart());
+        return CartData::from($this->cartService->getCart())->wrap('data');
     }
 
-    public function update(string $cartItemId, UpdateCartItemQuantityRequest $request): CartResource
+    public function update(string $cartItemId, UpdateCartItemQuantityRequest $request): CartData
     {
         $cart = $this->cartService->getCart();
         $cartItem = $this->findCartItem($cart, $cartItemId);
@@ -52,14 +52,14 @@ class CartController extends Controller
 
         $this->cartService->updateItemsQuantity($cart, [$dto]);
 
-        return new CartResource($this->cartService->getCart());
+        return CartData::from($this->cartService->getCart())->wrap('data');
     }
 
-    public function destroy(string $cartItemId): CartResource
+    public function destroy(string $cartItemId): CartData
     {
         $this->cartService->removeItemsFromCart([$cartItemId]);
 
-        return new CartResource($this->cartService->getCart());
+        return CartData::from($this->cartService->getCart())->wrap('data');
     }
 
     private function findCartItem($cart, string $cartItemId)
