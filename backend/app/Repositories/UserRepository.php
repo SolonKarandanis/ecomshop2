@@ -47,4 +47,11 @@ class UserRepository
             ->groupBy('users.name')
             ->get();
     }
+
+    public function existsByUserEmail(string $email, int $userId): bool{
+        return $this->modelQuery()
+            ->where('email', $email)
+            ->where('id', '!=', $userId)
+            ->exists();
+    }
 }

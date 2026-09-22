@@ -49,7 +49,7 @@ class UserService
 
     public function updateProfile(User $user, UpdateProfileDto $dto): void
     {
-        if (User::where('email', $dto->getEmail())->where('id', '!=', $user->id)->exists()) {
+        if ($this->userRepository->existsByUserEmail($dto->getEmail(), $user->id)) {
             throw ProfileException::emailTaken();
         }
         $user->name  = $dto->getName();
