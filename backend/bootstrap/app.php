@@ -51,6 +51,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            return response()->json(['message' => $e->getMessage()], $status);
+            return response()->apiError(null, $e->getMessage(), $status, class_basename($e));
         });
     })->create();
