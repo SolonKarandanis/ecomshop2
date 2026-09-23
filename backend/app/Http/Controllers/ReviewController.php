@@ -10,7 +10,7 @@ use App\Http\Requests\SubmitReviewRequest;
 use App\Services\ProductService;
 use App\Services\ReviewService;
 use Illuminate\Support\Facades\Gate;
-use Spatie\LaravelData\DataCollection;
+use Spatie\LaravelData\PaginatedDataCollection;
 
 class ReviewController extends Controller
 {
@@ -19,11 +19,11 @@ class ReviewController extends Controller
         private readonly ProductService $productService,
     ) {}
 
-    public function index(int $product): DataCollection
+    public function index(int $product): PaginatedDataCollection
     {
         $this->productService->getProductById($product);
 
-        return ReviewData::collect($this->reviewService->getPublishedReviewsForProduct($product), DataCollection::class)->wrap('data');
+        return ReviewData::collect($this->reviewService->getPublishedReviewsForProduct($product), PaginatedDataCollection::class);
     }
 
     public function store(SubmitReviewRequest $request, int $product): ReviewData

@@ -6,6 +6,7 @@ use App\Data\NotificationData;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Spatie\LaravelData\DataCollection;
+use Spatie\LaravelData\PaginatedDataCollection;
 
 class NotificationController extends Controller
 {
@@ -13,12 +14,12 @@ class NotificationController extends Controller
         private readonly NotificationService $notificationService,
     ) {}
 
-    public function index(Request $request): DataCollection
+    public function index(Request $request): PaginatedDataCollection
     {
         return NotificationData::collect(
             $this->notificationService->getUsersNotifications($request->user()->id),
-            DataCollection::class,
-        )->wrap('data');
+            PaginatedDataCollection::class,
+        );
     }
 
     public function unread(Request $request): DataCollection
