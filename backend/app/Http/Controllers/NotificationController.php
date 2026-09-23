@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Data\NotificationData;
+use App\Http\Requests\NotificationSearchRequest;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Spatie\LaravelData\DataCollection;
@@ -14,10 +15,10 @@ class NotificationController extends Controller
         private readonly NotificationService $notificationService,
     ) {}
 
-    public function index(Request $request): PaginatedDataCollection
+    public function index(NotificationSearchRequest $request): PaginatedDataCollection
     {
         return NotificationData::collect(
-            $this->notificationService->getUsersNotifications($request->user()->id),
+            $this->notificationService->getUsersNotifications($request->user()->id, $request->integer('per_page', 20)),
             PaginatedDataCollection::class,
         );
     }

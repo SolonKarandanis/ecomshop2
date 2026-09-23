@@ -61,9 +61,9 @@ class ReviewRepository
         ]);
     }
 
-    public function getPublishedReviewsForProduct(int $productId): LengthAwarePaginator|Collection
+    public function getPublishedReviewsForProduct(int $productId, int $perPage = 5): LengthAwarePaginator|Collection
     {
-        return $this->modelQuery()->where('product_id', $productId)->published()->paginate(5);
+        return $this->modelQuery()->where('product_id', $productId)->published()->paginate($perPage);
     }
 
     public function getRatingStatsForProduct(int $productId): ReviewRatingStatsDto

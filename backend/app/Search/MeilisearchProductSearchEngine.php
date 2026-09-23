@@ -39,6 +39,6 @@ class MeilisearchProductSearchEngine implements ProductSearchEngineInterface
         $sortColumn = $this->sortBy[$dto->getSort()] ?? $this->sortBy['latest'];
         $builder->orderBy($sortColumn, 'desc');
 
-        return $builder->paginate(6);
+        return $builder->paginate($dto->getPerPage());
     }
 }

@@ -14,11 +14,11 @@ class NotificationRepository
         return Notification::query();
     }
 
-    public function getUsersNotifications(int $userId):LengthAwarePaginator|array{
+    public function getUsersNotifications(int $userId, int $perPage = 20):LengthAwarePaginator|array{
         return $this->modelQuery()
             ->forUser($userId)
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate($perPage);
     }
 
     public function getUsersUnreadNotifications(int $userId): DatabaseNotificationCollection{

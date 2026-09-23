@@ -44,6 +44,7 @@ class OrderSearchRequestDTO
         $instance->withMaxPrice($request->filled('maxPrice') ? (float) $request->input('maxPrice') : null);
         $instance->withSortColumn($request->input('sortColumn', $instance->getSortColumn()));
         $instance->withSortDirection($request->input('sortDirection', $instance->getSortDirection()));
+        $instance->withPerPage($request->integer('perPage', $instance->getPerPage()));
 
         return $instance;
     }

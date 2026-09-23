@@ -15,8 +15,8 @@ class NotificationService
         private readonly NotificationRepository $notificationRepository
     ){}
 
-    public function getUsersNotifications(int $userId):LengthAwarePaginator|array{
-        return $this->notificationRepository->getUsersNotifications($userId);
+    public function getUsersNotifications(int $userId, int $perPage = 20):LengthAwarePaginator|array{
+        return $this->notificationRepository->getUsersNotifications($userId, $perPage);
     }
 
     public function getUsersUnreadNotifications(int $userId):DatabaseNotificationCollection{

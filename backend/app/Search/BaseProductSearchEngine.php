@@ -50,7 +50,7 @@ abstract class BaseProductSearchEngine implements ProductSearchEngineInterface
         $sortColumn = $this->sortBy[$dto->getSort()] ?? $this->sortBy['latest'];
         $productQuery->orderBy($sortColumn, 'desc');
 
-        return $productQuery->paginate(6);
+        return $productQuery->paginate($dto->getPerPage());
     }
 
     abstract protected function applySearchTerm(Builder $query, string $term): void;

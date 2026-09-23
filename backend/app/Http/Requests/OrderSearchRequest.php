@@ -31,6 +31,7 @@ class OrderSearchRequest extends FormRequest
             'maxPrice' => ['nullable', 'numeric', 'min:0', 'gte:minPrice'],
             'sortColumn' => ['sometimes', Rule::in(self::SORTABLE_COLUMNS)],
             'sortDirection' => ['sometimes', Rule::in(['asc', 'desc'])],
+            'perPage' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ];
     }
 }

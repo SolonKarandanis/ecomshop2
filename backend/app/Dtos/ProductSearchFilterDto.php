@@ -22,6 +22,8 @@ class ProductSearchFilterDto
 
     private string $search = '';
 
+    private int $perPage = 6;
+
     public static function fromRequest(ProductSearchRequest $request): self
     {
         $instance = new self;
@@ -33,6 +35,7 @@ class ProductSearchFilterDto
         $instance->setPriceTo($request->integer('price_to', 3000));
         $instance->setSort($request->input('sort', 'latest'));
         $instance->setSearch($request->input('q', ''));
+        $instance->setPerPage($request->integer('per_page', $instance->getPerPage()));
 
         return $instance;
     }
@@ -115,5 +118,15 @@ class ProductSearchFilterDto
     public function setSearch(string $search): void
     {
         $this->search = $search;
+    }
+
+    public function getPerPage(): int
+    {
+        return $this->perPage;
+    }
+
+    public function setPerPage(int $perPage): void
+    {
+        $this->perPage = $perPage;
     }
 }

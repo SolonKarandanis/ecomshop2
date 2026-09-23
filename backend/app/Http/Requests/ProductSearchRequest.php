@@ -28,6 +28,7 @@ class ProductSearchRequest extends FormRequest
             'price_to' => ['sometimes', 'integer', 'gte:price_from'],
             'sort' => ['sometimes', 'string', 'in:latest,price,rating'],
             'q' => ['sometimes', 'string', 'max:100'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ];
     }
 }

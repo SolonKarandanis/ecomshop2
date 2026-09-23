@@ -6,6 +6,7 @@ use App\Data\ReviewData;
 use App\Dtos\SubmitReviewDto;
 use App\Dtos\UpdateReviewDTO;
 use App\Enums\ReviewStatusEnum;
+use App\Http\Requests\ReviewSearchRequest;
 use App\Http\Requests\SubmitReviewRequest;
 use App\Services\ProductService;
 use App\Services\ReviewService;
@@ -19,11 +20,13 @@ class ReviewController extends Controller
         private readonly ProductService $productService,
     ) {}
 
-    public function index(int $product): PaginatedDataCollection
+    public function index(ReviewSearchRequest $request, int $product): PaginatedDataCollection
     {
         $this->productService->getProductById($product);
 
-        return ReviewData::collect($this->reviewService->getPublishedReviewsForProduct($product), PaginatedDataCollection::class);
+        $perPage = $request->integer('per_page', 5);
+
+        return ReviewData::collect($this->reviewService->getPublishedReviewsForProduct($product, $perPage), PaginatedDataCollection::class);
     }
 
     public function store(SubmitReviewRequest $request, int $product): ReviewData

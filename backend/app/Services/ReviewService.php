@@ -103,9 +103,9 @@ class ReviewService
 
     }
 
-    public function getPublishedReviewsForProduct(int $productId): LengthAwarePaginator|Collection
+    public function getPublishedReviewsForProduct(int $productId, int $perPage = 5): LengthAwarePaginator|Collection
     {
-        return $this->reviewRepository->getPublishedReviewsForProduct($productId);
+        return $this->reviewRepository->getPublishedReviewsForProduct($productId, $perPage);
     }
 
     /**
