@@ -70,3 +70,20 @@ it('maps a domain exception to its declared status code and a consistent JSON sh
         ->assertBadRequest()
         ->assertExactJson(['message' => OrderException::checkout()->getMessage()]);
 });
+
+it('renders a 404 under /api as the generic apiError JSON shape, even without an Accept header', function () {
+    $this->get('/api/does-not-exist')
+        ->assertNotFound()
+        ->assertExactJson([
+            'status' => false,
+            'message' => 'Resource not found',
+            'data' => null,
+            'error' => 'NotFound',
+        ]);
+});
+
+it('leaves a 404 under /admin as HTML for the Filament panel', function () {
+    $this->get('/admin/does-not-exist')
+        ->assertNotFound()
+        ->assertHeader('Content-Type', 'text/html; charset=utf-8');
+});
