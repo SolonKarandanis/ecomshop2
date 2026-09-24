@@ -37,7 +37,7 @@ it('transitions the Order to Paid and notifies the Buyer on a paid Stripe sessio
     fakeStripeSession('paid');
     [$buyer, $order] = buyerWithPendingOrder();
 
-    $response = $this->actingAs($buyer)->getJson('/success?session_id=cs_test_123')->assertOk();
+    $response = $this->actingAs($buyer)->getJson('/api/success?session_id=cs_test_123')->assertOk();
 
     expect($response->json('order_status'))->toBe(OrderStatusEnum::Paid->value);
     expect($response->json('payment_status'))->toBe(OrderPaymentStatusEnum::PAID->value);
@@ -62,7 +62,7 @@ it('notifies the Supplier only when suppliers are enabled', function () {
     fakeStripeSession('paid');
     [$buyer, $order] = buyerWithPendingOrder();
 
-    $this->actingAs($buyer)->getJson('/success?session_id=cs_test_123')->assertOk();
+    $this->actingAs($buyer)->getJson('/api/success?session_id=cs_test_123')->assertOk();
 
     Notification::assertSentTo(
         $order->fresh()->supplier,
@@ -78,7 +78,7 @@ it('marks the Order payment Failed and notifies the Buyer on an unpaid Stripe se
     fakeStripeSession('unpaid');
     [$buyer, $order] = buyerWithPendingOrder();
 
-    $response = $this->actingAs($buyer)->getJson('/success?session_id=cs_test_123')->assertOk();
+    $response = $this->actingAs($buyer)->getJson('/api/success?session_id=cs_test_123')->assertOk();
 
     expect($response->json('payment_status'))->toBe(OrderPaymentStatusEnum::FAILED->value);
     $this->assertDatabaseHas('orders', [
@@ -102,8 +102,8 @@ it('only sends the payment-confirmed and ready-for-supplier Notifications once a
     fakeStripeSession('paid');
     [$buyer, $order] = buyerWithPendingOrder();
 
-    $this->actingAs($buyer)->getJson('/success?session_id=cs_test_123')->assertOk();
-    $this->actingAs($buyer)->getJson('/success?session_id=cs_test_123')->assertOk();
+    $this->actingAs($buyer)->getJson('/api/success?session_id=cs_test_123')->assertOk();
+    $this->actingAs($buyer)->getJson('/api/success?session_id=cs_test_123')->assertOk();
 
     Notification::assertSentToTimes($buyer->fresh(), OrderNotification::class, 1);
     Notification::assertSentToTimes($order->fresh()->supplier, OrderNotification::class, 1);
@@ -112,7 +112,7 @@ it('only sends the payment-confirmed and ready-for-supplier Notifications once a
 it('does not alter Order or Payment Status on cancel', function () {
     [$buyer, $order] = buyerWithPendingOrder();
 
-    $response = $this->actingAs($buyer)->getJson('/cancel')->assertOk();
+    $response = $this->actingAs($buyer)->getJson('/api/cancel')->assertOk();
 
     expect($response->json('order_status'))->toBe(OrderStatusEnum::Draft->value);
     expect($response->json('payment_status'))->toBe(OrderPaymentStatusEnum::PENDING->value);
@@ -124,6 +124,6 @@ it('does not alter Order or Payment Status on cancel', function () {
 });
 
 it('rejects success and cancel for a guest', function () {
-    $this->getJson('/success')->assertUnauthorized();
-    $this->getJson('/cancel')->assertUnauthorized();
+    $this->getJson('/api/success')->assertUnauthorized();
+    $this->getJson('/api/cancel')->assertUnauthorized();
 });

@@ -41,7 +41,7 @@ it("lists only the authenticated Buyer's own Orders", function () {
     Order::factory()->create(['user_id' => $buyer->id]);
     Order::factory()->count(2)->create(['user_id' => $otherBuyer->id]);
 
-    $response = $this->actingAs($buyer)->getJson('/orders')->assertOk();
+    $response = $this->actingAs($buyer)->getJson('/api/orders')->assertOk();
 
     expect($response->json('data'))->toHaveCount(1);
     expect($response->json('data.0.id'))->toBeInt();
@@ -53,7 +53,7 @@ it('filters the Buyer order list by order status', function () {
     Order::factory()->create(['user_id' => $buyer->id, 'order_status' => OrderStatusEnum::Draft->value]);
 
     $response = $this->actingAs($buyer)
-        ->getJson('/orders?orderStatus='.urlencode(OrderStatusEnum::Paid->value))
+        ->getJson('/api/orders?orderStatus='.urlencode(OrderStatusEnum::Paid->value))
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(1);
@@ -63,7 +63,7 @@ it('filters the Buyer order list by order status', function () {
 it('rejects an invalid sortColumn on the order list', function () {
     $buyer = buyer();
 
-    $this->actingAs($buyer)->getJson('/orders?sortColumn=notacolumn')->assertUnprocessable();
+    $this->actingAs($buyer)->getJson('/api/orders?sortColumn=notacolumn')->assertUnprocessable();
 });
 
 it("returns the owning Buyer's Order detail with items and address, without exposing the supplier id", function () {
@@ -89,7 +89,7 @@ it("returns the owning Buyer's Order detail with items and address, without expo
         'postal_code' => '12345',
     ]);
 
-    $response = $this->actingAs($buyer)->getJson("/orders/{$order->id}")->assertOk();
+    $response = $this->actingAs($buyer)->getJson("/api/orders/{$order->id}")->assertOk();
 
     expect($response->json('data.id'))->toBe($order->id);
     expect($response->json('data.items'))->toHaveCount(1);
@@ -103,7 +103,7 @@ it("rejects a Buyer requesting another Buyer's Order with 403", function () {
     $otherBuyer = buyer();
     $order = Order::factory()->create(['user_id' => $otherBuyer->id]);
 
-    $this->actingAs($buyer)->getJson("/orders/{$order->id}")->assertForbidden();
+    $this->actingAs($buyer)->getJson("/api/orders/{$order->id}")->assertForbidden();
 });
 
 it('lets an Admin view any Order, including the supplier id', function () {
@@ -112,7 +112,7 @@ it('lets an Admin view any Order, including the supplier id', function () {
     $supplier = supplier();
     $order = Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $supplier->id]);
 
-    $response = $this->actingAs($admin)->getJson("/orders/{$order->id}")->assertOk();
+    $response = $this->actingAs($admin)->getJson("/api/orders/{$order->id}")->assertOk();
 
     expect($response->json('data.supplier_id'))->toBe($supplier->id);
 });
@@ -122,7 +122,7 @@ it('lets the owning Supplier view the Order, including the supplier id', functio
     $supplier = supplier();
     $order = Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $supplier->id]);
 
-    $response = $this->actingAs($supplier)->getJson("/orders/{$order->id}")->assertOk();
+    $response = $this->actingAs($supplier)->getJson("/api/orders/{$order->id}")->assertOk();
 
     expect($response->json('data.supplier_id'))->toBe($supplier->id);
 });
@@ -133,18 +133,18 @@ it('rejects a Supplier viewing an Order it does not fulfil', function () {
     $otherSupplier = supplier();
     $order = Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $supplier->id]);
 
-    $this->actingAs($otherSupplier)->getJson("/orders/{$order->id}")->assertForbidden();
+    $this->actingAs($otherSupplier)->getJson("/api/orders/{$order->id}")->assertForbidden();
 });
 
 it('rejects a guest from listing or viewing Orders', function () {
     $order = Order::factory()->create();
 
-    $this->getJson('/orders')->assertUnauthorized();
-    $this->getJson("/orders/{$order->id}")->assertUnauthorized();
+    $this->getJson('/api/orders')->assertUnauthorized();
+    $this->getJson("/api/orders/{$order->id}")->assertUnauthorized();
 });
 
 it('returns 404 for a nonexistent Order', function () {
     $buyer = buyer();
 
-    $this->actingAs($buyer)->getJson('/orders/999999')->assertNotFound();
+    $this->actingAs($buyer)->getJson('/api/orders/999999')->assertNotFound();
 });

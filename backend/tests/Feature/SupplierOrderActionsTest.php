@@ -46,7 +46,7 @@ it('lets a Supplier ship their own Paid Order and notifies the Buyer', function 
     $buyer = supplierActionsBuyer();
     $order = Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Paid->value]);
 
-    $response = $this->actingAs($supplier)->postJson("/supplier-orders/{$order->id}/ship")->assertOk();
+    $response = $this->actingAs($supplier)->postJson("/api/supplier-orders/{$order->id}/ship")->assertOk();
 
     expect($response->json('data.order_status'))->toBe(OrderStatusEnum::Shipped->value);
     $this->assertDatabaseHas('orders', ['id' => $order->id, 'order_status' => OrderStatusEnum::Shipped->value]);
@@ -64,7 +64,7 @@ it('lets a Supplier cancel their own Paid Order and notifies the Buyer', functio
     $buyer = supplierActionsBuyer();
     $order = Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Paid->value]);
 
-    $response = $this->actingAs($supplier)->postJson("/supplier-orders/{$order->id}/cancel")->assertOk();
+    $response = $this->actingAs($supplier)->postJson("/api/supplier-orders/{$order->id}/cancel")->assertOk();
 
     expect($response->json('data.order_status'))->toBe(OrderStatusEnum::Cancelled->value);
     Notification::assertSentTo(
@@ -81,7 +81,7 @@ it('lets a Supplier deliver their own Shipped Order and notifies the Buyer', fun
     $buyer = supplierActionsBuyer();
     $order = Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Shipped->value]);
 
-    $response = $this->actingAs($supplier)->postJson("/supplier-orders/{$order->id}/deliver")->assertOk();
+    $response = $this->actingAs($supplier)->postJson("/api/supplier-orders/{$order->id}/deliver")->assertOk();
 
     expect($response->json('data.order_status'))->toBe(OrderStatusEnum::Delivered->value);
     Notification::assertSentTo(
@@ -96,7 +96,7 @@ it('rejects delivering a still-Paid Order as an illegal transition', function ()
     $supplier = supplierActionsSupplier();
     $order = Order::factory()->create(['supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Paid->value]);
 
-    $this->actingAs($supplier)->postJson("/supplier-orders/{$order->id}/deliver")->assertStatus(400);
+    $this->actingAs($supplier)->postJson("/api/supplier-orders/{$order->id}/deliver")->assertStatus(400);
 
     $this->assertDatabaseHas('orders', ['id' => $order->id, 'order_status' => OrderStatusEnum::Paid->value]);
 });
@@ -105,7 +105,7 @@ it('rejects shipping an already-Shipped Order as an illegal transition', functio
     $supplier = supplierActionsSupplier();
     $order = Order::factory()->create(['supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Shipped->value]);
 
-    $this->actingAs($supplier)->postJson("/supplier-orders/{$order->id}/ship")->assertStatus(400);
+    $this->actingAs($supplier)->postJson("/api/supplier-orders/{$order->id}/ship")->assertStatus(400);
 });
 
 it('rejects acting on a terminal Delivered Order for every role, including Admin', function () {
@@ -113,15 +113,15 @@ it('rejects acting on a terminal Delivered Order for every role, including Admin
     $admin = supplierActionsAdmin();
     $order = Order::factory()->create(['supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Delivered->value]);
 
-    $this->actingAs($supplier)->postJson("/supplier-orders/{$order->id}/ship")->assertForbidden();
-    $this->actingAs($admin)->postJson("/supplier-orders/{$order->id}/ship")->assertForbidden();
+    $this->actingAs($supplier)->postJson("/api/supplier-orders/{$order->id}/ship")->assertForbidden();
+    $this->actingAs($admin)->postJson("/api/supplier-orders/{$order->id}/ship")->assertForbidden();
 });
 
 it('rejects acting on a terminal Cancelled Order', function () {
     $supplier = supplierActionsSupplier();
     $order = Order::factory()->create(['supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Cancelled->value]);
 
-    $this->actingAs($supplier)->postJson("/supplier-orders/{$order->id}/deliver")->assertForbidden();
+    $this->actingAs($supplier)->postJson("/api/supplier-orders/{$order->id}/deliver")->assertForbidden();
 });
 
 it("rejects a Supplier acting on an Order that doesn't contain their Products", function () {
@@ -129,27 +129,27 @@ it("rejects a Supplier acting on an Order that doesn't contain their Products", 
     $otherSupplier = supplierActionsSupplier();
     $order = Order::factory()->create(['supplier_id' => $otherSupplier->id, 'order_status' => OrderStatusEnum::Paid->value]);
 
-    $this->actingAs($supplier)->postJson("/supplier-orders/{$order->id}/ship")->assertForbidden();
+    $this->actingAs($supplier)->postJson("/api/supplier-orders/{$order->id}/ship")->assertForbidden();
 });
 
 it('rejects a Buyer performing a Supplier order action', function () {
     $buyer = supplierActionsBuyer();
     $order = Order::factory()->create(['user_id' => $buyer->id, 'order_status' => OrderStatusEnum::Paid->value]);
 
-    $this->actingAs($buyer)->postJson("/supplier-orders/{$order->id}/ship")->assertForbidden();
+    $this->actingAs($buyer)->postJson("/api/supplier-orders/{$order->id}/ship")->assertForbidden();
 });
 
 it('rejects an Admin performing a Supplier order action', function () {
     $admin = supplierActionsAdmin();
     $order = Order::factory()->create(['order_status' => OrderStatusEnum::Paid->value]);
 
-    $this->actingAs($admin)->postJson("/supplier-orders/{$order->id}/ship")->assertForbidden();
+    $this->actingAs($admin)->postJson("/api/supplier-orders/{$order->id}/ship")->assertForbidden();
 });
 
 it('rejects a guest performing a Supplier order action', function () {
     $order = Order::factory()->create(['order_status' => OrderStatusEnum::Paid->value]);
 
-    $this->postJson("/supplier-orders/{$order->id}/ship")->assertUnauthorized();
+    $this->postJson("/api/supplier-orders/{$order->id}/ship")->assertUnauthorized();
 });
 
 it('rejects a Supplier order action when the Suppliers Feature is off', function () {
@@ -157,11 +157,11 @@ it('rejects a Supplier order action when the Suppliers Feature is off', function
     $supplier = supplierActionsSupplier();
     $order = Order::factory()->create(['supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Paid->value]);
 
-    $this->actingAs($supplier)->postJson("/supplier-orders/{$order->id}/ship")->assertForbidden();
+    $this->actingAs($supplier)->postJson("/api/supplier-orders/{$order->id}/ship")->assertForbidden();
 });
 
 it('returns 404 for a nonexistent Order on a Supplier action', function () {
     $supplier = supplierActionsSupplier();
 
-    $this->actingAs($supplier)->postJson('/supplier-orders/999999/ship')->assertNotFound();
+    $this->actingAs($supplier)->postJson('/api/supplier-orders/999999/ship')->assertNotFound();
 });

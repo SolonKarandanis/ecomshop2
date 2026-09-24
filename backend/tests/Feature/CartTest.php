@@ -45,7 +45,7 @@ function seedBuyerRole(): void
 it('lets a guest add a product to the cart and persists it across requests via cookies', function () {
     $product = Product::factory()->create();
 
-    $add = simulateNextRequest()->postJson('/cart/items', [
+    $add = simulateNextRequest()->postJson('/api/cart/items', [
         'product_id' => $product->id,
         'quantity' => 2,
     ])->assertOk();
@@ -53,7 +53,7 @@ it('lets a guest add a product to the cart and persists it across requests via c
     expect($add->json('data.items'))->toHaveCount(1);
     $add->assertCookie('cart')->assertCookie('cartItems');
 
-    $show = simulateNextRequest($add)->getJson('/cart')->assertOk();
+    $show = simulateNextRequest($add)->getJson('/api/cart')->assertOk();
     expect($show->json('data.items.0.product_id'))->toBe($product->id);
     expect($show->json('data.items.0.quantity'))->toBe(2);
 
@@ -67,10 +67,10 @@ it("persists an authenticated Buyer's cart via the database", function () {
     $product = Product::factory()->create();
 
     $login = simulateNextRequest()
-        ->postJson('/login', ['email' => $buyer->email, 'password' => 'password'])
+        ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
         ->assertOk();
 
-    $add = simulateNextRequest($login)->postJson('/cart/items', [
+    $add = simulateNextRequest($login)->postJson('/api/cart/items', [
         'product_id' => $product->id,
         'quantity' => 3,
     ])->assertOk();
@@ -80,7 +80,7 @@ it("persists an authenticated Buyer's cart via the database", function () {
         'quantity' => 3,
     ]);
 
-    $show = simulateNextRequest($add)->getJson('/cart')->assertOk();
+    $show = simulateNextRequest($add)->getJson('/api/cart')->assertOk();
     expect($show->json('data.items.0.product_id'))->toBe($product->id);
 });
 
@@ -90,13 +90,13 @@ it('rejects adding a product from a second Supplier to a non-empty guest cart', 
     $productA = Product::factory()->create(['supplier_id' => $supplierA->id]);
     $productB = Product::factory()->create(['supplier_id' => $supplierB->id]);
 
-    $add = simulateNextRequest()->postJson('/cart/items', ['product_id' => $productA->id])->assertOk();
+    $add = simulateNextRequest()->postJson('/api/cart/items', ['product_id' => $productA->id])->assertOk();
 
-    $reject = simulateNextRequest($add)->postJson('/cart/items', ['product_id' => $productB->id])
+    $reject = simulateNextRequest($add)->postJson('/api/cart/items', ['product_id' => $productB->id])
         ->assertBadRequest();
     expect($reject->json('message'))->toBe(CartException::supplierMismatch()->getMessage());
 
-    $show = simulateNextRequest($reject)->getJson('/cart')->assertOk();
+    $show = simulateNextRequest($reject)->getJson('/api/cart')->assertOk();
     expect($show->json('data.items'))->toHaveCount(1);
 });
 
@@ -111,12 +111,12 @@ it('rejects adding a product from a second Supplier to a non-empty authenticated
     $productB = Product::factory()->create(['supplier_id' => $supplierB->id]);
 
     $login = simulateNextRequest()
-        ->postJson('/login', ['email' => $buyer->email, 'password' => 'password'])
+        ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
         ->assertOk();
 
-    $add = simulateNextRequest($login)->postJson('/cart/items', ['product_id' => $productA->id])->assertOk();
+    $add = simulateNextRequest($login)->postJson('/api/cart/items', ['product_id' => $productA->id])->assertOk();
 
-    simulateNextRequest($add)->postJson('/cart/items', ['product_id' => $productB->id])
+    simulateNextRequest($add)->postJson('/api/cart/items', ['product_id' => $productB->id])
         ->assertBadRequest();
 
     $this->assertDatabaseMissing('cart_items', ['product_id' => $productB->id]);
@@ -128,13 +128,13 @@ it('transfers the guest cart to the database on login (TransferGuestCartToUser)'
     $buyer->assignRole(RolesEnum::ROLE_BUYER->value);
     $product = Product::factory()->create();
 
-    $add = simulateNextRequest()->postJson('/cart/items', [
+    $add = simulateNextRequest()->postJson('/api/cart/items', [
         'product_id' => $product->id,
         'quantity' => 4,
     ])->assertOk();
 
     $login = simulateNextRequest($add)
-        ->postJson('/login', ['email' => $buyer->email, 'password' => 'password'])
+        ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
         ->assertOk();
 
     $this->assertDatabaseHas('cart_items', [
@@ -142,7 +142,7 @@ it('transfers the guest cart to the database on login (TransferGuestCartToUser)'
         'quantity' => 4,
     ]);
 
-    $show = simulateNextRequest($login)->getJson('/cart')->assertOk();
+    $show = simulateNextRequest($login)->getJson('/api/cart')->assertOk();
     expect($show->json('data.items'))->toHaveCount(1);
     expect($show->json('data.items.0.quantity'))->toBe(4);
 });
@@ -150,10 +150,10 @@ it('transfers the guest cart to the database on login (TransferGuestCartToUser)'
 it('updates a guest cart item quantity', function () {
     $product = Product::factory()->create();
 
-    $add = simulateNextRequest()->postJson('/cart/items', ['product_id' => $product->id, 'quantity' => 1])->assertOk();
+    $add = simulateNextRequest()->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1])->assertOk();
     $itemId = $add->json('data.items.0.id');
 
-    $update = simulateNextRequest($add)->patchJson("/cart/items/{$itemId}", ['quantity' => 5])->assertOk();
+    $update = simulateNextRequest($add)->patchJson("/api/cart/items/{$itemId}", ['quantity' => 5])->assertOk();
 
     expect($update->json('data.items.0.quantity'))->toBe(5);
 });
@@ -165,13 +165,13 @@ it('updates an authenticated Buyer cart item quantity', function () {
     $product = Product::factory()->create();
 
     $login = simulateNextRequest()
-        ->postJson('/login', ['email' => $buyer->email, 'password' => 'password'])
+        ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
         ->assertOk();
 
-    $add = simulateNextRequest($login)->postJson('/cart/items', ['product_id' => $product->id, 'quantity' => 1])->assertOk();
+    $add = simulateNextRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1])->assertOk();
     $itemId = $add->json('data.items.0.id');
 
-    simulateNextRequest($add)->patchJson("/cart/items/{$itemId}", ['quantity' => 7])->assertOk();
+    simulateNextRequest($add)->patchJson("/api/cart/items/{$itemId}", ['quantity' => 7])->assertOk();
 
     $this->assertDatabaseHas('cart_items', ['product_id' => $product->id, 'quantity' => 7]);
 });
@@ -179,10 +179,10 @@ it('updates an authenticated Buyer cart item quantity', function () {
 it('removes a guest cart item', function () {
     $product = Product::factory()->create();
 
-    $add = simulateNextRequest()->postJson('/cart/items', ['product_id' => $product->id])->assertOk();
+    $add = simulateNextRequest()->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
     $itemId = $add->json('data.items.0.id');
 
-    $remove = simulateNextRequest($add)->deleteJson("/cart/items/{$itemId}")->assertOk();
+    $remove = simulateNextRequest($add)->deleteJson("/api/cart/items/{$itemId}")->assertOk();
 
     expect($remove->json('data.items'))->toHaveCount(0);
 });
@@ -194,13 +194,13 @@ it('removes an authenticated Buyer cart item', function () {
     $product = Product::factory()->create();
 
     $login = simulateNextRequest()
-        ->postJson('/login', ['email' => $buyer->email, 'password' => 'password'])
+        ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
         ->assertOk();
 
-    $add = simulateNextRequest($login)->postJson('/cart/items', ['product_id' => $product->id])->assertOk();
+    $add = simulateNextRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
     $itemId = $add->json('data.items.0.id');
 
-    simulateNextRequest($add)->deleteJson("/cart/items/{$itemId}")->assertOk();
+    simulateNextRequest($add)->deleteJson("/api/cart/items/{$itemId}")->assertOk();
 
     $this->assertDatabaseMissing('cart_items', ['product_id' => $product->id]);
 });
@@ -212,15 +212,15 @@ it('rejects adding to cart for an authenticated Supplier', function () {
     $product = Product::factory()->create();
 
     $login = simulateNextRequest()
-        ->postJson('/login', ['email' => $supplier->email, 'password' => 'password'])
+        ->postJson('/api/login', ['email' => $supplier->email, 'password' => 'password'])
         ->assertOk();
 
-    simulateNextRequest($login)->postJson('/cart/items', ['product_id' => $product->id])->assertForbidden();
+    simulateNextRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id])->assertForbidden();
 });
 
 it('returns an empty cart for a fresh guest', function () {
     simulateNextRequest()
-        ->getJson('/cart')
+        ->getJson('/api/cart')
         ->assertOk()
         ->assertJsonPath('data.items', []);
 });

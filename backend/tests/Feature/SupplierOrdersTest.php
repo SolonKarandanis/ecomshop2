@@ -46,7 +46,7 @@ it("lists only the authenticated Supplier's own Orders, excluding Draft", functi
     Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Draft->value]);
     Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $otherSupplier->id, 'order_status' => OrderStatusEnum::Paid->value]);
 
-    $response = $this->actingAs($supplier)->getJson('/supplier-orders')->assertOk();
+    $response = $this->actingAs($supplier)->getJson('/api/supplier-orders')->assertOk();
 
     expect($response->json('data'))->toHaveCount(1);
     expect($response->json('data.0.order_status'))->toBe(OrderStatusEnum::Paid->value);
@@ -59,7 +59,7 @@ it('includes terminal Order statuses in the Supplier order list', function () {
     Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Delivered->value]);
     Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Cancelled->value]);
 
-    $response = $this->actingAs($supplier)->getJson('/supplier-orders')->assertOk();
+    $response = $this->actingAs($supplier)->getJson('/api/supplier-orders')->assertOk();
 
     expect($response->json('data'))->toHaveCount(2);
 });
@@ -72,7 +72,7 @@ it('filters the Supplier order list by order status', function () {
     Order::factory()->create(['user_id' => $buyer->id, 'supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Shipped->value]);
 
     $response = $this->actingAs($supplier)
-        ->getJson('/supplier-orders?orderStatus='.urlencode(OrderStatusEnum::Paid->value))
+        ->getJson('/api/supplier-orders?orderStatus='.urlencode(OrderStatusEnum::Paid->value))
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(1);
@@ -82,32 +82,32 @@ it('filters the Supplier order list by order status', function () {
 it('rejects a Buyer listing Supplier Orders with 403', function () {
     $buyer = supplierOrdersBuyer();
 
-    $this->actingAs($buyer)->getJson('/supplier-orders')->assertForbidden();
+    $this->actingAs($buyer)->getJson('/api/supplier-orders')->assertForbidden();
 });
 
 it('rejects an Admin listing Supplier Orders with 403', function () {
     $admin = supplierOrdersAdmin();
 
-    $this->actingAs($admin)->getJson('/supplier-orders')->assertForbidden();
+    $this->actingAs($admin)->getJson('/api/supplier-orders')->assertForbidden();
 });
 
 it('rejects a guest listing Supplier Orders with 401', function () {
-    $this->getJson('/supplier-orders')->assertUnauthorized();
+    $this->getJson('/api/supplier-orders')->assertUnauthorized();
 });
 
 it('rejects a Supplier listing Supplier Orders when the Suppliers Feature is off', function () {
     config(['features.suppliers_enabled' => false]);
     $supplier = supplierOrdersSupplier();
 
-    $this->actingAs($supplier)->getJson('/supplier-orders')->assertForbidden();
+    $this->actingAs($supplier)->getJson('/api/supplier-orders')->assertForbidden();
 });
 
 it('checks the Suppliers Feature flag live rather than cached', function () {
     $supplier = supplierOrdersSupplier();
 
     config(['features.suppliers_enabled' => false]);
-    $this->actingAs($supplier)->getJson('/supplier-orders')->assertForbidden();
+    $this->actingAs($supplier)->getJson('/api/supplier-orders')->assertForbidden();
 
     config(['features.suppliers_enabled' => true]);
-    $this->actingAs($supplier)->getJson('/supplier-orders')->assertOk();
+    $this->actingAs($supplier)->getJson('/api/supplier-orders')->assertOk();
 });

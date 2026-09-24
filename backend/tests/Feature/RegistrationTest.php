@@ -18,7 +18,7 @@ it('registers a new user as a Buyer by default and authenticates the session', f
 
     $client = $this->withHeader('Origin', 'http://localhost:3000');
 
-    $response = $client->postJson('/register', [
+    $response = $client->postJson('/api/register', [
         'name' => 'Jane Buyer',
         'email' => 'jane@example.com',
         'password' => 'password123',
@@ -34,14 +34,14 @@ it('registers a new user as a Buyer by default and authenticates the session', f
     // model on the cached guard, so drop it to simulate that fresh resolution.
     $this->app['auth']->forgetGuards();
 
-    $client->getJson('/user')->assertOk()->assertJsonPath('data.id', $user->id);
+    $client->getJson('/api/user')->assertOk()->assertJsonPath('data.id', $user->id);
 });
 
 it('registers a new user as a Supplier when the Suppliers Feature is enabled', function () {
     seedBuyerAndSupplierRoles();
     config(['features.suppliers_enabled' => true]);
 
-    $this->withHeader('Origin', 'http://localhost:3000')->postJson('/register', [
+    $this->withHeader('Origin', 'http://localhost:3000')->postJson('/api/register', [
         'name' => 'Sam Supplier',
         'email' => 'sam@example.com',
         'password' => 'password123',
@@ -56,7 +56,7 @@ it('rejects registering as a Supplier while the Suppliers Feature is off', funct
     seedBuyerAndSupplierRoles();
     config(['features.suppliers_enabled' => false]);
 
-    $this->postJson('/register', [
+    $this->postJson('/api/register', [
         'name' => 'Sam Supplier',
         'email' => 'sam@example.com',
         'password' => 'password123',
@@ -70,7 +70,7 @@ it('rejects registration with an already-used email', function () {
     seedBuyerAndSupplierRoles();
     $existing = User::factory()->create();
 
-    $this->postJson('/register', [
+    $this->postJson('/api/register', [
         'name' => 'Duplicate',
         'email' => $existing->email,
         'password' => 'password123',
@@ -81,7 +81,7 @@ it('sends a password reset link for a known email', function () {
     Notification::fake();
     $user = User::factory()->create();
 
-    $this->postJson('/forgot-password', ['email' => $user->email])
+    $this->postJson('/api/forgot-password', ['email' => $user->email])
         ->assertOk()
         ->assertJsonPath('message', trans(Password::RESET_LINK_SENT));
 
@@ -89,7 +89,7 @@ it('sends a password reset link for a known email', function () {
 });
 
 it('rejects a password reset link request for an unknown email', function () {
-    $this->postJson('/forgot-password', ['email' => 'nobody@example.com'])
+    $this->postJson('/api/forgot-password', ['email' => 'nobody@example.com'])
         ->assertUnprocessable()
         ->assertJsonValidationErrors('email');
 });
@@ -98,14 +98,14 @@ it('resets the password given a valid token', function () {
     $user = User::factory()->create();
     $token = Password::createToken($user);
 
-    $this->postJson('/reset-password', [
+    $this->postJson('/api/reset-password', [
         'email' => $user->email,
         'token' => $token,
         'password' => 'new-password123',
         'password_confirmation' => 'new-password123',
     ])->assertOk()->assertJsonPath('message', trans(Password::PASSWORD_RESET));
 
-    $this->withHeader('Origin', 'http://localhost:3000')->postJson('/login', [
+    $this->withHeader('Origin', 'http://localhost:3000')->postJson('/api/login', [
         'email' => $user->email,
         'password' => 'new-password123',
     ])->assertOk();
@@ -114,7 +114,7 @@ it('resets the password given a valid token', function () {
 it('rejects resetting the password with an invalid token', function () {
     $user = User::factory()->create();
 
-    $this->postJson('/reset-password', [
+    $this->postJson('/api/reset-password', [
         'email' => $user->email,
         'token' => 'not-a-real-token',
         'password' => 'new-password123',

@@ -40,7 +40,7 @@ function loggedInBuyer(): array
     $buyer->assignRole(RolesEnum::ROLE_BUYER->value);
 
     $login = simulateNextCheckoutRequest()
-        ->postJson('/login', ['email' => $buyer->email, 'password' => 'password'])
+        ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
         ->assertOk();
 
     return [$buyer, $login];
@@ -68,13 +68,13 @@ it('checks out a non-empty cart, creates the Order, clears the cart and notifies
     [$buyer, $login] = loggedInBuyer();
     $product = Product::factory()->create(['price' => 25]);
 
-    $add = simulateNextCheckoutRequest($login)->postJson('/cart/items', [
+    $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', [
         'product_id' => $product->id,
         'quantity' => 2,
     ])->assertOk();
 
     $checkout = simulateNextCheckoutRequest($add)
-        ->postJson('/checkout', validCheckoutPayload())
+        ->postJson('/api/checkout', validCheckoutPayload())
         ->assertOk();
 
     expect($checkout->json('redirect_url'))->not->toBeEmpty();
@@ -97,7 +97,7 @@ it('rejects checkout with an empty cart', function () {
     [$buyer, $login] = loggedInBuyer();
 
     $checkout = simulateNextCheckoutRequest($login)
-        ->postJson('/checkout', validCheckoutPayload())
+        ->postJson('/api/checkout', validCheckoutPayload())
         ->assertBadRequest();
 
     expect($checkout->json('message'))->toBe(EmptyCartException::emptyCart()->getMessage());
@@ -107,10 +107,10 @@ it('rejects checkout with an empty cart', function () {
 it('rejects checkout for a guest', function () {
     $product = Product::factory()->create();
 
-    $add = simulateNextCheckoutRequest()->postJson('/cart/items', ['product_id' => $product->id])->assertOk();
+    $add = simulateNextCheckoutRequest()->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
 
     simulateNextCheckoutRequest($add)
-        ->postJson('/checkout', validCheckoutPayload())
+        ->postJson('/api/checkout', validCheckoutPayload())
         ->assertUnauthorized();
 });
 
@@ -120,11 +120,11 @@ it('rejects checkout for an authenticated Supplier', function () {
     $supplier->assignRole(RolesEnum::ROLE_SUPPLIER->value);
 
     $login = simulateNextCheckoutRequest()
-        ->postJson('/login', ['email' => $supplier->email, 'password' => 'password'])
+        ->postJson('/api/login', ['email' => $supplier->email, 'password' => 'password'])
         ->assertOk();
 
     simulateNextCheckoutRequest($login)
-        ->postJson('/checkout', validCheckoutPayload())
+        ->postJson('/api/checkout', validCheckoutPayload())
         ->assertForbidden();
 });
 
@@ -133,13 +133,13 @@ it('rejects checkout with a missing required field', function () {
     [, $login] = loggedInBuyer();
     $product = Product::factory()->create();
 
-    $add = simulateNextCheckoutRequest($login)->postJson('/cart/items', ['product_id' => $product->id])->assertOk();
+    $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
 
     $payload = validCheckoutPayload();
     unset($payload['address']);
 
     simulateNextCheckoutRequest($add)
-        ->postJson('/checkout', $payload)
+        ->postJson('/api/checkout', $payload)
         ->assertUnprocessable()
         ->assertJsonValidationErrors('address');
 });

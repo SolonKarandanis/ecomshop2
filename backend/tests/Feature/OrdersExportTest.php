@@ -25,7 +25,7 @@ it("exports only the authenticated Buyer's own Orders as an xlsx spreadsheet", f
     Order::factory()->create(['user_id' => $buyer->id]);
     Order::factory()->count(2)->create(['user_id' => $otherBuyer->id]);
 
-    $this->actingAs($buyer)->getJson('/orders/export')->assertOk();
+    $this->actingAs($buyer)->getJson('/api/orders/export')->assertOk();
 
     Excel::assertDownloaded('orders.xlsx', function (OrdersExport $export) use ($buyer) {
         $rows = $export->collection();
@@ -41,7 +41,7 @@ it('respects the orderStatus filter on export', function () {
     Order::factory()->create(['user_id' => $buyer->id, 'order_status' => OrderStatusEnum::Draft->value]);
 
     $this->actingAs($buyer)
-        ->getJson('/orders/export?orderStatus='.urlencode(OrderStatusEnum::Paid->value))
+        ->getJson('/api/orders/export?orderStatus='.urlencode(OrderStatusEnum::Paid->value))
         ->assertOk();
 
     Excel::assertDownloaded('orders.xlsx', function (OrdersExport $export) {
@@ -57,15 +57,15 @@ it('rejects exporting Orders when the result would exceed 10,000 rows', function
         $mock->shouldReceive('countOrders')->once()->andReturn(10001);
     });
 
-    $this->actingAs($buyer)->getJson('/orders/export')->assertStatus(400);
+    $this->actingAs($buyer)->getJson('/api/orders/export')->assertStatus(400);
 });
 
 it('rejects a guest from exporting Orders', function () {
-    $this->getJson('/orders/export')->assertUnauthorized();
+    $this->getJson('/api/orders/export')->assertUnauthorized();
 });
 
 it('has no export endpoint for the Supplier Orders list', function () {
     $buyer = ordersExportBuyer();
 
-    $this->actingAs($buyer)->getJson('/supplier-orders/export')->assertNotFound();
+    $this->actingAs($buyer)->getJson('/api/supplier-orders/export')->assertNotFound();
 });

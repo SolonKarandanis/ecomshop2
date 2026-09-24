@@ -29,7 +29,7 @@ function profileAdmin(): User
 it("returns the authenticated Buyer's own name and email, without a User Status", function () {
     $buyer = profileBuyer();
 
-    $response = $this->actingAs($buyer)->getJson('/profile')->assertOk();
+    $response = $this->actingAs($buyer)->getJson('/api/profile')->assertOk();
 
     expect($response->json('data.name'))->toBe($buyer->name);
     expect($response->json('data.email'))->toBe($buyer->email);
@@ -39,7 +39,7 @@ it("returns the authenticated Buyer's own name and email, without a User Status"
 it("returns the authenticated Admin's own User Status alongside name and email", function () {
     $admin = profileAdmin();
 
-    $response = $this->actingAs($admin)->getJson('/profile')->assertOk();
+    $response = $this->actingAs($admin)->getJson('/api/profile')->assertOk();
 
     expect($response->json('data.status'))->toBe(UserStatusEnum::ACTIVE->value);
 });
@@ -48,7 +48,7 @@ it("updates the authenticated User's name and email", function () {
     $buyer = profileBuyer();
 
     $response = $this->actingAs($buyer)
-        ->patchJson('/profile', ['name' => 'New Name', 'email' => 'new@example.com'])
+        ->patchJson('/api/profile', ['name' => 'New Name', 'email' => 'new@example.com'])
         ->assertOk();
 
     expect($response->json('data.name'))->toBe('New Name');
@@ -61,7 +61,7 @@ it('rejects updating the profile to an email already used by another User', func
     $otherBuyer = profileBuyer();
 
     $this->actingAs($buyer)
-        ->patchJson('/profile', ['name' => $buyer->name, 'email' => $otherBuyer->email])
+        ->patchJson('/api/profile', ['name' => $buyer->name, 'email' => $otherBuyer->email])
         ->assertStatus(400);
 });
 
@@ -69,7 +69,7 @@ it('changes the password given the correct current password', function () {
     $buyer = profileBuyer();
 
     $this->actingAs($buyer)
-        ->patchJson('/profile/password', [
+        ->patchJson('/api/profile/password', [
             'currentPassword' => 'old-password',
             'newPassword' => 'new-password',
             'newPasswordConfirmation' => 'new-password',
@@ -83,7 +83,7 @@ it('rejects changing the password given the wrong current password', function ()
     $buyer = profileBuyer();
 
     $this->actingAs($buyer)
-        ->patchJson('/profile/password', [
+        ->patchJson('/api/profile/password', [
             'currentPassword' => 'wrong-password',
             'newPassword' => 'new-password',
             'newPasswordConfirmation' => 'new-password',
@@ -97,7 +97,7 @@ it('rejects a new password that does not match its confirmation', function () {
     $buyer = profileBuyer();
 
     $this->actingAs($buyer)
-        ->patchJson('/profile/password', [
+        ->patchJson('/api/profile/password', [
             'currentPassword' => 'old-password',
             'newPassword' => 'new-password',
             'newPasswordConfirmation' => 'does-not-match',
@@ -133,15 +133,15 @@ it("lists the authenticated User's own past Order Addresses, read-only", functio
         'postal_code' => '54321',
     ]);
 
-    $response = $this->actingAs($buyer)->getJson('/profile/addresses')->assertOk();
+    $response = $this->actingAs($buyer)->getJson('/api/profile/addresses')->assertOk();
 
     expect($response->json('data'))->toHaveCount(1);
     expect($response->json('data.0.city'))->toBe('Athens');
 });
 
 it('rejects a guest from viewing or updating the profile, changing the password, or listing addresses', function () {
-    $this->getJson('/profile')->assertUnauthorized();
-    $this->patchJson('/profile', ['name' => 'x', 'email' => 'x@example.com'])->assertUnauthorized();
-    $this->patchJson('/profile/password', ['currentPassword' => 'a', 'newPassword' => 'newpassword', 'newPasswordConfirmation' => 'newpassword'])->assertUnauthorized();
-    $this->getJson('/profile/addresses')->assertUnauthorized();
+    $this->getJson('/api/profile')->assertUnauthorized();
+    $this->patchJson('/api/profile', ['name' => 'x', 'email' => 'x@example.com'])->assertUnauthorized();
+    $this->patchJson('/api/profile/password', ['currentPassword' => 'a', 'newPassword' => 'newpassword', 'newPasswordConfirmation' => 'newpassword'])->assertUnauthorized();
+    $this->getJson('/api/profile/addresses')->assertUnauthorized();
 });
