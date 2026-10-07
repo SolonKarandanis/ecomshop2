@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Observers\OrderObserver;
 use App\Search\ProductSearchEngineFactory;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
@@ -39,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerObservers();
         $this->registerGates();
+        $this->registerPasswordResetUrl();
 
         Schema::defaultStringLength(191);
     }
@@ -61,6 +63,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('admin-action', function (?User $user) {
             return $user === null || $user->isAdmin();
         });
+    }
+
+    // There is no `password.reset` web route in this API-only app; the reset
+    // form is the Nuxt `/reset-password` page, which posts to `/api/reset-password`.
+    private function registerPasswordResetUrl(): void
+    {
+        ResetPassword::createUrlUsing(fn (User $user, string $token) => config('app.frontend_url').'/reset-password?'.http_build_query([
+            'token' => $token,
+            'email' => $user->getEmailForPasswordReset(),
+        ]));
     }
 
     private function registerConfig(): void

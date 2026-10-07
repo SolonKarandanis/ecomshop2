@@ -88,6 +88,20 @@ it('sends a password reset link for a known email', function () {
     Notification::assertSentTo($user, ResetPassword::class);
 });
 
+it('links the password reset email to the frontend reset page', function () {
+    Notification::fake();
+    config(['app.frontend_url' => 'https://shop.test']);
+    $user = User::factory()->create(['email' => 'buyer@example.com']);
+
+    $this->postJson('/api/forgot-password', ['email' => $user->email])->assertOk();
+
+    Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user) {
+        $url = $notification->toMail($user)->actionUrl;
+
+        return $url === 'https://shop.test/reset-password?token='.$notification->token.'&email=buyer%40example.com';
+    });
+});
+
 it('rejects a password reset link request for an unknown email', function () {
     $this->postJson('/api/forgot-password', ['email' => 'nobody@example.com'])
         ->assertUnprocessable()

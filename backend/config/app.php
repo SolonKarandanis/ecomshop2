@@ -54,6 +54,10 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Origin of the Nuxt frontend (ADR-0001). Links that land the user back in
+    // the storefront, such as password-reset emails, are built from this.
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+
     'currency' => env('APP_CURRENCY', 'eur'),
 
     /*

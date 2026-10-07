@@ -11,6 +11,25 @@ it('serves a CSRF cookie', function () {
         ->assertCookie('XSRF-TOKEN');
 });
 
+it('allows credentialed cross-origin requests from the frontend origin only', function () {
+    $preflight = fn (string $origin, string $uri) => $this->withHeaders([
+        'Origin' => $origin,
+        'Access-Control-Request-Method' => 'POST',
+    ])->options($uri);
+
+    $preflight('http://localhost:3000', '/api/login')
+        ->assertHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
+        ->assertHeader('Access-Control-Allow-Credentials', 'true');
+
+    $preflight('http://localhost:3000', '/sanctum/csrf-cookie')
+        ->assertHeader('Access-Control-Allow-Credentials', 'true');
+
+    // With a single allowed origin the API always echoes that origin, so the
+    // browser refuses the response for any other caller.
+    expect($preflight('https://evil.example', '/api/login')->headers->get('Access-Control-Allow-Origin'))
+        ->toBe('http://localhost:3000');
+});
+
 it('logs a user in with valid credentials and recognizes the session on later requests', function () {
     $user = User::factory()->create(['password' => Hash::make('password')]);
 
