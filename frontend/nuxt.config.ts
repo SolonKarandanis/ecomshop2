@@ -25,6 +25,10 @@ export default defineNuxtConfig({
     '/profile/**': { ssr: false },
     '/supplier/**': { ssr: false },
     '/notifications/**': { ssr: false },
+    '/login': { ssr: false },
+    '/register': { ssr: false },
+    '/forgot-password': { ssr: false },
+    '/reset-password': { ssr: false },
   },
 
   compatibilityDate: '2025-07-15',
