@@ -9,8 +9,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 abstract class BaseProductSearchEngine implements ProductSearchEngineInterface
 {
-    private array $sortBy = ['latest' => 'created_at', 'price' => 'price', 'rating' => 'average_rating'];
-
     public function search(ProductSearchFilterDto $dto): LengthAwarePaginator
     {
         $productQuery = Product::query()
@@ -23,8 +21,15 @@ abstract class BaseProductSearchEngine implements ProductSearchEngineInterface
                     })->with(['media', 'attribute']);
                 },
             ])
-            ->where('is_active', true)
-            ->whereBetween('price', [$dto->getPriceFrom(), $dto->getPriceTo()]);
+            ->where('is_active', true);
+
+        $productQuery->when($dto->getPriceFrom() !== null, function ($query) use ($dto) {
+            $query->where('price', '>=', $dto->getPriceFrom());
+        });
+
+        $productQuery->when($dto->getPriceTo() !== null, function ($query) use ($dto) {
+            $query->where('price', '<=', $dto->getPriceTo());
+        });
 
         $productQuery->when(! empty($dto->getSelectedCategories()), function ($query) use ($dto) {
             $query->whereIn('category_id', $dto->getSelectedCategories());
@@ -47,8 +52,7 @@ abstract class BaseProductSearchEngine implements ProductSearchEngineInterface
             $this->applySearchTerm($query, $term);
         });
 
-        $sortColumn = $this->sortBy[$dto->getSort()] ?? $this->sortBy['latest'];
-        $productQuery->orderBy($sortColumn, 'desc');
+        $productQuery->orderBy($dto->getSortColumn(), $dto->getSortDirection());
 
         return $productQuery->paginate($dto->getPerPage());
     }

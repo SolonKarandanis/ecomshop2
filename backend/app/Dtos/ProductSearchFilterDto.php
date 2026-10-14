@@ -6,6 +6,15 @@ use App\Http\Requests\ProductSearchRequest;
 
 class ProductSearchFilterDto
 {
+    // Each public `sort` value maps to [column, direction]; ProductSearchRequest
+    // validates against these keys.
+    public const SORTS = [
+        'latest' => ['created_at', 'desc'],
+        'price_asc' => ['price', 'asc'],
+        'price_desc' => ['price', 'desc'],
+        'rating' => ['average_rating', 'desc'],
+    ];
+
     private array $selected_categories;
 
     private array $selected_brands;
@@ -31,8 +40,9 @@ class ProductSearchFilterDto
         $instance->setSelectedBrands($request->input('brands', []));
         $instance->setFeatured($request->boolean('featured'));
         $instance->setOnSale($request->boolean('on_sale'));
-        $instance->setPriceFrom($request->integer('price_from', 0));
-        $instance->setPriceTo($request->integer('price_to', 3000));
+        // Bounds apply only when sent, so an unfiltered search returns every price.
+        $instance->setPriceFrom($request->has('price_from') ? $request->integer('price_from') : null);
+        $instance->setPriceTo($request->has('price_to') ? $request->integer('price_to') : null);
         $instance->setSort($request->input('sort', 'latest'));
         $instance->setSearch($request->input('q', ''));
         $instance->setPerPage($request->integer('per_page', $instance->getPerPage()));
@@ -80,22 +90,22 @@ class ProductSearchFilterDto
         $this->on_sale = $on_sale;
     }
 
-    public function getPriceFrom(): int
+    public function getPriceFrom(): ?int
     {
         return $this->price_from;
     }
 
-    public function setPriceFrom(int $price_from): void
+    public function setPriceFrom(?int $price_from): void
     {
         $this->price_from = $price_from;
     }
 
-    public function getPriceTo(): int
+    public function getPriceTo(): ?int
     {
         return $this->price_to;
     }
 
-    public function setPriceTo(int $price_to): void
+    public function setPriceTo(?int $price_to): void
     {
         $this->price_to = $price_to;
     }
@@ -108,6 +118,16 @@ class ProductSearchFilterDto
     public function setSort(string $sort): void
     {
         $this->sort = $sort;
+    }
+
+    public function getSortColumn(): string
+    {
+        return (self::SORTS[$this->sort] ?? self::SORTS['latest'])[0];
+    }
+
+    public function getSortDirection(): string
+    {
+        return (self::SORTS[$this->sort] ?? self::SORTS['latest'])[1];
     }
 
     public function getSearch(): string

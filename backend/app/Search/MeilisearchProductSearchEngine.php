@@ -8,8 +8,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class MeilisearchProductSearchEngine implements ProductSearchEngineInterface
 {
-    private array $sortBy = ['latest' => 'created_at', 'price' => 'price', 'rating' => 'average_rating'];
-
     public function search(ProductSearchFilterDto $dto): LengthAwarePaginator
     {
         $term = trim($dto->getSearch());
@@ -17,16 +15,21 @@ class MeilisearchProductSearchEngine implements ProductSearchEngineInterface
 
         $builder = Product::search($searchTerm);
 
-        $builder->when(!empty($dto->getSelectedCategories()), function ($query) use ($dto) {
+        $builder->when(! empty($dto->getSelectedCategories()), function ($query) use ($dto) {
             $query->whereIn('category_id', $dto->getSelectedCategories());
         });
 
-        $builder->when(!empty($dto->getSelectedBrands()), function ($query) use ($dto) {
+        $builder->when(! empty($dto->getSelectedBrands()), function ($query) use ($dto) {
             $query->whereIn('brand_id', $dto->getSelectedBrands());
         });
 
-        $builder->where('price', '>=', $dto->getPriceFrom());
-        $builder->where('price', '<=', $dto->getPriceTo());
+        $builder->when($dto->getPriceFrom() !== null, function ($query) use ($dto) {
+            $query->where('price', '>=', $dto->getPriceFrom());
+        });
+
+        $builder->when($dto->getPriceTo() !== null, function ($query) use ($dto) {
+            $query->where('price', '<=', $dto->getPriceTo());
+        });
 
         $builder->when($dto->isFeatured(), function ($query) {
             $query->where('is_featured', true);
@@ -36,8 +39,7 @@ class MeilisearchProductSearchEngine implements ProductSearchEngineInterface
             $query->where('on_sale', true);
         });
 
-        $sortColumn = $this->sortBy[$dto->getSort()] ?? $this->sortBy['latest'];
-        $builder->orderBy($sortColumn, 'desc');
+        $builder->orderBy($dto->getSortColumn(), $dto->getSortDirection());
 
         return $builder->paginate($dto->getPerPage());
     }
