@@ -13,13 +13,18 @@ defineProps<{ product: Product }>()
       :to="`/products/${product.slug}`"
       class="block"
     >
-      <img
-        :src="product.thumbnail"
-        :alt="product.name"
-        loading="lazy"
-        class="aspect-square w-full bg-elevated object-cover"
-      >
-      <div class="space-y-2 p-4">
+      <!-- The `thumb` conversion is 100x100 (Product::registerMediaConversions); shown at its own size, not stretched. -->
+      <div class="flex h-32 items-center justify-center bg-elevated">
+        <img
+          :src="product.thumbnail"
+          :alt="product.name"
+          width="100"
+          height="100"
+          loading="lazy"
+          class="size-25 object-contain"
+        >
+      </div>
+      <div class="space-y-1.5 p-3">
         <div class="flex flex-wrap gap-1">
           <UBadge
             v-if="product.on_sale"
@@ -34,7 +39,7 @@ defineProps<{ product: Product }>()
             variant="subtle"
           />
         </div>
-        <h3 class="font-medium">
+        <h3 class="line-clamp-2 text-sm font-medium">
           {{ product.name }}
         </h3>
         <div class="flex items-center justify-between text-sm">

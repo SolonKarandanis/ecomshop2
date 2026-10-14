@@ -15,7 +15,7 @@ if (!category.value) {
 const filters = computed(() => ({ ...filtersFromQuery(route.query), categories: [category.value!.id] }))
 
 const { data: products } = await useCatalogFetch<Paginated<Product>>('/products', {
-  query: computed(() => queryFromFilters(filters.value)),
+  query: computed(() => ({ ...queryFromFilters(filters.value), per_page: '12' })),
 })
 
 useSeoMeta({ title: () => category.value!.name })

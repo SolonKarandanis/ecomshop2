@@ -17,14 +17,19 @@ async function logout() {
 <template>
   <div>
     <header class="border-b border-default">
-      <UContainer class="flex h-16 items-center justify-between">
-        <nav class="flex items-center gap-6">
-          <NuxtLink
-            to="/"
-            class="text-lg font-bold"
-          >
-            ecomshop
-          </NuxtLink>
+      <!--
+        On phones the nav links wrap onto their own row below the logo and
+        auth buttons; from `sm` up everything sits on one row.
+      -->
+      <UContainer class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3 sm:h-16 sm:flex-nowrap sm:py-0">
+        <NuxtLink
+          to="/"
+          class="text-lg font-bold"
+        >
+          ecomshop
+        </NuxtLink>
+
+        <nav class="order-last flex w-full items-center gap-6 sm:order-none sm:w-auto sm:flex-1">
           <NuxtLink
             to="/products"
             class="text-sm hover:text-primary"

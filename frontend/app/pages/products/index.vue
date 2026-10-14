@@ -9,7 +9,8 @@ const route = useRoute()
 // The URL is the source of truth for filters, so a reload or a shared link
 // SSR-renders exactly the same results.
 const filters = computed(() => filtersFromQuery(route.query))
-const query = computed(() => queryFromFilters(filters.value))
+// 12 fills whole rows at 2, 3 and 4 columns; kept out of the page URL.
+const query = computed(() => ({ ...queryFromFilters(filters.value), per_page: '12' }))
 
 const [{ data: products, error }, { data: categories }] = await Promise.all([
   useCatalogFetch<Paginated<Product>>('/products', { query }),
