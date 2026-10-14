@@ -18,12 +18,28 @@ async function logout() {
   <div>
     <header class="border-b border-default">
       <UContainer class="flex h-16 items-center justify-between">
-        <NuxtLink
-          to="/"
-          class="text-lg font-bold"
-        >
-          ecomshop
-        </NuxtLink>
+        <nav class="flex items-center gap-6">
+          <NuxtLink
+            to="/"
+            class="text-lg font-bold"
+          >
+            ecomshop
+          </NuxtLink>
+          <NuxtLink
+            to="/products"
+            class="text-sm hover:text-primary"
+            active-class="text-primary"
+          >
+            Products
+          </NuxtLink>
+          <NuxtLink
+            to="/categories"
+            class="text-sm hover:text-primary"
+            active-class="text-primary"
+          >
+            Categories
+          </NuxtLink>
+        </nav>
 
         <!--
           Client-only: the server never sees the session (ADR-0002), and the
