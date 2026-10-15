@@ -55,7 +55,7 @@ class CartService
 
     /**
      * The Cart's single owning Supplier, resolved from the same source
-     * assertSingleSupplier() validates against (ADR-0008). Assumes the Cart
+     * assertSingleSupplier() validates against. Assumes the Cart
      * is non-empty and single-supplier, both already guaranteed by the time
      * checkout is reached.
      */
