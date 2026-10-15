@@ -12,7 +12,7 @@ We add a Stripe webhook endpoint, `POST /api/stripe/webhook`, subscribed to `che
 
 The success redirect stays, because the Buyer needs to see a result. It still calls the shared transition, so a Buyer who arrives before the webhook sees `Paid` straight away rather than `Pending`.
 
-The redirect URLs themselves point at the Nuxt frontend, not the API. They are built from a new `app.frontend_url` config value rather than `route('success')`. Before this change, Stripe sent the Buyer's browser straight to the JSON API response.
+The redirect URLs themselves point at the Nuxt frontend, not the API. They are built from the existing `app.frontend_url` config value (`FRONTEND_URL`, already used for password-reset links) rather than `route('success')`. Before this change, Stripe sent the Buyer's browser straight to the JSON API response.
 
 - **`success_url` is `{FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`.** The Nuxt page calls `GET /api/success?session_id=...`, which requires the session id.
 - **`cancel_url` is `{FRONTEND_URL}/cancel?order_id={id}`.** Stripe substitutes `{CHECKOUT_SESSION_ID}` only into `success_url`, so the cancel URL carries the Order id, which exists before the session is created. `GET /api/cancel?order_id=...` returns the Buyer's Order without changing it, plus a `retry_url`: the Stripe session's `url` while the session is still open and the Order is `Pending`, otherwise `null`. A Buyer who cancels can pay the same Order again through the same session. The cart stays cleared, because checkout already moved its items into the Order.
