@@ -87,7 +87,12 @@ it('maps a domain exception to its declared status code and a consistent JSON sh
 
     $this->getJson('/api/__test/order-exception')
         ->assertBadRequest()
-        ->assertExactJson(['message' => OrderException::checkout()->getMessage()]);
+        ->assertExactJson([
+            'status' => false,
+            'message' => 'Something went wrong during checkout!',
+            'data' => null,
+            'error' => 'OrderException',
+        ]);
 });
 
 it('renders a 404 under /api as the generic apiError JSON shape, even without an Accept header', function () {
