@@ -7,6 +7,7 @@ use App\Mail\OrderPlaced;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\StripeOrderDetail;
 use App\Models\User;
 use App\Notifications\OrderNotification;
 use App\Services\CartService;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
 use Spatie\Permission\Models\Role;
+use Stripe\ApiRequestor;
+use Stripe\HttpClient\ClientInterface;
 use Tests\TestCase;
 
 function simulateNextCheckoutRequest(?TestResponse $previous = null): TestCase
@@ -90,6 +93,78 @@ it('checks out a non-empty cart, creates the Order, clears the cart and notifies
 
     Notification::assertSentTo($buyer->fresh(), OrderNotification::class);
     Mail::assertQueued(OrderPlaced::class);
+});
+
+/**
+ * Stands in for Stripe's HTTP client: records each request and answers with a
+ * Checkout Session, so checkout can be tested without network calls.
+ */
+final class FakeStripeHttpClient implements ClientInterface
+{
+    /** @var array<int, array{method: string, url: string, params: array}> */
+    public array $requests = [];
+
+    public function request($method, $absUrl, $headers, $params, $hasFile, $apiMode = 'v1', $maxNetworkRetries = null)
+    {
+        $this->requests[] = ['method' => $method, 'url' => $absUrl, 'params' => $params];
+
+        return [json_encode([
+            'id' => 'cs_test_checkout',
+            'object' => 'checkout.session',
+            'url' => 'https://checkout.stripe.com/c/pay/cs_test_checkout',
+        ]), 200, []];
+    }
+}
+
+function checkoutWithCartItem(string $paymentMethod): array
+{
+    PaymentMethod::firstOrCreate(['resource_key' => $paymentMethod]);
+    [$buyer, $login] = loggedInBuyer();
+    $product = Product::factory()->create(['price' => 25]);
+
+    $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', [
+        'product_id' => $product->id,
+        'quantity' => 1,
+    ])->assertOk();
+
+    $checkout = simulateNextCheckoutRequest($add)
+        ->postJson('/api/checkout', validCheckoutPayload($paymentMethod))
+        ->assertOk();
+
+    return [$buyer, $checkout];
+}
+
+it('sends a Cash on Delivery Buyer to the frontend success page for the new Order', function () {
+    Notification::fake();
+    Mail::fake();
+    config(['app.frontend_url' => 'https://shop.test']);
+
+    [$buyer, $checkout] = checkoutWithCartItem(PaymentMethodEnum::CASH_ON_DELIVERY->value);
+
+    $order = Order::where('user_id', $buyer->id)->sole();
+    expect($checkout->json('redirect_url'))->toBe("https://shop.test/success?order_id={$order->id}");
+});
+
+it('creates the Stripe session with success and cancel URLs on the frontend, and stores its session id', function () {
+    Notification::fake();
+    Mail::fake();
+    config(['app.frontend_url' => 'https://shop.test', 'app.stripe_secret_key' => 'sk_test_fake']);
+    $stripe = new FakeStripeHttpClient;
+    ApiRequestor::setHttpClient($stripe);
+
+    try {
+        [$buyer, $checkout] = checkoutWithCartItem(PaymentMethodEnum::STRIPE->value);
+    } finally {
+        ApiRequestor::setHttpClient(null);
+    }
+
+    $order = Order::where('user_id', $buyer->id)->sole();
+    expect($checkout->json('redirect_url'))->toBe('https://checkout.stripe.com/c/pay/cs_test_checkout');
+    expect($stripe->requests)->toHaveCount(1);
+    expect($stripe->requests[0]['params'])
+        ->success_url->toBe('https://shop.test/success?session_id={CHECKOUT_SESSION_ID}')
+        ->cancel_url->toBe("https://shop.test/cancel?order_id={$order->id}");
+    expect(StripeOrderDetail::where('order_id', $order->id)->value('session_id'))->toBe('cs_test_checkout');
 });
 
 it('rejects checkout with an empty cart', function () {

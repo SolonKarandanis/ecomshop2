@@ -7,7 +7,6 @@ use App\Dtos\CreateOrderDTO;
 use App\Dtos\OrderSearchRequestDTO;
 use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
-use App\Enums\StripePaymentStatusEnum;
 use App\Exceptions\EmptyCartException;
 use App\Exceptions\OrderCountException;
 use App\Exceptions\OrderException;
@@ -30,6 +29,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Exception;
+use Stripe\Checkout\Session;
+use Stripe\Event;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
@@ -283,43 +284,178 @@ class OrderService
     }
 
     /**
-     * @throws OrderException|Throwable
+     * The Buyer's own Order, or a 404. Used where a Buyer names an Order in the
+     * URL (Stripe redirects), so another Buyer's id doesn't reveal it exists.
      */
-    public function successOrFailStripeOrder(string $sessionId, Order $latestOrder): Order
+    public function getBuyersOrder(int $orderId, User $buyer): Order
     {
-        // Stripe/the Buyer's browser can hit the success endpoint more than once for the
-        // same session (redirect retries, page refresh); the Order's own PENDING payment
-        // status is the idempotency key so the transition and its Notifications fire once.
-        if ($latestOrder->payment_status !== OrderPaymentStatusEnum::PENDING->value) {
-            return $latestOrder;
+        $order = $this->orderRepository->getUsersOrderById($orderId, $buyer->id);
+        abort_if($order === null, 404);
+
+        return $order;
+    }
+
+    /**
+     * The success redirect: finalizes the Order behind $sessionId if the webhook
+     * hasn't yet, so a Buyer who arrives first sees Paid straight away (ADR-0004).
+     *
+     * @throws OrderException|PaymentException
+     */
+    public function confirmStripeRedirect(string $sessionId, User $buyer): Order
+    {
+        $order = $this->orderRepository->getOrderByStripeSessionId($sessionId);
+        abort_if($order === null || $order->user_id !== $buyer->id, 404);
+
+        if ($order->payment_status !== OrderPaymentStatusEnum::PENDING->value) {
+            return $order;
+        }
+
+        return $this->completeStripePayment($order, $this->stripeService->retrieveSession($sessionId));
+    }
+
+    /**
+     * The Stripe session's URL while the Buyer can still pay the Order through it,
+     * otherwise null. Lets the cancel page offer a retry on the same session.
+     */
+    public function getStripeRetryUrl(Order $order): ?string
+    {
+        $sessionId = $order->stripeOrderDetail?->session_id;
+
+        if ($sessionId === null || $order->payment_status !== OrderPaymentStatusEnum::PENDING->value) {
+            return null;
         }
 
         try {
-            DB::beginTransaction();
-            $sessionInfo = $this->stripeService->retrieveSession($sessionId);
-            $isPaid = $sessionInfo->payment_status == StripePaymentStatusEnum::PAID->value;
-            if ($isPaid) {
-                $latestOrder->payment_status = OrderPaymentStatusEnum::PAID->value;
-                $latestOrder->order_status = OrderStatusEnum::Paid->value;
-            } else {
-                $latestOrder->payment_status = OrderPaymentStatusEnum::FAILED->value;
-            }
-            $this->orderRepository->updateOrder($latestOrder);
-            DB::commit();
-            if ($isPaid) {
-                $this->notificationService->orderPaymentConfirmed($latestOrder);
-                if (config('features.suppliers_enabled')) {
-                    $this->notificationService->orderReadyForSupplier($latestOrder);
-                }
-            } else {
-                $this->notificationService->orderPaymentFailed($latestOrder);
-            }
+            $session = $this->stripeService->retrieveSession($sessionId);
+        } catch (PaymentException) {
+            return null;
+        }
 
-            return $latestOrder;
+        return $session->status === Session::STATUS_OPEN ? $session->url : null;
+    }
+
+    /**
+     * Applies a verified Stripe webhook event to the Order behind its Checkout Session.
+     * Events for unknown sessions, and event types we don't handle, are ignored.
+     *
+     * @throws OrderException
+     */
+    public function handleStripeEvent(Event $event): void
+    {
+        $session = $event->data->object;
+
+        if (! $session instanceof Session) {
+            return;
+        }
+
+        $order = $this->orderRepository->getOrderByStripeSessionId($session->id);
+
+        if ($order === null) {
+            return;
+        }
+
+        match ($event->type) {
+            Event::CHECKOUT_SESSION_COMPLETED,
+            Event::CHECKOUT_SESSION_ASYNC_PAYMENT_SUCCEEDED => $this->completeStripePayment($order, $session),
+            Event::CHECKOUT_SESSION_ASYNC_PAYMENT_FAILED => $this->failStripePayment($order),
+            Event::CHECKOUT_SESSION_EXPIRED => $this->expireStripePayment($order),
+            default => null,
+        };
+    }
+
+    /**
+     * Shared by the success redirect and the webhook. Marks the Order Paid if the
+     * session is paid. An unpaid completed session is an async payment still in
+     * progress: the Order stays Pending until async_payment_succeeded/failed arrives.
+     *
+     * @throws OrderException
+     */
+    public function completeStripePayment(Order $order, Session $session): Order
+    {
+        if ($session->payment_status !== Session::PAYMENT_STATUS_PAID) {
+            return $order;
+        }
+
+        return $this->transitionPendingStripeOrder(
+            $order,
+            function (Order $order) {
+                $order->payment_status = OrderPaymentStatusEnum::PAID->value;
+                $order->order_status = OrderStatusEnum::Paid->value;
+            },
+            function (Order $order) {
+                $this->notificationService->orderPaymentConfirmed($order);
+                if (config('features.suppliers_enabled')) {
+                    $this->notificationService->orderReadyForSupplier($order);
+                }
+            },
+        );
+    }
+
+    /**
+     * @throws OrderException
+     */
+    public function failStripePayment(Order $order): Order
+    {
+        return $this->transitionPendingStripeOrder(
+            $order,
+            function (Order $order) {
+                $order->payment_status = OrderPaymentStatusEnum::FAILED->value;
+            },
+            fn (Order $order) => $this->notificationService->orderPaymentFailed($order),
+        );
+    }
+
+    /**
+     * The Buyer never paid and the Checkout Session expired. Cancelling the Order
+     * sends the Buyer the order-cancelled Notification through OrderObserver.
+     *
+     * @throws OrderException
+     */
+    public function expireStripePayment(Order $order): Order
+    {
+        return $this->transitionPendingStripeOrder($order, function (Order $order) {
+            $order->payment_status = OrderPaymentStatusEnum::FAILED->value;
+            $order->order_status = OrderStatusEnum::Cancelled->value;
+        });
+    }
+
+    /**
+     * The webhook and the success redirect routinely arrive within milliseconds of
+     * each other. Locking the row before checking for PENDING means only one of them
+     * applies the change, so its Notifications are sent exactly once.
+     *
+     * @param  callable(Order): void  $apply
+     * @param  (callable(Order): void)|null  $afterCommit
+     *
+     * @throws OrderException
+     */
+    private function transitionPendingStripeOrder(Order $order, callable $apply, ?callable $afterCommit = null): Order
+    {
+        $transitioned = false;
+
+        try {
+            $order = DB::transaction(function () use ($order, $apply, &$transitioned) {
+                $locked = $this->orderRepository->lockOrderById($order->id);
+
+                if ($locked->payment_status !== OrderPaymentStatusEnum::PENDING->value) {
+                    return $locked;
+                }
+
+                $apply($locked);
+                $this->orderRepository->updateOrder($locked);
+                $transitioned = true;
+
+                return $locked;
+            });
         } catch (Throwable $exception) {
             Log::error($exception);
-            DB::rollBack();
             throw OrderException::stripeProcessing();
         }
+
+        if ($transitioned && $afterCommit !== null) {
+            $afterCommit($order);
+        }
+
+        return $order;
     }
 }
