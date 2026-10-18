@@ -142,12 +142,12 @@ it('fails and cancels a Pending Order on checkout.session.expired, notifying the
 });
 
 it('ignores checkout.session.expired for an Order that is already Paid', function () {
-    Notification::fake();
     $order = webhookOrder();
     $order->update([
         'payment_status' => OrderPaymentStatusEnum::PAID->value,
         'order_status' => OrderStatusEnum::Paid->value,
     ]);
+    Notification::fake();
 
     postStripeWebhook(stripeEventPayload('checkout.session.expired', ['status' => 'expired']))->assertOk();
 

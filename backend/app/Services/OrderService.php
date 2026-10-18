@@ -376,19 +376,11 @@ class OrderService
             return $order;
         }
 
-        return $this->transitionPendingStripeOrder(
-            $order,
-            function (Order $order) {
-                $order->payment_status = OrderPaymentStatusEnum::PAID->value;
-                $order->order_status = OrderStatusEnum::Paid->value;
-            },
-            function (Order $order) {
-                $this->notificationService->orderPaymentConfirmed($order);
-                if (config('features.suppliers_enabled')) {
-                    $this->notificationService->orderReadyForSupplier($order);
-                }
-            },
-        );
+        // OrderObserver sends the payment-confirmed and ready-for-supplier Notifications.
+        return $this->transitionPendingStripeOrder($order, function (Order $order) {
+            $order->payment_status = OrderPaymentStatusEnum::PAID->value;
+            $order->order_status = OrderStatusEnum::Paid->value;
+        });
     }
 
     /**

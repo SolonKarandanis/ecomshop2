@@ -72,11 +72,11 @@ it('transitions the Order to Paid and notifies the Buyer on a paid Stripe sessio
         fn ($notification, $channels, $notifiable) => $notification->toDatabase($notifiable)['event_type']
             === NotificationEventTypeEnum::ORDER_PAYMENT_CONFIRMED->value
     );
-    Notification::assertNotSentTo($order->fresh()->supplier, OrderNotification::class);
 });
 
-it('notifies the Supplier only when suppliers are enabled', function () {
-    config(['features.suppliers_enabled' => true]);
+// With the flag off the Order's Supplier is the admin who owns its products (#45).
+it("notifies the Order's Supplier that it is ready to ship, whether or not suppliers are enabled", function (bool $suppliersEnabled) {
+    config(['features.suppliers_enabled' => $suppliersEnabled]);
     Notification::fake();
     fakeStripeSession(['payment_status' => 'paid']);
     [$buyer, $order] = buyerWithPendingOrder();
@@ -89,7 +89,7 @@ it('notifies the Supplier only when suppliers are enabled', function () {
         fn ($notification, $channels, $notifiable) => $notification->toDatabase($notifiable)['event_type']
             === NotificationEventTypeEnum::ORDER_READY_FOR_SUPPLIER->value
     );
-});
+})->with([true, false]);
 
 it('leaves the Order Pending on an unpaid session, since an async payment may still succeed', function () {
     config(['features.suppliers_enabled' => true]);

@@ -6,6 +6,7 @@ use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Enums\PaymentMethodEnum;
 use App\Enums\ShippingMethodEnum;
+use App\Models\Order;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -37,8 +38,11 @@ class OrdersTable
                     ->formatStateUsing(fn ($state) => OrderPaymentStatusEnum::labels()[$state] ?? $state)
                     ->searchable()
                     ->sortable(),
+                // Filament re-checks disabled() on the server before saving, so a
+                // terminal Order can't be changed from here even by a forged request.
                 SelectColumn::make('order_status')
                     ->options(OrderStatusEnum::labels())
+                    ->disabled(fn (Order $record) => OrderStatusEnum::from($record->order_status)->isTerminal())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('currency')
