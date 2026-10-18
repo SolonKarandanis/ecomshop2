@@ -22,7 +22,7 @@ readonly class StripePaymentHandler implements PaymentHandlerInterface
      */
     public function process(Order $order, array $lineItems): string {
         Log::debug('OrderService paymentMethod: Stripe');
-        $session = $this->stripeService->createSession($lineItems);
+        $session = $this->stripeService->createSession($order, $lineItems);
         Log::debug('OrderService $sessionCheckout:',[$session->id]);
         $this->stripeOrderDetailRepository->createStripeOrderDetail($order->id, $session->id);
         return $session->url;

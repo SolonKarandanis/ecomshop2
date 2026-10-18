@@ -23,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        // Stripe can't send a CSRF token; the webhook checks Stripe's signature instead.
+        $middleware->preventRequestForgery(except: ['api/stripe/webhook']);
         $middleware->api(prepend: [AlwaysAcceptJsonMiddleware::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

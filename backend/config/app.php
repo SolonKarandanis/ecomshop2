@@ -60,6 +60,10 @@ return [
 
     'currency' => env('APP_CURRENCY', 'eur'),
 
+    // Stripe API key, and the signing secret for the Stripe webhook (ADR-0004).
+    'stripe_secret_key' => env('STRIPE_SECRET_KEY'),
+    'stripe_webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

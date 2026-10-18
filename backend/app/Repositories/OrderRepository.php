@@ -65,6 +65,29 @@ class OrderRepository
             ->firstOrFail();
     }
 
+    public function getUsersOrderById(int $orderId, int $userId): ?Order
+    {
+        return $this->modelQuery()
+            ->where('id', $orderId)
+            ->where('user_id', $userId)
+            ->first();
+    }
+
+    public function getOrderByStripeSessionId(string $sessionId): ?Order
+    {
+        return $this->modelQuery()
+            ->whereHas('stripeOrderDetail', fn (Builder $query) => $query->where('session_id', $sessionId))
+            ->first();
+    }
+
+    /**
+     * Must be called inside a transaction: the row stays locked until it commits.
+     */
+    public function lockOrderById(int $orderId): Order
+    {
+        return $this->modelQuery()->lockForUpdate()->findOrFail($orderId);
+    }
+
     public function getLatestOrder(int $userId): Order
     {
         return $this->modelQuery()
