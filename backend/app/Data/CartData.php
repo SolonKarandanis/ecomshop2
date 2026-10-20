@@ -11,6 +11,8 @@ class CartData extends BaseData
         public float $total_price,
         /** @var DataCollection<int, CartItemData> */
         public DataCollection $items,
+        // One-time message for the Buyer, e.g. that their saved cart was replaced at login.
+        public ?string $notice = null,
     ) {}
 
     public static function fromModel(Cart $cart): self

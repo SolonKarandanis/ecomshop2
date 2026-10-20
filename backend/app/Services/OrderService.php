@@ -7,6 +7,7 @@ use App\Dtos\CreateOrderDTO;
 use App\Dtos\OrderSearchRequestDTO;
 use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
+use App\Exceptions\CartException;
 use App\Exceptions\EmptyCartException;
 use App\Exceptions\OrderCountException;
 use App\Exceptions\OrderException;
@@ -222,7 +223,7 @@ class OrderService
             $this->notificationService->orderCreated($order);
 
             return $redirect_url;
-        } catch (EmptyCartException|PaymentException $exception) {
+        } catch (CartException|EmptyCartException|PaymentException $exception) {
             DB::rollBack();
             throw $exception;
         } catch (Throwable $exception) {

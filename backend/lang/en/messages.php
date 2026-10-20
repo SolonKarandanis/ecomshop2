@@ -25,6 +25,9 @@ return [
         'empty_cart' => 'Cart is empty',
         'supplier_mismatch' => 'Your cart can only contain products from one supplier at a time. Clear your cart to add this product.',
     ],
+    'cart_notices' => [
+        'saved_cart_replaced' => 'Your previously saved cart was from a different supplier and has been replaced.',
+    ],
     'order_exceptions' => [
         'create_order' => 'Failed to create new order',
         'checkout' => 'Something went wrong during checkout!',

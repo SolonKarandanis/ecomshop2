@@ -2,8 +2,11 @@
 
 use App\Enums\PaymentMethodEnum;
 use App\Enums\RolesEnum;
+use App\Exceptions\CartException;
 use App\Exceptions\EmptyCartException;
 use App\Mail\OrderPlaced;
+use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Product;
@@ -177,6 +180,32 @@ it('rejects checkout with an empty cart', function () {
 
     expect($checkout->json('message'))->toBe(EmptyCartException::emptyCart()->getMessage());
     expect(Order::count())->toBe(0);
+});
+
+it('rejects checkout of a cart holding more than one Supplier', function () {
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
+    [$buyer, $login] = loggedInBuyer();
+
+    // Adding to the cart can't produce this; write it directly to hit the safety net.
+    $cart = Cart::create(['user_id' => $buyer->id, 'total_price' => 0]);
+    foreach ([User::factory()->create(), User::factory()->create()] as $supplier) {
+        $product = Product::factory()->create(['supplier_id' => $supplier->id]);
+        CartItem::create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price' => $product->price,
+            'total_price' => $product->price,
+        ]);
+    }
+
+    $checkout = simulateNextCheckoutRequest($login)
+        ->postJson('/api/checkout', validCheckoutPayload())
+        ->assertBadRequest();
+
+    expect($checkout->json('message'))->toBe(CartException::supplierMismatch()->getMessage());
+    expect(Order::count())->toBe(0);
+    expect(CartItem::where('cart_id', $cart->id)->count())->toBe(2);
 });
 
 it('rejects checkout for a guest', function () {

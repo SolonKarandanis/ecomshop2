@@ -3,19 +3,22 @@ import { registerEndpoint } from '@nuxt/test-utils/runtime'
 import { createError, readBody } from 'h3'
 import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
+import { useCartStore } from '~/stores/cart'
 
 const buyer = {
   id: 7,
   name: 'Ada Buyer',
   email: 'ada@example.com',
-  status: 'active',
-  roles: ['ROLE_BUYER'],
+  status: 'user.status.active',
+  roles: ['role.buyer'],
   email_verified_at: null,
   created_at: null,
 }
 
 let session: typeof buyer | null
 let userRequests: number
+// The cart the API serves: the Buyer's saved cart while logged in, else the (empty) guest cart.
+const savedCartItem = { id: '1', product_id: 3, product_name: 'Mug', product_slug: 'mug', quantity: 2, unit_price: 5, total_price: 10, attributes: {} }
 
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -51,6 +54,9 @@ beforeEach(() => {
       return { data: session }
     },
   })
+  registerEndpoint('/api/cart', () => ({
+    data: session ? { total_price: 10, items: [savedCartItem], notice: null } : { total_price: 0, items: [], notice: null },
+  }))
   registerEndpoint('/api/logout', {
     method: 'POST',
     handler: () => {
@@ -116,5 +122,33 @@ describe('auth store', () => {
 
     expect(auth.user).toBeNull()
     expect(auth.resolved).toBe(true)
+  })
+
+  it('knows whether the user is a Buyer', async () => {
+    const auth = useAuthStore()
+    expect(auth.isBuyer).toBe(false)
+
+    await auth.login({ email: buyer.email, password: 'secret' })
+    expect(auth.isBuyer).toBe(true)
+
+    auth.user = { ...buyer, roles: ['role.supplier'] }
+    expect(auth.isBuyer).toBe(false)
+  })
+
+  it('refetches the cart after logging in, since the API has just moved the guest cart into the account', async () => {
+    const auth = useAuthStore()
+
+    await auth.login({ email: buyer.email, password: 'secret' })
+
+    expect(useCartStore().itemCount).toBe(2)
+  })
+
+  it('empties the cart on logout', async () => {
+    const auth = useAuthStore()
+    await auth.login({ email: buyer.email, password: 'secret' })
+
+    await auth.logout()
+
+    expect(useCartStore().itemCount).toBe(0)
   })
 })

@@ -252,3 +252,85 @@ it('does not leave a stale cached empty cart after transferring an empty guest c
 
     expect($cartService->getCart()->cartItems)->toHaveCount(1);
 });
+
+/**
+ * Logs in a Buyer who already has a saved cart holding $savedProduct, after
+ * building a guest cart holding $guestProduct. Returns the login response.
+ */
+function loginWithGuestAndSavedCarts(User $buyer, Product $savedProduct, Product $guestProduct): TestResponse
+{
+    $cart = Cart::create(['user_id' => $buyer->id, 'total_price' => 0]);
+    CartItem::create([
+        'cart_id' => $cart->id,
+        'product_id' => $savedProduct->id,
+        'quantity' => 1,
+        'unit_price' => $savedProduct->price,
+        'total_price' => $savedProduct->price,
+    ]);
+
+    $add = simulateNextRequest()->postJson('/api/cart/items', ['product_id' => $guestProduct->id])->assertOk();
+
+    return simulateNextRequest($add)
+        ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
+        ->assertOk();
+}
+
+it('merges the guest cart into the saved cart at login when both are from the same Supplier', function () {
+    seedBuyerRole();
+    $buyer = User::factory()->create(['password' => Hash::make('password')]);
+    $buyer->assignRole(RolesEnum::ROLE_BUYER->value);
+    $supplier = User::factory()->create();
+    $savedProduct = Product::factory()->create(['supplier_id' => $supplier->id]);
+    $guestProduct = Product::factory()->create(['supplier_id' => $supplier->id]);
+
+    $login = loginWithGuestAndSavedCarts($buyer, $savedProduct, $guestProduct);
+
+    $show = simulateNextRequest($login)->getJson('/api/cart')->assertOk();
+    expect(collect($show->json('data.items'))->pluck('product_id')->sort()->values()->all())
+        ->toBe(collect([$savedProduct->id, $guestProduct->id])->sort()->values()->all());
+    expect($show->json('data.notice'))->toBeNull();
+});
+
+it('replaces the saved cart with the guest cart at login when they are from different Suppliers, with a one-time notice', function () {
+    seedBuyerRole();
+    $buyer = User::factory()->create(['password' => Hash::make('password')]);
+    $buyer->assignRole(RolesEnum::ROLE_BUYER->value);
+    $savedProduct = Product::factory()->create(['supplier_id' => User::factory()->create()->id]);
+    $guestProduct = Product::factory()->create(['supplier_id' => User::factory()->create()->id]);
+
+    $login = loginWithGuestAndSavedCarts($buyer, $savedProduct, $guestProduct);
+
+    $this->assertDatabaseMissing('cart_items', ['product_id' => $savedProduct->id]);
+
+    $show = simulateNextRequest($login)->getJson('/api/cart')->assertOk();
+    expect($show->json('data.items'))->toHaveCount(1);
+    expect($show->json('data.items.0.product_id'))->toBe($guestProduct->id);
+    expect($show->json('data.notice'))->toBe(__('messages.cart_notices.saved_cart_replaced'));
+
+    $again = simulateNextRequest($show)->getJson('/api/cart')->assertOk();
+    expect($again->json('data.notice'))->toBeNull();
+});
+
+it('keeps the saved cart at login when the guest cart is empty', function () {
+    seedBuyerRole();
+    $buyer = User::factory()->create(['password' => Hash::make('password')]);
+    $buyer->assignRole(RolesEnum::ROLE_BUYER->value);
+    $product = Product::factory()->create();
+    $cart = Cart::create(['user_id' => $buyer->id, 'total_price' => 0]);
+    CartItem::create([
+        'cart_id' => $cart->id,
+        'product_id' => $product->id,
+        'quantity' => 2,
+        'unit_price' => $product->price,
+        'total_price' => $product->price * 2,
+    ]);
+
+    $login = simulateNextRequest()
+        ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
+        ->assertOk();
+
+    $show = simulateNextRequest($login)->getJson('/api/cart')->assertOk();
+    expect($show->json('data.items'))->toHaveCount(1);
+    expect($show->json('data.items.0.quantity'))->toBe(2);
+    expect($show->json('data.notice'))->toBeNull();
+});

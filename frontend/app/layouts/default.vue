@@ -56,6 +56,8 @@ async function logout() {
             v-if="auth.resolved"
             class="flex items-center gap-2"
           >
+            <!-- Suppliers and admins can't add to a cart (`buyer-action` gate), so they get no cart. -->
+            <CartIcon v-if="!auth.user || auth.isBuyer" />
             <template v-if="auth.user">
               <span class="text-sm text-muted">{{ auth.user.name }}</span>
               <UButton

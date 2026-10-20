@@ -18,7 +18,10 @@ class CartController extends Controller
 
     public function index(): CartData
     {
-        return CartData::from($this->cartService->getCart())->wrap('data');
+        $cart = CartData::from($this->cartService->getCart());
+        $cart->notice = $this->cartService->pullSavedCartReplacedNotice();
+
+        return $cart->wrap('data');
     }
 
     public function store(AddCartItemRequest $request): CartData
