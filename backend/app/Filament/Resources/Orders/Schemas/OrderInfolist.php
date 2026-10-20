@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Orders\Schemas;
 use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Enums\PaymentMethodEnum;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
@@ -44,6 +45,23 @@ class OrderInfolist
                 TextEntry::make('updated_at')
                     ->dateTime()
                     ->placeholder('-'),
+                RepeatableEntry::make('statusHistory')
+                    ->label('Status history')
+                    ->schema([
+                        TextEntry::make('order_status')
+                            ->formatStateUsing(fn ($state) => OrderStatusEnum::labels()[$state] ?? $state),
+                        TextEntry::make('payment_status')
+                            ->formatStateUsing(fn ($state) => OrderPaymentStatusEnum::labels()[$state] ?? $state)
+                            ->placeholder('-'),
+                        TextEntry::make('changedBy.name')
+                            ->label('Changed by')
+                            ->placeholder('System'),
+                        TextEntry::make('created_at')
+                            ->label('When')
+                            ->dateTime(),
+                    ])
+                    ->columns(4)
+                    ->columnSpanFull(),
             ]);
     }
 }

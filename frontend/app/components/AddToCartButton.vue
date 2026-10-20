@@ -47,7 +47,7 @@ async function add() {
         aria-label="Quantity"
         class="w-28"
       />
-      <UButton
+      <UButton class="cursor-pointer"
         label="Add to cart"
         icon="i-lucide-shopping-cart"
         :loading="adding"

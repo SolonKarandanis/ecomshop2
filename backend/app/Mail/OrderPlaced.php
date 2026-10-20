@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Order;
+use App\Support\OrderLinks;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -43,7 +44,7 @@ class OrderPlaced extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'mail.orders.placed',
             with: [
-                'url' => route('orders.show', $this->order->id),
+                'url' => OrderLinks::buyer($this->order->id),
             ]
         );
     }

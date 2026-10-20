@@ -95,6 +95,7 @@ async function onSubmit() {
       <UButton
         type="submit"
         label="Log in"
+        class="cursor-pointer"
         block
       />
     </UForm>

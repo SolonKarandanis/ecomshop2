@@ -102,6 +102,7 @@ async function onSubmit() {
       <UButton
         type="submit"
         label="Register"
+        class="cursor-pointer"
         block
       />
     </UForm>

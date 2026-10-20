@@ -54,6 +54,7 @@ class OrderRepository
     {
         return $this->modelQuery()
             ->with([
+                'statusHistory',
                 'address',
                 'paymentMethod',
                 'items',

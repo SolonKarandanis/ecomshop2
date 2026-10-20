@@ -60,7 +60,7 @@ async function logout() {
             <CartIcon v-if="!auth.user || auth.isBuyer" />
             <template v-if="auth.user">
               <span class="text-sm text-muted">{{ auth.user.name }}</span>
-              <UButton
+              <UButton class="cursor-pointer"
                 label="Log out"
                 color="neutral"
                 variant="ghost"
