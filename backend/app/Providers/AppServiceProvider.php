@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Order;
 use App\Models\User;
 use App\Observers\OrderObserver;
+use App\Observers\OrderStatusHistoryObserver;
 use App\Search\ProductSearchEngineFactory;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\DB;
@@ -47,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
 
     private function registerObservers(): void
     {
-        Order::observe(OrderObserver::class);
+        Order::observe([OrderObserver::class, OrderStatusHistoryObserver::class]);
     }
 
     private function registerGates(): void

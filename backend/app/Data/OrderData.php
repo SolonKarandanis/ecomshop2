@@ -24,6 +24,9 @@ class OrderData extends BaseData
         public Lazy|AddressData|null $address,
         /** @var Lazy|DataCollection<int, OrderItemData> */
         public Lazy|DataCollection $items,
+        // Only on single-Order responses, which load it; list endpoints don't.
+        /** @var Lazy|DataCollection<int, OrderStatusHistoryData> */
+        public Lazy|DataCollection $status_history,
     ) {}
 
     public static function fromModel(Order $order): self
@@ -49,6 +52,7 @@ class OrderData extends BaseData
             payment_method: Lazy::whenLoaded('paymentMethod', $order, fn () => $order->paymentMethod->resource_key),
             address: Lazy::whenLoaded('address', $order, fn () => $order->address ? AddressData::fromModel($order->address) : null),
             items: Lazy::whenLoaded('items', $order, fn () => OrderItemData::collect($order->items, DataCollection::class)),
+            status_history: Lazy::whenLoaded('statusHistory', $order, fn () => OrderStatusHistoryData::collect($order->statusHistory, DataCollection::class)),
         );
     }
 }

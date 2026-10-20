@@ -48,6 +48,6 @@ class SupplierOrderController extends Controller
         $order = $this->orderService->getOrderForSupplierAction($orderId, $request->user());
         $order = $this->orderService->transitionOrderStatusBySupplier($order, $request->user(), $toStatus);
 
-        return OrderData::from($order)->wrap('data');
+        return OrderData::from($order->load('statusHistory'))->wrap('data');
     }
 }
