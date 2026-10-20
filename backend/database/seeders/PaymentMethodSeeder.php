@@ -12,14 +12,17 @@ class PaymentMethodSeeder extends Seeder
      */
     public function run(): void
     {
+        // is_active only applies when the row is created, so re-seeding on every
+        // deploy (ADR-0001) never overrides a value an admin changed in Filament.
+        // PayPal starts off: it has no payment handler yet.
         $methods = [
-            ['resource_key' => 'payment.method.cod'],
-            ['resource_key' => 'payment.method.stripe'],
-            ['resource_key' => 'payment.method.paypal'],
+            'payment.method.cod' => true,
+            'payment.method.stripe' => true,
+            'payment.method.paypal' => false,
         ];
 
-        foreach ($methods as $method) {
-            PaymentMethod::firstOrCreate($method);
+        foreach ($methods as $resourceKey => $isActive) {
+            PaymentMethod::firstOrCreate(['resource_key' => $resourceKey], ['is_active' => $isActive]);
         }
     }
 }

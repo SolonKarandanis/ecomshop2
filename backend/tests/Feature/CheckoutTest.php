@@ -182,6 +182,26 @@ it('rejects checkout with an empty cart', function () {
     expect(Order::count())->toBe(0);
 });
 
+it('rejects checkout with a payment method that does not exist or is switched off', function (string $paymentMethod, bool $exists) {
+    if ($exists) {
+        PaymentMethod::firstOrCreate(['resource_key' => $paymentMethod], ['is_active' => false]);
+    }
+    [$buyer, $login] = loggedInBuyer();
+    $product = Product::factory()->create();
+
+    $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
+
+    simulateNextCheckoutRequest($add)
+        ->postJson('/api/checkout', validCheckoutPayload($paymentMethod))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('paymentMethod');
+
+    expect(Order::count())->toBe(0);
+})->with([
+    'unknown' => ['payment.method.bitcoin', false],
+    'switched off' => [PaymentMethodEnum::PAYPAL->value, true],
+]);
+
 it('rejects checkout of a cart holding more than one Supplier', function () {
     PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
     [$buyer, $login] = loggedInBuyer();
@@ -219,6 +239,8 @@ it('rejects checkout for a guest', function () {
 });
 
 it('rejects checkout for an authenticated Supplier', function () {
+    // A valid payload, so validation passes and the request reaches the buyer-action gate.
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
     Role::firstOrCreate(['name' => RolesEnum::ROLE_SUPPLIER->value]);
     $supplier = User::factory()->create(['password' => Hash::make('password')]);
     $supplier->assignRole(RolesEnum::ROLE_SUPPLIER->value);
