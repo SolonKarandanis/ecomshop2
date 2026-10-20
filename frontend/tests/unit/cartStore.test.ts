@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { registerEndpoint } from '@nuxt/test-utils/runtime'
-import { createError, readBody } from 'h3'
+import { readBody, setResponseStatus } from 'h3'
 import { createPinia, setActivePinia } from 'pinia'
 import { useCartStore } from '~/stores/cart'
 import type { Cart, CartItem } from '~/types/cart'
@@ -52,7 +52,8 @@ beforeEach(() => {
       const { product_id, quantity } = await readBody(event)
       const supplier = products[product_id]![0]
       if (items.some(i => products[i.product_id]![0] !== supplier)) {
-        throw createError({ statusCode: 400, message: SUPPLIER_MISMATCH })
+        setResponseStatus(event, 400)
+        return { message: SUPPLIER_MISMATCH }
       }
       items = [...items, item(product_id, quantity)]
       return cart()
@@ -101,7 +102,9 @@ describe('cart store', () => {
     await store.addItem(1)
 
     // Rejected, not swallowed, so the caller can show the API's message.
-    await expect(store.addItem(3)).rejects.toMatchObject({ statusCode: 400 })
+    const error = await store.addItem(3).catch((e: unknown) => e)
+    expect(apiStatus(error)).toBe(400)
+    expect(apiErrorMessage(error)).toBe(SUPPLIER_MISMATCH)
     expect(store.items.map(i => i.product_id)).toEqual([1])
   })
 

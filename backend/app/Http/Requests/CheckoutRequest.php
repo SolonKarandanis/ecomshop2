@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CheckoutRequest extends FormRequest
 {
@@ -12,7 +13,7 @@ class CheckoutRequest extends FormRequest
     }
 
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
@@ -24,7 +25,8 @@ class CheckoutRequest extends FormRequest
             'city' => ['required', 'string', 'min:2', 'max:200'],
             'country' => ['required', 'string', 'min:2', 'max:200'],
             'zipCode' => ['required', 'string', 'min:2', 'max:200'],
-            'paymentMethod' => ['required', 'string'],
+            // Only methods an admin has left on, so a client can't pick a disabled one (e.g. PayPal).
+            'paymentMethod' => ['required', 'string', Rule::exists('payment_methods', 'resource_key')->where('is_active', true)],
         ];
     }
 }
