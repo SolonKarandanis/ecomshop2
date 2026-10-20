@@ -53,5 +53,12 @@ defineProps<{ product: Product }>()
         </div>
       </div>
     </NuxtLink>
+    <!-- Outside the link, so clicking it doesn't also open the product. -->
+    <div class="px-3 pb-3 empty:hidden">
+      <AddToCartButton
+        :product-id="product.id"
+        :in-stock="product.in_stock"
+      />
+    </div>
   </UCard>
 </template>

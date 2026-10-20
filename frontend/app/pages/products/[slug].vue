@@ -58,6 +58,12 @@ useSeoMeta({
           />
         </div>
 
+        <AddToCartButton
+          :product-id="product.id"
+          :in-stock="product.in_stock"
+          with-quantity
+        />
+
         <p
           v-if="product.average_rating !== null"
           class="text-sm text-muted"

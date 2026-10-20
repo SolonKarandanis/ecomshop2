@@ -28,6 +28,12 @@ class CartService
 
     protected const COOKIE_LIFETIME = 60 * 24 * 365; // 1 year
 
+    /**
+     * One-time session flag set when a guest cart replaced a saved cart from a
+     * different Supplier at login; read (and cleared) by pullSavedCartReplacedNotice().
+     */
+    protected const SESSION_SAVED_CART_REPLACED = 'cart_saved_items_replaced';
+
     private ?Cart $cachedCart = null;
 
     public function __construct(
@@ -55,13 +61,32 @@ class CartService
 
     /**
      * The Cart's single owning Supplier, resolved from the same source
-     * assertSingleSupplier() validates against. Assumes the Cart
-     * is non-empty and single-supplier, both already guaranteed by the time
-     * checkout is reached.
+     * assertSingleSupplier() validates against. Assumes the Cart is non-empty.
+     * Adding to the cart and the guest-cart transfer at login both keep a Cart
+     * to one Supplier, so the mismatch here is a safety net for checkout.
+     *
+     * @throws CartException
      */
     public function getCartSupplierId(Cart $cart): int
     {
-        return collect($this->cartRepository->getDistinctSupplierIds($cart->id))->filter()->first();
+        $supplierIds = collect($this->cartRepository->getDistinctSupplierIds($cart->id))->filter()->unique();
+
+        if ($supplierIds->count() > 1) {
+            throw CartException::supplierMismatch();
+        }
+
+        return $supplierIds->first();
+    }
+
+    /**
+     * The translated notice to show once after a guest cart replaced the saved
+     * cart at login, or null. Clears the flag, so the notice appears only once.
+     */
+    public function pullSavedCartReplacedNotice(): ?string
+    {
+        return session()->pull(self::SESSION_SAVED_CART_REPLACED, false)
+            ? __('messages.cart_notices.saved_cart_replaced')
+            : null;
     }
 
     protected function getCartFromCookies(): Cart
@@ -558,6 +583,13 @@ class CartService
         }
         $dbCart = $this->getCartFromDatabase();
         $dbCartItems = $dbCart->cartItems;
+        if ($this->cartsHaveDifferentSuppliers($cookieCart, $dbCart)) {
+            // A Cart holds one Supplier's products, so the two can't be merged.
+            // The guest cart is what the Buyer just built, so it wins.
+            $this->cartRepository->clearCart($dbCart->id);
+            $dbCartItems = collect();
+            session()->put(self::SESSION_SAVED_CART_REPLACED, true);
+        }
         $itemsToCreate = [];
         $itemsToUpdate = [];
         $idsToUpdate = [];
@@ -593,6 +625,17 @@ class CartService
         $dbCart = $this->getCartFromDatabase();
         $this->clearCartFromCookies();
         $this->recalculateCartTotalPrice($dbCart);
+    }
+
+    protected function cartsHaveDifferentSuppliers(Cart $cookieCart, Cart $dbCart): bool
+    {
+        if ($dbCart->cartItems->isEmpty()) {
+            return false;
+        }
+        $guestSupplierIds = $cookieCart->cartItems->map(fn (CartItem $item) => $item->product?->supplier_id);
+        $savedSupplierIds = $this->cartRepository->getDistinctSupplierIds($dbCart->id);
+
+        return $guestSupplierIds->merge($savedSupplierIds)->filter()->unique()->count() > 1;
     }
 
     protected function getFromCookies(string $cookieName): array|string|null

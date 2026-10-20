@@ -83,6 +83,10 @@ export async function fakeApi(page: Page, context: BrowserContext) {
         return reply(route, 201, { data: publicUser(user) })
       }
 
+      // Loaded on every page for the header badge (plugins/cart.client.ts).
+      case 'GET /api/cart':
+        return reply(route, 200, { data: { total_price: 0, items: [], notice: null } })
+
       case 'POST /api/logout':
         state.session = null
         return reply(route, 204)
