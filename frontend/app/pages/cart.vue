@@ -46,11 +46,35 @@ function remove(item: CartItem) {
       :title="error"
     />
 
+    <!-- Skeleton until the cart arrives: same rows, subtotal and button as the loaded cart, so nothing jumps. -->
     <div
       v-if="!cart.loaded"
-      class="py-10 text-center text-muted"
+      aria-busy="true"
+      class="space-y-6"
     >
-      Loading your cart…
+      <span class="sr-only">Loading your cart…</span>
+      <ul class="divide-y divide-default border-y">
+        <li
+          v-for="n in 3"
+          :key="n"
+          class="flex flex-wrap items-center gap-4 py-4"
+        >
+          <div class="min-w-0 flex-1 space-y-2">
+            <USkeleton class="h-5 w-48 max-w-full" />
+            <USkeleton class="h-4 w-24" />
+          </div>
+          <USkeleton class="h-8 w-28" />
+          <USkeleton class="h-6 w-24" />
+          <USkeleton class="size-8" />
+        </li>
+      </ul>
+      <div class="flex items-center justify-between">
+        <USkeleton class="h-6 w-20" />
+        <USkeleton class="h-8 w-28" />
+      </div>
+      <div class="flex justify-end">
+        <USkeleton class="h-10 w-28" />
+      </div>
     </div>
 
     <div
@@ -67,7 +91,7 @@ function remove(item: CartItem) {
     </div>
 
     <template v-else>
-      <ul class="divide-y divide-default border-y border-default">
+      <ul class="divide-y divide-default border-y">
         <li
           v-for="item in cart.items"
           :key="item.id"
