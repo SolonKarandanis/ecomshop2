@@ -166,7 +166,7 @@ describe('auth store', () => {
 
     await auth.login({ email: buyer.email, password: 'secret' })
 
-    expect(useCartStore().itemCount).toBe(2)
+    expect(useCartStore().productCount).toBe(1)
   })
 
   it('empties the cart on logout', async () => {
@@ -175,6 +175,6 @@ describe('auth store', () => {
 
     await auth.logout()
 
-    expect(useCartStore().itemCount).toBe(0)
+    expect(useCartStore().productCount).toBe(0)
   })
 })

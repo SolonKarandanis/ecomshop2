@@ -12,7 +12,8 @@ export const useCartStore = defineStore('cart', () => {
   // Whether the cart has come back from the API yet, so /cart doesn't flash "empty" first.
   const loaded = ref(false)
 
-  const itemCount = computed(() => items.value.reduce((sum, item) => sum + item.quantity, 0))
+  // Distinct products (cart lines) for the header badge, not the sum of their quantities.
+  const productCount = computed(() => items.value.length)
   // The API's total, not recalculated here: it already accounts for attribute pricing.
   const subtotal = computed(() => totalPrice.value)
 
@@ -52,5 +53,5 @@ export const useCartStore = defineStore('cart', () => {
     totalPrice.value = 0
   }
 
-  return { items, totalPrice, loaded, itemCount, subtotal, fetchCart, addItem, updateItem, removeItem, reset }
+  return { items, totalPrice, loaded, productCount, subtotal, fetchCart, addItem, updateItem, removeItem, reset }
 })
