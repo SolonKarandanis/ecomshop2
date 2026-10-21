@@ -67,17 +67,19 @@ class OrderItem extends Model
 
     public function getAttributeNamesAndOptions(): array
     {
-        if (!$this->attributes || !is_array($this->attributes)) {
+        // getAttribute(), not $this->attributes: that's Eloquent's array of every column.
+        $chosen = $this->getAttribute('attributes');
+        if (! $chosen || ! is_array($chosen)) {
             return [];
         }
 
-        $result = [];
-        foreach ($this->attributes as $attributeId => $optionId) {
-            $attribute = Attribute::find($attributeId);
-            $option = AttributeOptions::find($optionId);
+        $attributeNames = Attribute::whereIn('id', array_keys($chosen))->pluck('name', 'id');
+        $optionNames = AttributeOptions::whereIn('id', array_values($chosen))->pluck('option_name', 'id');
 
-            if ($attribute && $option) {
-                $result[$attribute->name] = $option->option_name;
+        $result = [];
+        foreach ($chosen as $attributeId => $optionId) {
+            if (isset($attributeNames[$attributeId], $optionNames[$optionId])) {
+                $result[$attributeNames[$attributeId]] = $optionNames[$optionId];
             }
         }
 

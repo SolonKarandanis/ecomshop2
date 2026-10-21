@@ -15,6 +15,8 @@ class OrderItemData extends BaseData
         public ?float $unit_amount,
         public ?float $total_amount,
         public ?array $attributes,
+        // attribute name → chosen option name, for display (e.g. ["Size" => "M"]).
+        public array $attribute_labels,
     ) {}
 
     public static function fromModel(OrderItem $orderItem): self
@@ -27,6 +29,7 @@ class OrderItemData extends BaseData
             unit_amount: $orderItem->unit_amount !== null ? (float) $orderItem->unit_amount : null,
             total_amount: $orderItem->total_amount !== null ? (float) $orderItem->total_amount : null,
             attributes: $orderItem->attributes,
+            attribute_labels: $orderItem->getAttributeNamesAndOptions(),
         );
     }
 }

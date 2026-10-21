@@ -39,3 +39,12 @@ describe('apiErrorMessage / apiStatus', () => {
     expect(apiStatus(new Error('boom'))).toBeUndefined()
   })
 })
+
+describe('apiStatus', () => {
+  it('reads the status of a fetch error wrapped by useAsyncData', () => {
+    const wrapped = createError({ statusCode: 403, data: { message: 'This action is unauthorized.' } })
+
+    expect(apiStatus(wrapped)).toBe(403)
+    expect(apiErrorMessage(wrapped)).toBe('This action is unauthorized.')
+  })
+})
