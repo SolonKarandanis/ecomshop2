@@ -6,6 +6,7 @@ use App\Data\UserData;
 use App\Dtos\CreateUserDTO;
 use App\Dtos\ResetPasswordDTO;
 use App\Enums\RolesEnum;
+use App\Enums\UserStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
@@ -32,8 +33,11 @@ class AuthController extends Controller
             ? $this->userService->createSupplier($dto)
             : $this->userService->createBuyer($dto);
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        // A Supplier starts PENDING and can't log in until an admin approves them.
+        if ($user->status !== UserStatusEnum::PENDING) {
+            Auth::login($user);
+            $request->session()->regenerate();
+        }
 
         return UserData::from($user->load('roles'))
             ->wrap('data')

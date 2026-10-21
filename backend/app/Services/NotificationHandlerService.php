@@ -5,7 +5,12 @@ namespace App\Services;
 use App\Enums\NotificationEventTypeEnum;
 use App\Mail\OrderPlaced;
 use App\Models\Order;
+use App\Models\User;
 use App\Notifications\OrderNotification;
+use App\Notifications\SupplierApprovedNotification;
+use App\Notifications\SupplierAwaitingApprovalNotification;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -92,5 +97,16 @@ class NotificationHandlerService
             $buyer->id,
             $order->user_id,
         ));
+    }
+
+    /**
+     * @param  Collection<int, User>  $admins
+     */
+    public function supplierAwaitingApproval(User $supplier, Collection $admins):void{
+        Notification::send($admins, new SupplierAwaitingApprovalNotification($supplier->id, $supplier->name));
+    }
+
+    public function supplierApproved(User $supplier):void{
+        $supplier->notify(new SupplierApprovedNotification());
     }
 }

@@ -12,6 +12,9 @@ class NotificationData extends BaseData
         public ?string $event_type,
         public ?int $order_id,
         public ?string $order_url,
+        // Where the Notification leads: the order page for order Notifications,
+        // or e.g. the Filament user page for a Supplier awaiting approval.
+        public ?string $url,
         public ?string $message,
         public ?Carbon $read_at,
         public ?Carbon $created_at,
@@ -24,6 +27,7 @@ class NotificationData extends BaseData
             event_type: $notification->data['event_type'] ?? null,
             order_id: $notification->data['order_id'] ?? null,
             order_url: $notification->data['order_url'] ?? null,
+            url: $notification->data['url'] ?? $notification->data['order_url'] ?? null,
             message: $notification->data['message'] ?? null,
             read_at: $notification->read_at,
             created_at: $notification->created_at,

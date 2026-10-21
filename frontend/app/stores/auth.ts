@@ -1,7 +1,9 @@
 import type { LoginPayload, RegisterPayload, User } from '~/types/auth'
 
-// The backend's RolesEnum::ROLE_BUYER value.
+// The backend's RolesEnum and UserStatusEnum values.
 export const ROLE_BUYER = 'role.buyer'
+export const ROLE_SUPPLIER = 'role.supplier'
+export const USER_STATUS_PENDING = 'user.status.pending'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -12,6 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => user.value !== null)
   const isBuyer = computed(() => user.value?.roles?.includes(ROLE_BUYER) ?? false)
+  const isSupplier = computed(() => user.value?.roles?.includes(ROLE_SUPPLIER) ?? false)
 
   function setUser(value: User | null) {
     user.value = value
@@ -51,10 +54,15 @@ export const useAuthStore = defineStore('auth', () => {
     await refreshCart()
   }
 
-  async function register(payload: RegisterPayload) {
+  /** Returns the new user; a Supplier comes back PENDING and isn't logged in. */
+  async function register(payload: RegisterPayload): Promise<User> {
     const response = await useApi()<{ data: User }>('/register', { method: 'POST', body: payload })
+    if (response.data.status === USER_STATUS_PENDING) {
+      return response.data
+    }
     setUser(response.data)
     await refreshCart()
+    return response.data
   }
 
   async function logout() {
@@ -72,5 +80,5 @@ export const useAuthStore = defineStore('auth', () => {
     await refreshCart()
   }
 
-  return { user, resolved, isAuthenticated, isBuyer, fetchUser, login, register, logout }
+  return { user, resolved, isAuthenticated, isBuyer, isSupplier, fetchUser, login, register, logout }
 })

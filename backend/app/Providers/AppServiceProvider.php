@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\UserStatusEnum;
 use App\Models\Order;
 use App\Models\User;
 use App\Observers\OrderObserver;
@@ -58,7 +59,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define('supplier-action', function (?User $user) {
-            return config('features.suppliers_enabled') && ($user === null || $user->isSupplier());
+            return config('features.suppliers_enabled')
+                && ($user === null || ($user->isSupplier() && $user->status === UserStatusEnum::ACTIVE));
         });
 
         Gate::define('admin-action', function (?User $user) {

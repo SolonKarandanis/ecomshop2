@@ -21,6 +21,7 @@ class UserInfolist
                     ->color(fn(UserStatusEnum $state) => match($state) {
                         UserStatusEnum::ACTIVE => 'success',
                         UserStatusEnum::INACTIVE => 'danger',
+                        UserStatusEnum::PENDING => 'warning',
                     }),
                 TextEntry::make('email_verified_at')
                     ->dateTime()

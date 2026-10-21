@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentMethodController;
@@ -14,6 +15,8 @@ use App\Http\Controllers\StripeRedirectController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SupplierOrderController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/config', [ConfigController::class, 'show']);
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);

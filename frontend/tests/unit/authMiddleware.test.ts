@@ -5,21 +5,24 @@ import { createPinia, setActivePinia } from 'pinia'
 import type { RouteLocationNormalized } from 'vue-router'
 import authMiddleware from '~/middleware/auth'
 import guestMiddleware from '~/middleware/guest'
+import supplierMiddleware from '~/middleware/supplier'
 
 const { navigateToMock } = vi.hoisted(() => ({ navigateToMock: vi.fn((to: unknown) => to) }))
 mockNuxtImport('navigateTo', () => navigateToMock)
 
 const to = { fullPath: '/orders/5?tab=items' } as RouteLocationNormalized
 let loggedIn: boolean
+let roles: string[]
 
 beforeEach(() => {
   setActivePinia(createPinia())
   navigateToMock.mockClear()
   loggedIn = false
+  roles = ['role.buyer']
 
   registerEndpoint('/api/user', () => {
     if (!loggedIn) throw createError({ statusCode: 401 })
-    return { data: { id: 1, name: 'Ada', email: 'ada@example.com' } }
+    return { data: { id: 1, name: 'Ada', email: 'ada@example.com', roles } }
   })
 })
 
@@ -47,5 +50,20 @@ describe('guest middleware', () => {
 
   it('lets a logged-out visitor through', async () => {
     expect(await guestMiddleware(to, to)).toBeUndefined()
+  })
+})
+
+describe('supplier middleware', () => {
+  it('lets a Supplier through', async () => {
+    loggedIn = true
+    roles = ['role.supplier']
+
+    expect(await supplierMiddleware(to, to)).toBeUndefined()
+  })
+
+  it('sends anyone else home', async () => {
+    loggedIn = true
+
+    expect(await supplierMiddleware(to, to)).toBe('/')
   })
 })

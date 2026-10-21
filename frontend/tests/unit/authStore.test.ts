@@ -50,7 +50,12 @@ beforeEach(() => {
   registerEndpoint('/api/register', {
     method: 'POST',
     handler: async (event) => {
-      session = { ...buyer, ...(await readBody(event)) }
+      const body = await readBody(event)
+      // A Supplier is created PENDING and not logged in.
+      if (body.role === 'role.supplier') {
+        return { data: { ...buyer, name: body.name, email: body.email, status: 'user.status.pending', roles: ['role.supplier'] } }
+      }
+      session = { ...buyer, ...body }
       return { data: session }
     },
   })
@@ -112,6 +117,16 @@ describe('auth store', () => {
     expect(auth.user?.email).toBe('new@example.com')
   })
 
+  it('registers a Supplier as pending without logging them in', async () => {
+    const auth = useAuthStore()
+
+    const user = await auth.register({ name: 'Sam', email: 'sam@example.com', password: 'password123', role: 'role.supplier' })
+
+    expect(user.status).toBe('user.status.pending')
+    expect(auth.isAuthenticated).toBe(false)
+    expect(useCartStore().loaded).toBe(false)
+  })
+
   it('logs out, clearing the user, even if the session had already expired', async () => {
     session = buyer
     const auth = useAuthStore()
@@ -133,6 +148,17 @@ describe('auth store', () => {
 
     auth.user = { ...buyer, roles: ['role.supplier'] }
     expect(auth.isBuyer).toBe(false)
+  })
+
+  it('knows whether the user is a Supplier', async () => {
+    const auth = useAuthStore()
+    expect(auth.isSupplier).toBe(false)
+
+    await auth.login({ email: buyer.email, password: 'secret' })
+    expect(auth.isSupplier).toBe(false)
+
+    auth.user = { ...buyer, roles: ['role.supplier'] }
+    expect(auth.isSupplier).toBe(true)
   })
 
   it('refetches the cart after logging in, since the API has just moved the guest cart into the account', async () => {

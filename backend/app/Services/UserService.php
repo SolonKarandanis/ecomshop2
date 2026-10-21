@@ -25,10 +25,11 @@ class UserService
     public function __construct(
         private readonly UserRepository $userRepository,
         private readonly RoleRepository $roleRepository,
+        private readonly NotificationHandlerService $notificationHandlerService,
     ){}
 
-    public function createUser(CreateUserDTO $dto):User{
-        $user= $this->userRepository->createUser($dto);
+    public function createUser(CreateUserDTO $dto, UserStatusEnum $status = UserStatusEnum::ACTIVE):User{
+        $user= $this->userRepository->createUser($dto, $status);
         event(new Registered($user));
         return $user;
     }
@@ -40,10 +41,12 @@ class UserService
         return $user;
     }
 
+    // A Supplier can't log in or sell until an admin approves them.
     public function createSupplier(CreateUserDTO $dto):User{
-        $user= $this->createUser($dto);
+        $user= $this->createUser($dto, UserStatusEnum::PENDING);
         $supplierRole=$this->roleRepository->getSupplierRole();
         $user->assignRole($supplierRole);
+        $this->notificationHandlerService->supplierAwaitingApproval($user, $this->userRepository->getAdmins());
         return $user;
     }
 
@@ -68,8 +71,12 @@ class UserService
 
     public function activateUser(User $user): void
     {
+        $wasPending = $user->status === UserStatusEnum::PENDING;
         $user->status = UserStatusEnum::ACTIVE;
         $this->userRepository->saveUser($user);
+        if ($wasPending) {
+            $this->notificationHandlerService->supplierApproved($user);
+        }
     }
 
     public function deactivateUser(User $user): void
