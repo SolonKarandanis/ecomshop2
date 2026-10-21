@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Enums\NotificationEventTypeEnum;
+use App\Support\OrderLinks;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -19,6 +20,7 @@ class OrderNotification extends Notification implements ShouldBroadcast, ShouldQ
         private readonly int $orderId,
         private readonly string $message,
         private readonly int $userId,
+        private readonly int $buyerId,
     ) {}
 
     public function via(object $notifiable): array
@@ -28,12 +30,12 @@ class OrderNotification extends Notification implements ShouldBroadcast, ShouldQ
 
     public function toDatabase(object $notifiable): array
     {
-        return $this->payload();
+        return $this->payload($notifiable);
     }
 
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return new BroadcastMessage($this->payload());
+        return new BroadcastMessage($this->payload($notifiable));
     }
 
     public function broadcastOn(): PrivateChannel
@@ -41,12 +43,12 @@ class OrderNotification extends Notification implements ShouldBroadcast, ShouldQ
         return new PrivateChannel('user.'.$this->userId);
     }
 
-    private function payload(): array
+    private function payload(object $notifiable): array
     {
         return [
             'event_type' => $this->eventType->value,
             'order_id' => $this->orderId,
-            'order_url' => route('orders.show', $this->orderId),
+            'order_url' => OrderLinks::forRecipient($notifiable, $this->orderId, $this->buyerId),
             'message' => $this->message,
         ];
     }

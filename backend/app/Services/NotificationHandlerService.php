@@ -19,6 +19,7 @@ class NotificationHandlerService
             $order->id,
             "Your order #{$order->id} has been placed successfully.",
             $user->id,
+            $order->user_id,
         ));
         try {
             Mail::to($user)->send(new OrderPlaced($order));
@@ -34,6 +35,7 @@ class NotificationHandlerService
             $order->id,
             "Payment for order #{$order->id} has been confirmed.",
             $buyer->id,
+            $order->user_id,
         ));
     }
 
@@ -44,6 +46,7 @@ class NotificationHandlerService
             $order->id,
             "Payment for order #{$order->id} failed. Please check your payment details.",
             $buyer->id,
+            $order->user_id,
         ));
     }
 
@@ -54,6 +57,7 @@ class NotificationHandlerService
             $order->id,
             "Your order #{$order->id} has been shipped.",
             $buyer->id,
+            $order->user_id,
         ));
     }
 
@@ -64,6 +68,7 @@ class NotificationHandlerService
             $order->id,
             "Your order #{$order->id} has been delivered.",
             $buyer->id,
+            $order->user_id,
         ));
     }
 
@@ -74,6 +79,7 @@ class NotificationHandlerService
             $order->id,
             "You have a new order to fulfill: #{$order->id}.",
             $supplier->id,
+            $order->user_id,
         ));
     }
 
@@ -84,6 +90,7 @@ class NotificationHandlerService
             $order->id,
             "Your order #{$order->id} has been cancelled.",
             $buyer->id,
+            $order->user_id,
         ));
     }
 }
