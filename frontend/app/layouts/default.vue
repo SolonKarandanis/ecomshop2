@@ -44,6 +44,25 @@ async function logout() {
           >
             Categories
           </NuxtLink>
+          <!-- Client-only for the same reason as the auth buttons below. -->
+          <ClientOnly>
+            <template v-if="auth.isSupplier">
+              <NuxtLink
+                to="/supplier/orders"
+                class="text-sm hover:text-primary"
+                active-class="text-primary"
+              >
+                Supplier orders
+              </NuxtLink>
+              <NuxtLink
+                to="/supplier/products"
+                class="text-sm hover:text-primary"
+                active-class="text-primary"
+              >
+                My products
+              </NuxtLink>
+            </template>
+          </ClientOnly>
         </nav>
 
         <!--

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Enums\RolesEnum;
 use App\Enums\UserStatusEnum;
 use App\Models\User;
 use App\Services\UserService;
@@ -11,7 +12,10 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class UsersTable
 {
@@ -30,6 +34,7 @@ class UsersTable
                     ->color(fn(UserStatusEnum $state) => match($state) {
                         UserStatusEnum::ACTIVE => 'success',
                         UserStatusEnum::INACTIVE => 'danger',
+                        UserStatusEnum::PENDING => 'warning',
                     }),
                 TextColumn::make('email_verified_at')
                     ->dateTime()
@@ -44,11 +49,24 @@ class UsersTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('status')
+                    ->options(UserStatusEnum::labels()),
+                Filter::make('suppliers_awaiting_approval')
+                    ->label('Suppliers awaiting approval')
+                    ->query(fn(Builder $query) => $query
+                        ->whereHas('roles', fn(Builder $q) => $q->where('name', RolesEnum::ROLE_SUPPLIER->value))
+                        ->where('status', UserStatusEnum::PENDING->value)),
             ])
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn(User $record) => $record->status === UserStatusEnum::PENDING)
+                    ->action(fn(User $record) => app(UserService::class)->activateUser($record)),
                 Action::make('activate')
                     ->label('Activate')
                     ->icon('heroicon-o-check-circle')

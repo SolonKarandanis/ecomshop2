@@ -18,6 +18,13 @@ class ViewUser extends ViewRecord
     {
         return [
             EditAction::make(),
+            Action::make('approve')
+                ->label('Approve')
+                ->icon('heroicon-o-check-badge')
+                ->color('success')
+                ->requiresConfirmation()
+                ->visible(fn() => $this->record->status === UserStatusEnum::PENDING)
+                ->action(fn() => app(UserService::class)->activateUser($this->record)),
             Action::make('activate')
                 ->label('Activate')
                 ->icon('heroicon-o-check-circle')

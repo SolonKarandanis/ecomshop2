@@ -83,6 +83,10 @@ export async function fakeApi(page: Page, context: BrowserContext) {
         return reply(route, 201, { data: publicUser(user) })
       }
 
+      // Read by /register to decide whether to offer the Supplier role.
+      case 'GET /api/config':
+        return reply(route, 200, { data: { suppliers_enabled: false } })
+
       // Loaded on every page for the header badge (plugins/cart.client.ts).
       case 'GET /api/cart':
         return reply(route, 200, { data: { total_price: 0, items: [], notice: null } })

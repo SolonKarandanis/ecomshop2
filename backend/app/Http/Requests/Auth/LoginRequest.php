@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Enums\UserStatusEnum;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -51,6 +52,15 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        // The password was right, so this isn't a failed attempt for the rate limiter.
+        if (Auth::user()->status === UserStatusEnum::PENDING) {
+            Auth::guard('web')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => __('user.awaiting_approval'),
+            ]);
+        }
     }
 
     /**

@@ -11,4 +11,6 @@ enum NotificationEventTypeEnum: string
     case ORDER_DELIVERED = 'order.notification.delivered';
     case ORDER_CANCELLED = 'order.notification.cancelled';
     case ORDER_READY_FOR_SUPPLIER = 'order.notification.ready_for_supplier';
+    case SUPPLIER_AWAITING_APPROVAL = 'user.notification.supplier_awaiting_approval';
+    case SUPPLIER_APPROVED = 'user.notification.supplier_approved';
 }

@@ -6,9 +6,17 @@ useSeoMeta({ title: 'Register' })
 
 const route = useRoute()
 const auth = useAuthStore()
+const { data: config } = await usePublicConfig()
 
-const state = reactive({ name: '', email: '', password: '', password_confirmation: '' })
+const state = reactive({ name: '', email: '', password: '', password_confirmation: '', role: ROLE_BUYER })
 const { error, submit } = useApiForm(() => Object.keys(state))
+// Set once a Supplier registers: they start PENDING and aren't logged in.
+const awaitingApproval = ref(false)
+
+const roleItems = [
+  { label: 'I want to buy', value: ROLE_BUYER },
+  { label: 'I want to sell (Supplier)', value: ROLE_SUPPLIER },
+]
 
 function validate(data: Partial<typeof state>): FormError[] {
   const errors: FormError[] = []
@@ -24,14 +32,52 @@ function validate(data: Partial<typeof state>): FormError[] {
 async function onSubmit() {
   await submit(async () => {
     // The API only checks the password once; the confirmation is client-side.
-    await auth.register({ name: state.name, email: state.email, password: state.password })
+    // The role is only sent while the Suppliers feature is on.
+    const user = await auth.register({
+      name: state.name,
+      email: state.email,
+      password: state.password,
+      ...(config.value?.suppliers_enabled ? { role: state.role } : {}),
+    })
+    if (user.status === USER_STATUS_PENDING) {
+      awaitingApproval.value = true
+      return
+    }
     await navigateTo(redirectTarget(route.query.redirect))
   })
 }
 </script>
 
 <template>
-  <UCard class="mx-auto max-w-md">
+  <UCard
+    v-if="awaitingApproval"
+    class="mx-auto max-w-md"
+  >
+    <template #header>
+      <h1 class="text-xl font-semibold">
+        Thanks for registering
+      </h1>
+    </template>
+
+    <p class="text-sm">
+      Your Supplier account is awaiting approval. We'll email you once an admin
+      has approved it, and you'll be able to log in then.
+    </p>
+
+    <template #footer>
+      <UButton
+        to="/"
+        label="Back to the shop"
+        color="neutral"
+        variant="ghost"
+      />
+    </template>
+  </UCard>
+
+  <UCard
+    v-else
+    class="mx-auto max-w-md"
+  >
     <template #header>
       <h1 class="text-xl font-semibold">
         Create an account
@@ -51,6 +97,17 @@ async function onSubmit() {
         variant="subtle"
         :title="error"
       />
+
+      <UFormField
+        v-if="config?.suppliers_enabled"
+        label="Account type"
+        name="role"
+      >
+        <URadioGroup
+          v-model="state.role"
+          :items="roleItems"
+        />
+      </UFormField>
 
       <UFormField
         label="Name"

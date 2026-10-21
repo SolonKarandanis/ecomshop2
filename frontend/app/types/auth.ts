@@ -20,6 +20,14 @@ export interface RegisterPayload {
   name: string
   email: string
   password: string
+  // A RolesEnum value; the API defaults to Buyer, and only accepts Supplier
+  // while the Suppliers feature is on.
+  role?: string
+}
+
+// Mirrors the backend's App\Data\ApplicationConfigData (GET /api/config).
+export interface ApplicationConfig {
+  suppliers_enabled: boolean
 }
 
 export interface ForgotPasswordPayload {
