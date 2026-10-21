@@ -125,4 +125,9 @@ class User extends Authenticatable implements FilamentUser
     public function isSupplier(): bool{
         return $this->hasRole(RolesEnum::ROLE_SUPPLIER->value);
     }
+
+    public static function cleanEmail(string $email): string
+    {
+        return preg_replace('/^([^+@]+)\+[^@]*@(.+)$/','$1@$2',$email);
+    }
 }

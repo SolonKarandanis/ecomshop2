@@ -3,12 +3,21 @@
 namespace App\Http\Requests\Auth;
 
 use App\Enums\RolesEnum;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 
 class RegisterUserRequest extends FormRequest
 {
+
+    protected function prepareForValidation(): void
+    {
+        $email = $this->input('email');
+        $this->merge([
+            'email' => User::cleanEmail($email)
+        ]);
+    }
     public function authorize(): bool
     {
         return true;
