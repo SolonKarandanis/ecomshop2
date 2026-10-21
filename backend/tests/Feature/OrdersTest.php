@@ -3,6 +3,8 @@
 use App\Enums\OrderStatusEnum;
 use App\Enums\RolesEnum;
 use App\Models\Address;
+use App\Models\Attribute;
+use App\Models\AttributeOptions;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -125,6 +127,25 @@ it('lets the owning Supplier view the Order, including the supplier id', functio
     $response = $this->actingAs($supplier)->getJson("/api/orders/{$order->id}")->assertOk();
 
     expect($response->json('data.supplier_id'))->toBe($supplier->id);
+});
+
+it('shows each Order item\'s chosen attributes by name', function () {
+    $supplier = supplier();
+    $order = Order::factory()->create(['user_id' => buyer()->id, 'supplier_id' => $supplier->id]);
+    $product = Product::factory()->create(['supplier_id' => $supplier->id]);
+    $size = Attribute::create(['name' => 'Size', 'type' => 'Select']);
+    $medium = AttributeOptions::create(['attribute_id' => $size->id, 'option_name' => 'M']);
+    $order->items()->create([
+        'product_id' => $product->id,
+        'quantity' => 1,
+        'unit_amount' => 10,
+        'total_amount' => 10,
+        'attributes' => [$size->id => $medium->id],
+    ]);
+
+    $response = $this->actingAs($supplier)->getJson("/api/orders/{$order->id}")->assertOk();
+
+    expect($response->json('data.items.0.attribute_labels'))->toBe(['Size' => 'M']);
 });
 
 it('rejects a Supplier viewing an Order it does not fulfil', function () {

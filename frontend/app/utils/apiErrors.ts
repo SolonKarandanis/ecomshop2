@@ -6,8 +6,10 @@ interface LaravelErrorBody {
   errors?: Record<string, string[]>
 }
 
-function isFetchError(error: unknown): error is FetchError {
-  return error instanceof Error && error.name === 'FetchError'
+// A FetchError from $fetch, or the error useAsyncData/useFetch wrap it in
+// (an H3Error that keeps its statusCode and data).
+function isFetchError(error: unknown): error is Pick<FetchError, 'statusCode' | 'data'> {
+  return error instanceof Error && (error.name === 'FetchError' || typeof (error as { statusCode?: unknown }).statusCode === 'number')
 }
 
 function errorBody(error: unknown): LaravelErrorBody | undefined {
