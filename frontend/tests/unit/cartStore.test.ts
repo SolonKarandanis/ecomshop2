@@ -75,7 +75,7 @@ beforeEach(() => {
 })
 
 describe('cart store', () => {
-  it('fetches the cart, counting quantities and taking the subtotal from the API', async () => {
+  it('fetches the cart, counting distinct products and taking the subtotal from the API', async () => {
     items = [item(1, 2), item(2, 3)]
     const store = useCartStore()
 
@@ -84,7 +84,7 @@ describe('cart store', () => {
 
     expect(store.loaded).toBe(true)
     expect(store.items).toHaveLength(2)
-    expect(store.itemCount).toBe(5)
+    expect(store.productCount).toBe(2)
     expect(store.subtotal).toBe(55)
   })
 
@@ -93,7 +93,7 @@ describe('cart store', () => {
 
     await store.addItem(1, 2)
 
-    expect(store.itemCount).toBe(2)
+    expect(store.productCount).toBe(1)
     expect(store.subtotal).toBe(40)
   })
 
@@ -114,7 +114,9 @@ describe('cart store', () => {
 
     await store.updateItem(store.items[0]!.id, 4)
 
-    expect(store.itemCount).toBe(4)
+    // Still one product, whatever its quantity.
+    expect(store.items[0]!.quantity).toBe(4)
+    expect(store.productCount).toBe(1)
     expect(store.subtotal).toBe(80)
   })
 
@@ -147,7 +149,7 @@ describe('cart store', () => {
     store.reset()
 
     expect(store.items).toEqual([])
-    expect(store.itemCount).toBe(0)
+    expect(store.productCount).toBe(0)
     expect(store.subtotal).toBe(0)
   })
 })
