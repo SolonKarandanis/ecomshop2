@@ -28,6 +28,9 @@ export interface RegisterPayload {
 // Mirrors the backend's App\Data\ApplicationConfigData (GET /api/config).
 export interface ApplicationConfig {
   suppliers_enabled: boolean
+  // Per Product, and per image in kilobytes; the API enforces both.
+  max_product_images: number
+  max_product_image_kb: number
 }
 
 export interface ForgotPasswordPayload {

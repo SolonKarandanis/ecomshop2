@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 
@@ -19,7 +20,7 @@ class UploadProductImagesRequest extends FormRequest
     {
         return [
             'images' => ['required', 'array', 'min:1'],
-            'images.*' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:5120'],
+            'images.*' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:'.Product::MAX_IMAGE_KB],
         ];
     }
 }

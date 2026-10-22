@@ -5,6 +5,7 @@ use App\Enums\RolesEnum;
 use App\Enums\UserStatusEnum;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
+use App\Models\Product;
 use App\Models\User;
 use App\Notifications\SupplierApprovedNotification;
 use App\Notifications\SupplierAwaitingApprovalNotification;
@@ -44,7 +45,11 @@ it('serves the public config without authentication', function (bool $enabled) {
 
     $this->getJson('/api/config')
         ->assertOk()
-        ->assertExactJson(['data' => ['suppliers_enabled' => $enabled]]);
+        ->assertExactJson(['data' => [
+            'suppliers_enabled' => $enabled,
+            'max_product_images' => Product::MAX_IMAGES,
+            'max_product_image_kb' => Product::MAX_IMAGE_KB,
+        ]]);
 })->with([true, false]);
 
 it('creates a registering Supplier as PENDING and does not log them in', function () {

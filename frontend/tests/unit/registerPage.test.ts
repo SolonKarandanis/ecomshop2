@@ -19,7 +19,7 @@ beforeEach(() => {
   // The page uses the Nuxt app's own Pinia, which outlives each test.
   useAuthStore().user = null
 
-  registerEndpoint('/api/config', () => ({ data: { suppliers_enabled: suppliersEnabled } }))
+  registerEndpoint('/api/config', () => ({ data: { suppliers_enabled: suppliersEnabled, max_product_images: 5, max_product_image_kb: 5120 } }))
   registerEndpoint('/api/cart', () => ({ data: { total_price: 0, items: [], notice: null } }))
   registerEndpoint('/api/register', {
     method: 'POST',
