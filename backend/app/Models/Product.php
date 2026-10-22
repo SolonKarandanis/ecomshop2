@@ -83,6 +83,9 @@ class Product extends Model implements HasMedia
 
     public const MAX_IMAGES = 5;
 
+    // Per image, in kilobytes (Laravel's `max` rule for files).
+    public const MAX_IMAGE_KB = 5120;
+
     protected $fillable=[
         'category_id',
         'brand_id',
