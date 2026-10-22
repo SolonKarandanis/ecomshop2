@@ -78,6 +78,11 @@ class Product extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, Searchable;
 
+    // The Spatie Media Library collection Filament's ProductForm uploads to.
+    public const IMAGES_COLLECTION = 'product-images';
+
+    public const MAX_IMAGES = 5;
+
     protected $fillable=[
         'category_id',
         'brand_id',

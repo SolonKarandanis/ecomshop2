@@ -42,5 +42,11 @@ return [
     ],
     'product_exceptions' => [
         'not_found' => 'Product with ID :id not found.',
+        'ordered_cannot_be_deleted' => 'This product is part of existing orders and cannot be deleted. Deactivate it instead to hide it from the catalogue.',
+    ],
+    'supplier_products' => [
+        'option_not_of_attribute' => 'The selected option does not belong to the selected attribute.',
+        'duplicate_attribute_option' => 'This attribute option has already been added.',
+        'too_many_images' => 'A product can have at most :max images.',
     ],
 ];

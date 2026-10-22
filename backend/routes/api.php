@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StripeRedirectController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SupplierOrderController;
+use App\Http\Controllers\SupplierProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/config', [ConfigController::class, 'show']);
@@ -27,6 +30,8 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);
 Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/brands', [BrandController::class, 'index']);
+Route::get('/attributes', [AttributeController::class, 'index']);
 Route::get('/payment-methods', [PaymentMethodController::class, 'index']);
 
 // Authenticated by Stripe's signature, not the session (ADR-0004).
@@ -50,6 +55,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/supplier-orders/{order}/ship', [SupplierOrderController::class, 'ship']);
     Route::post('/supplier-orders/{order}/deliver', [SupplierOrderController::class, 'deliver']);
     Route::post('/supplier-orders/{order}/cancel', [SupplierOrderController::class, 'cancel']);
+    Route::get('/supplier-products', [SupplierProductController::class, 'index']);
+    Route::post('/supplier-products', [SupplierProductController::class, 'store']);
+    Route::get('/supplier-products/{product}', [SupplierProductController::class, 'show']);
+    Route::patch('/supplier-products/{product}', [SupplierProductController::class, 'update']);
+    Route::delete('/supplier-products/{product}', [SupplierProductController::class, 'destroy']);
+    Route::post('/supplier-products/{product}/images', [SupplierProductController::class, 'storeImages']);
+    Route::delete('/supplier-products/{product}/images/{media}', [SupplierProductController::class, 'destroyImage']);
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread', [NotificationController::class, 'unread']);
