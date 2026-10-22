@@ -6,7 +6,9 @@ use App\Models\Address;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Testing\TestResponse;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 function profileBuyer(): User
 {
@@ -15,6 +17,24 @@ function profileBuyer(): User
     $buyer->assignRole(RolesEnum::ROLE_BUYER->value);
 
     return $buyer;
+}
+
+// A request from one browser: carries the cookies (session, XSRF) of that browser's previous response.
+function profileBrowser(?TestResponse $previous = null): TestCase
+{
+    $client = test()->withCredentials()->withHeader('Origin', 'http://localhost:3000');
+
+    if ($previous !== null) {
+        foreach ($previous->headers->getCookies() as $cookie) {
+            $client->withUnencryptedCookie($cookie->getName(), $cookie->getValue());
+        }
+    }
+
+    app('auth')->forgetGuards();
+    // An earlier auth:sanctum request leaves `sanctum` as the default guard, which can't log in.
+    app('auth')->shouldUse('web');
+
+    return $client;
 }
 
 function profileAdmin(): User
@@ -62,7 +82,19 @@ it('rejects updating the profile to an email already used by another User', func
 
     $this->actingAs($buyer)
         ->patchJson('/api/profile', ['name' => $buyer->name, 'email' => $otherBuyer->email])
-        ->assertStatus(400);
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['email' => __('messages.update_profile.email_taken')]);
+
+    expect($buyer->fresh()->email)->not->toBe($otherBuyer->email);
+});
+
+it('lets a User keep their own email when updating the profile', function () {
+    $buyer = profileBuyer();
+
+    $this->actingAs($buyer)
+        ->patchJson('/api/profile', ['name' => 'Renamed', 'email' => $buyer->email])
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Renamed');
 });
 
 it('changes the password given the correct current password', function () {
@@ -88,9 +120,30 @@ it('rejects changing the password given the wrong current password', function ()
             'newPassword' => 'new-password',
             'newPasswordConfirmation' => 'new-password',
         ])
-        ->assertStatus(400);
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['currentPassword' => __('messages.change_password.wrong_current')]);
 
     expect(Hash::check('old-password', $buyer->fresh()->password))->toBeTrue();
+});
+
+it('keeps this device logged in after a password change, and logs out other sessions', function () {
+    $buyer = profileBuyer();
+    $credentials = ['email' => $buyer->email, 'password' => 'old-password'];
+    $thisDevice = profileBrowser()->postJson('/api/login', $credentials)->assertOk();
+    $otherDevice = profileBrowser()->postJson('/api/login', $credentials)->assertOk();
+
+    $changed = profileBrowser($thisDevice)
+        ->patchJson('/api/profile/password', [
+            'currentPassword' => 'old-password',
+            'newPassword' => 'new-password',
+            'newPasswordConfirmation' => 'new-password',
+        ])
+        ->assertNoContent();
+
+    // Sanctum's AuthenticateSession: this session stored the new password hash with
+    // the response above, while the other session still holds the old one.
+    profileBrowser($changed)->getJson('/api/user')->assertOk()->assertJsonPath('data.id', $buyer->id);
+    profileBrowser($otherDevice)->getJson('/api/user')->assertUnauthorized();
 });
 
 it('rejects a new password that does not match its confirmation', function () {

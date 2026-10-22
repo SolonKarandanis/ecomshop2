@@ -78,7 +78,13 @@ async function logout() {
             <!-- Suppliers and admins can't add to a cart (`buyer-action` gate), so they get no cart. -->
             <CartIcon v-if="!auth.user || auth.isBuyer" />
             <template v-if="auth.user">
-              <span class="text-sm text-muted">{{ auth.user.name }}</span>
+              <NuxtLink
+                to="/profile"
+                class="text-sm text-muted hover:text-primary"
+                active-class="text-primary"
+              >
+                {{ auth.user.name }}
+              </NuxtLink>
               <UButton class="cursor-pointer"
                 label="Log out"
                 color="neutral"

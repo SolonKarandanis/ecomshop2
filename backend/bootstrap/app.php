@@ -7,7 +7,6 @@ use App\Exceptions\OrderException;
 use App\Exceptions\PaymentException;
 use App\Exceptions\ProductException;
 use App\Exceptions\ProductNotFoundException;
-use App\Exceptions\ProfileException;
 use App\Exceptions\ReviewException;
 use App\Http\Middleware\AlwaysAcceptJsonMiddleware;
 use Illuminate\Foundation\Application;
@@ -54,7 +53,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 PaymentException::class,
                 ProductException::class,
                 ProductNotFoundException::class,
-                ProfileException::class,
                 ReviewException::class => $e->getCode(),
                 default => null,
             };
