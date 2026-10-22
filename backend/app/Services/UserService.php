@@ -7,7 +7,6 @@ use App\Dtos\CreateUserDTO;
 use App\Dtos\ResetPasswordDTO;
 use App\Dtos\UpdateProfileDto;
 use App\Enums\UserStatusEnum;
-use App\Exceptions\ProfileException;
 use App\Models\User;
 use App\Repositories\RoleRepository;
 use App\Repositories\UserRepository;
@@ -50,21 +49,17 @@ class UserService
         return $user;
     }
 
+    // UpdateProfileRequest has already rejected an email another User has.
     public function updateProfile(User $user, UpdateProfileDto $dto): void
     {
-        if ($this->userRepository->existsByUserEmail($dto->getEmail(), $user->id)) {
-            throw ProfileException::emailTaken();
-        }
         $user->name  = $dto->getName();
         $user->email = $dto->getEmail();
         $this->userRepository->saveUser($user);
     }
 
+    // ChangePasswordRequest has already checked the current password.
     public function changePassword(User $user, ChangePasswordDto $dto): void
     {
-        if (!Hash::check($dto->getCurrentPassword(), $user->password)) {
-            throw ProfileException::wrongCurrentPassword();
-        }
         $user->password = Hash::make($dto->getNewPassword());
         $this->userRepository->saveUser($user);
     }

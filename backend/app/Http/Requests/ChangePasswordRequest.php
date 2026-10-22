@@ -17,9 +17,19 @@ class ChangePasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'currentPassword' => ['required', 'string'],
+            'currentPassword' => ['required', 'string', 'current_password'],
             'newPassword' => ['required', 'string', 'min:8', 'same:newPasswordConfirmation'],
             'newPasswordConfirmation' => ['required', 'string'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'currentPassword.current_password' => __('messages.change_password.wrong_current'),
         ];
     }
 }

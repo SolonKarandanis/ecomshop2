@@ -55,11 +55,4 @@ class UserRepository
             ->whereHas('roles', fn ($q) => $q->where('name', RolesEnum::ROLE_ADMIN->value))
             ->get();
     }
-
-    public function existsByUserEmail(string $email, int $userId): bool{
-        return $this->modelQuery()
-            ->where('email', $email)
-            ->where('id', '!=', $userId)
-            ->exists();
-    }
 }
