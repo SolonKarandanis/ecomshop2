@@ -171,6 +171,52 @@ it('creates the Stripe session with success and cancel URLs on the frontend, and
     expect(StripeOrderDetail::where('order_id', $order->id)->value('session_id'))->toBe('cs_test_checkout');
 });
 
+it('charges the exact price, cents included, on the Order', function () {
+    Notification::fake();
+    Mail::fake();
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
+    [$buyer, $login] = loggedInBuyer();
+    $product = Product::factory()->create(['price' => 19.99]);
+
+    $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 2])->assertOk();
+    simulateNextCheckoutRequest($add)->postJson('/api/checkout', validCheckoutPayload())->assertOk();
+
+    $order = Order::where('user_id', $buyer->id)->sole();
+    expect((float) $order->grand_total)->toBe(39.98);
+    expect($order->items()->sole())
+        ->unit_amount->toEqual('19.99')
+        ->total_amount->toEqual('39.98');
+});
+
+it('sends Stripe each unit price as a whole number of cents', function (float $price, int $cents) {
+    Notification::fake();
+    Mail::fake();
+    config(['app.stripe_secret_key' => 'sk_test_fake']);
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::STRIPE->value]);
+    [, $login] = loggedInBuyer();
+    $product = Product::factory()->create(['price' => $price]);
+    $stripe = new FakeStripeHttpClient;
+    ApiRequestor::setHttpClient($stripe);
+
+    try {
+        $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
+        simulateNextCheckoutRequest($add)
+            ->postJson('/api/checkout', validCheckoutPayload(PaymentMethodEnum::STRIPE->value))
+            ->assertOk();
+    } finally {
+        ApiRequestor::setHttpClient(null);
+    }
+
+    expect($stripe->requests[0]['params']['line_items'][0]['price_data']['unit_amount'])->toBe($cents);
+})->with([
+    // price * 100 in floating point isn't exact: 19.99 * 100 is 1998.9999999999998.
+    '19.99' => [19.99, 1999],
+    '4.35' => [4.35, 435],
+    '1.15' => [1.15, 115],
+    '8.20' => [8.20, 820],
+    '25.00' => [25.00, 2500],
+]);
+
 it("saves the shipping address as the Buyer's default when saveAddress is set and the address book is empty", function () {
     Notification::fake();
     Mail::fake();

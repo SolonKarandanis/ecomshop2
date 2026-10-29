@@ -6,17 +6,17 @@ class AddToCartDto
 {
     private int $productId;
     private int $quantity;
-    private int $price;
+    private float $price;
     private array $attributes;
 
-    public function __construct(int $productId, int $quantity, int $price){
+    public function __construct(int $productId, int $quantity, float $price){
         $this->productId = $productId;
         $this->quantity = $quantity;
         $this->price = $price;
         $this->attributes = [];
     }
 
-    public static function withAttributes(int $productId, int $quantity, int $price, array $attributes): self
+    public static function withAttributes(int $productId, int $quantity, float $price, array $attributes): self
     {
         $dto = new self($productId, $quantity, $price);
         $dto->setAttributes($attributes);
@@ -43,12 +43,12 @@ class AddToCartDto
         $this->quantity = $quantity;
     }
 
-    public function getPrice(): int
+    public function getPrice(): float
     {
         return $this->price;
     }
 
-    public function setPrice(int $price): void
+    public function setPrice(float $price): void
     {
         $this->price = $price;
     }

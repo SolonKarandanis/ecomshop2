@@ -258,7 +258,8 @@ class OrderService
         return $cartItems->map(fn (CartItem $cartItem) => [
             'price_data' => [
                 'currency' => config('app.currency'),
-                'unit_amount' => $cartItem->unit_price * 100, // stripe wants cents
+                // Stripe wants whole cents; price * 100 in floating point isn't exact (19.99 * 100 = 1998.99…).
+                'unit_amount' => (int) round($cartItem->unit_price * 100),
                 'product_data' => ['name' => $cartItem->product->name],
             ],
             'quantity' => $cartItem->quantity,
