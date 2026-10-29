@@ -31,7 +31,7 @@ function simulateNextRequest(?TestResponse $previous = null): TestCase
         }
     }
 
-    app()->forgetInstance(CartService::class);
+    forgetRequestState();
     app('auth')->forgetGuards();
 
     return $client;
@@ -333,4 +333,61 @@ it('keeps the saved cart at login when the guest cart is empty', function () {
     expect($show->json('data.items'))->toHaveCount(1);
     expect($show->json('data.items.0.quantity'))->toBe(2);
     expect($show->json('data.notice'))->toBeNull();
+});
+
+function loggedInCartBuyer(): array
+{
+    seedBuyerRole();
+    $buyer = User::factory()->create(['password' => Hash::make('password')]);
+    $buyer->assignRole(RolesEnum::ROLE_BUYER->value);
+
+    $login = simulateNextRequest()
+        ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
+        ->assertOk();
+
+    return [$buyer, $login];
+}
+
+// Regression: AddToCartDto typed the price as int, so a logged-in Buyer's 19.99 item was saved as 19.
+it("keeps the cents of an authenticated Buyer's cart item price", function () {
+    [, $login] = loggedInCartBuyer();
+    $product = Product::factory()->create(['price' => 19.99]);
+
+    $add = simulateNextRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 2])->assertOk();
+
+    expect($add->json('data.items.0.unit_price'))->toBe(19.99);
+    expect($add->json('data.items.0.total_price'))->toBe(39.98);
+    expect(CartItem::sole())
+        ->unit_price->toEqualWithDelta(19.99, 0.001)
+        ->total_price->toEqualWithDelta(39.98, 0.001);
+});
+
+it('keeps the cents when an authenticated Buyer adds more of an item already in the cart', function () {
+    [, $login] = loggedInCartBuyer();
+    $product = Product::factory()->create(['price' => 4.35]);
+
+    $first = simulateNextRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
+    $again = simulateNextRequest($first)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 2])->assertOk();
+
+    expect($again->json('data.items'))->toHaveCount(1);
+    expect($again->json('data.items.0.quantity'))->toBe(3);
+    expect($again->json('data.items.0.unit_price'))->toBe(4.35);
+    expect($again->json('data.items.0.total_price'))->toBe(13.05);
+    expect($again->json('data.total_price'))->toBe(13.05);
+});
+
+it('keeps the cents when a guest cart is transferred to the database on login', function () {
+    seedBuyerRole();
+    $buyer = User::factory()->create(['password' => Hash::make('password')]);
+    $buyer->assignRole(RolesEnum::ROLE_BUYER->value);
+    $product = Product::factory()->create(['price' => 8.20]);
+
+    $add = simulateNextRequest()->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
+    $login = simulateNextRequest($add)
+        ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
+        ->assertOk();
+
+    expect(CartItem::sole()->unit_price)->toEqualWithDelta(8.20, 0.001);
+    $show = simulateNextRequest($login)->getJson('/api/cart')->assertOk();
+    expect($show->json('data.items.0.unit_price'))->toBe(8.2);
 });

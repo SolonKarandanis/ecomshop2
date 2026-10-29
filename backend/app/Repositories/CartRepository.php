@@ -83,7 +83,7 @@ class CartRepository
             ->first();
     }
 
-    public function updateItemQuantity(int $cartItemId, int $quantity, int $unitPrice, int $totalPrice): void
+    public function updateItemQuantity(int $cartItemId, int $quantity, float $unitPrice, float $totalPrice): void
     {
         $this->itemModelQuery()->where('id', $cartItemId)->update([
             'quantity' => $quantity,

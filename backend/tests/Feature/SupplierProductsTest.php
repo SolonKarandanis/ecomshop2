@@ -11,7 +11,6 @@ use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\User;
-use App\Services\CartService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -67,7 +66,7 @@ function supplierProductsNextRequest(?TestResponse $previous = null): TestCase
         }
     }
 
-    app()->forgetInstance(CartService::class);
+    forgetRequestState();
     app('auth')->forgetGuards();
     // An earlier auth:sanctum request leaves `sanctum` as the default guard, which can't log in.
     app('auth')->shouldUse('web');
