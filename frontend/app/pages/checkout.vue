@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { FormError } from '@nuxt/ui'
 import type { CheckoutPayload, CheckoutResponse, PaymentMethodOption } from '~/types/order'
+import type { SavedAddress } from '~/types/profile'
 
 definePageMeta({ middleware: 'auth' })
 useSeoMeta({ title: 'Checkout' })
@@ -23,6 +24,7 @@ const state = reactive<CheckoutPayload>({
   country: '',
   zipCode: '',
   paymentMethod: '',
+  saveAddress: false,
 })
 const { error, submit } = useApiForm(() => Object.keys(state))
 const submitting = ref(false)
@@ -34,11 +36,40 @@ watch(paymentMethods, (methods) => {
   }
 }, { immediate: true })
 
+// The address book is a convenience: if it can't load, the Buyer just types the address.
+const { data: savedAddresses } = await useAsyncData(
+  'checkout-saved-addresses',
+  () => useApi()<{ data: SavedAddress[] }>('/profile/addresses').then(response => response.data),
+)
+const selectedAddressId = ref<number | undefined>(undefined)
+
+const savedAddressItems = computed(() =>
+  (savedAddresses.value ?? []).map(address => ({
+    label: address.is_default ? `${formatSavedAddress(address)} (default)` : formatSavedAddress(address),
+    value: address.id,
+  })),
+)
+
+// Fills the shipping fields from a saved address; they stay editable.
+function pickAddress(id: number | undefined) {
+  selectedAddressId.value = id
+  const address = savedAddresses.value?.find(candidate => candidate.id === id)
+  if (address) {
+    Object.assign(state, savedAddressToCheckout(address))
+  }
+}
+
+// The page renders only once the address book has loaded, so the form is still empty here.
+const defaultAddress = savedAddresses.value?.find(address => address.is_default)
+if (defaultAddress) {
+  pickAddress(defaultAddress.id)
+}
+
 const paymentMethodItems = computed(() =>
   (paymentMethods.value ?? []).map(method => ({ label: method.label, value: method.key })),
 )
 
-const addressFields: { name: Exclude<keyof CheckoutPayload, 'paymentMethod'>, label: string, autocomplete: string }[] = [
+const addressFields: { name: Exclude<keyof CheckoutPayload, 'paymentMethod' | 'saveAddress'>, label: string, autocomplete: string }[] = [
   { name: 'firstName', label: 'First name', autocomplete: 'given-name' },
   { name: 'lastName', label: 'Last name', autocomplete: 'family-name' },
   { name: 'phone', label: 'Phone', autocomplete: 'tel' },
@@ -119,6 +150,18 @@ async function onSubmit() {
           <h2 class="text-lg font-semibold">
             Shipping address
           </h2>
+          <UFormField
+            v-if="savedAddressItems.length"
+            label="Saved addresses"
+          >
+            <USelect
+              :model-value="selectedAddressId"
+              :items="savedAddressItems"
+              placeholder="Choose a saved address"
+              class="w-full"
+              @update:model-value="pickAddress"
+            />
+          </UFormField>
           <div class="grid gap-4 sm:grid-cols-2">
             <UFormField
               v-for="field in addressFields"
@@ -135,6 +178,10 @@ async function onSubmit() {
               />
             </UFormField>
           </div>
+          <UCheckbox
+            v-model="state.saveAddress"
+            label="Save this address to my address book"
+          />
         </section>
 
         <section class="space-y-4">

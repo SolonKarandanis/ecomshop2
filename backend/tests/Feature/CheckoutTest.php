@@ -10,6 +10,7 @@ use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\SavedAddress;
 use App\Models\StripeOrderDetail;
 use App\Models\User;
 use App\Notifications\OrderNotification;
@@ -119,7 +120,7 @@ final class FakeStripeHttpClient implements ClientInterface
     }
 }
 
-function checkoutWithCartItem(string $paymentMethod): array
+function checkoutWithCartItem(string $paymentMethod, array $payloadOverrides = []): array
 {
     PaymentMethod::firstOrCreate(['resource_key' => $paymentMethod]);
     [$buyer, $login] = loggedInBuyer();
@@ -131,7 +132,7 @@ function checkoutWithCartItem(string $paymentMethod): array
     ])->assertOk();
 
     $checkout = simulateNextCheckoutRequest($add)
-        ->postJson('/api/checkout', validCheckoutPayload($paymentMethod))
+        ->postJson('/api/checkout', [...validCheckoutPayload($paymentMethod), ...$payloadOverrides])
         ->assertOk();
 
     return [$buyer, $checkout];
@@ -168,6 +169,78 @@ it('creates the Stripe session with success and cancel URLs on the frontend, and
         ->success_url->toBe('https://shop.test/success?session_id={CHECKOUT_SESSION_ID}')
         ->cancel_url->toBe("https://shop.test/cancel?order_id={$order->id}");
     expect(StripeOrderDetail::where('order_id', $order->id)->value('session_id'))->toBe('cs_test_checkout');
+});
+
+it("saves the shipping address as the Buyer's default when saveAddress is set and the address book is empty", function () {
+    Notification::fake();
+    Mail::fake();
+
+    [$buyer] = checkoutWithCartItem(PaymentMethodEnum::CASH_ON_DELIVERY->value, ['saveAddress' => true]);
+
+    expect(SavedAddress::where('user_id', $buyer->id)->sole()->only([
+        'first_name', 'last_name', 'phone', 'street_address', 'city', 'country', 'postal_code', 'is_default',
+    ]))->toBe([
+        'first_name' => 'Jane',
+        'last_name' => 'Doe',
+        'phone' => '555-1234',
+        'street_address' => '1 Main St',
+        'city' => 'Athens',
+        'country' => 'Greece',
+        'postal_code' => '12345',
+        'is_default' => true,
+    ]);
+});
+
+it("doesn't save a duplicate when the Buyer already has an identical address", function () {
+    Notification::fake();
+    Mail::fake();
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
+    [$buyer, $login] = loggedInBuyer();
+    SavedAddress::factory()->for($buyer)->create([
+        'first_name' => 'Jane',
+        'last_name' => 'Doe',
+        'phone' => '555-1234',
+        'street_address' => '1 Main St',
+        'city' => 'Athens',
+        'country' => 'Greece',
+        'postal_code' => '12345',
+    ]);
+    $other = SavedAddress::factory()->for($buyer)->default()->create(['city' => 'Sparta']);
+    $product = Product::factory()->create();
+
+    $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
+    simulateNextCheckoutRequest($add)
+        ->postJson('/api/checkout', [...validCheckoutPayload(), 'saveAddress' => true])
+        ->assertOk();
+
+    expect(SavedAddress::where('user_id', $buyer->id)->count())->toBe(2);
+    expect($other->fresh()->is_default)->toBeTrue();
+});
+
+it("adds a new address as non-default when the Buyer's address book already has one", function () {
+    Notification::fake();
+    Mail::fake();
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
+    [$buyer, $login] = loggedInBuyer();
+    $existing = SavedAddress::factory()->for($buyer)->default()->create(['city' => 'Sparta']);
+    $product = Product::factory()->create();
+
+    $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
+    simulateNextCheckoutRequest($add)
+        ->postJson('/api/checkout', [...validCheckoutPayload(), 'saveAddress' => true])
+        ->assertOk();
+
+    expect(SavedAddress::where('user_id', $buyer->id)->where('city', 'Athens')->sole()->is_default)->toBeFalse();
+    expect($existing->fresh()->is_default)->toBeTrue();
+});
+
+it("doesn't touch the address book when saveAddress isn't set", function () {
+    Notification::fake();
+    Mail::fake();
+
+    checkoutWithCartItem(PaymentMethodEnum::CASH_ON_DELIVERY->value);
+
+    expect(SavedAddress::count())->toBe(0);
 });
 
 it('rejects checkout with an empty cart', function () {

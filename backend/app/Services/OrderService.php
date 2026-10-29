@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Dtos\CheckoutDTO;
 use App\Dtos\CreateOrderDTO;
 use App\Dtos\OrderSearchRequestDTO;
+use App\Dtos\SaveAddressDto;
 use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Exceptions\CartException;
@@ -47,6 +48,7 @@ class OrderService
         private readonly PaymentHandlerFactory $paymentHandlerFactory,
         private readonly NotificationHandlerService $notificationService,
         private readonly ProductRepository $productRepository,
+        private readonly SavedAddressService $savedAddressService,
     ) {}
 
     public function getOrderById(int $orderId, User $user): Order
@@ -216,6 +218,9 @@ class OrderService
             Log::debug('OrderService creating address');
             $this->addressRepository->create($order->id, $dto);
             Log::debug('OrderService created address');
+            if ($dto->shouldSaveAddress()) {
+                $this->savedAddressService->saveFromCheckout(auth()->user()->id, SaveAddressDto::fromCheckout($dto));
+            }
             Log::debug('OrderService clearing cart');
             $this->cartService->clearCart();
             DB::commit();

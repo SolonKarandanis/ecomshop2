@@ -108,6 +108,10 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Address::class);
     }
 
+    public function savedAddresses(): HasMany{
+        return $this->hasMany(SavedAddress::class);
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->can('view-admin-panel', User::class)

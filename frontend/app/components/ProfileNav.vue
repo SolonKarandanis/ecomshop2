@@ -5,6 +5,7 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 const items: NavigationMenuItem[] = [
   { label: 'Profile', icon: 'i-lucide-user', to: '/profile', exact: true },
   { label: 'Password', icon: 'i-lucide-lock', to: '/profile/password', exact: true },
+  { label: 'Addresses', icon: 'i-lucide-map-pin', to: '/profile/addresses', exact: true },
 ]
 </script>
 

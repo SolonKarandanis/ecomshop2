@@ -2,8 +2,6 @@
 
 use App\Enums\RolesEnum;
 use App\Enums\UserStatusEnum;
-use App\Models\Address;
-use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\TestResponse;
@@ -156,40 +154,6 @@ it('rejects a new password that does not match its confirmation', function () {
             'newPasswordConfirmation' => 'does-not-match',
         ])
         ->assertUnprocessable();
-});
-
-it("lists the authenticated User's own past Order Addresses, read-only", function () {
-    $buyer = profileBuyer();
-    $otherBuyer = profileBuyer();
-    $order = Order::factory()->create(['user_id' => $buyer->id]);
-    Address::create([
-        'user_id' => $buyer->id,
-        'order_id' => $order->id,
-        'first_name' => 'Jane',
-        'last_name' => 'Doe',
-        'phone' => '555-1234',
-        'street_address' => '1 Main St',
-        'city' => 'Athens',
-        'country' => 'Greece',
-        'postal_code' => '12345',
-    ]);
-    $otherOrder = Order::factory()->create(['user_id' => $otherBuyer->id]);
-    Address::create([
-        'user_id' => $otherBuyer->id,
-        'order_id' => $otherOrder->id,
-        'first_name' => 'John',
-        'last_name' => 'Roe',
-        'phone' => '555-5678',
-        'street_address' => '2 Main St',
-        'city' => 'Sparta',
-        'country' => 'Greece',
-        'postal_code' => '54321',
-    ]);
-
-    $response = $this->actingAs($buyer)->getJson('/api/profile/addresses')->assertOk();
-
-    expect($response->json('data'))->toHaveCount(1);
-    expect($response->json('data.0.city'))->toBe('Athens');
 });
 
 it('rejects a guest from viewing or updating the profile, changing the password, or listing addresses', function () {

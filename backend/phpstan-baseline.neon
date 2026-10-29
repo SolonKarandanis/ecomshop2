@@ -49,12 +49,6 @@ parameters:
 			path: app/Filament/Resources/Orders/Schemas/OrderForm.php
 
 		-
-			message: '#^Method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Order\>\:\:select\(\) invoked with 4 parameters, 0\-1 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: app/Filament/Resources/Orders/Widgets/OrderStatsWidget.php
-
-		-
 			message: '#^Cannot access property \$id on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
 			identifier: property.nonObject
 			count: 1
@@ -326,12 +320,6 @@ parameters:
 
 		-
 			message: '#^Method App\\Repositories\\UserRepository\:\:createUser\(\) should return App\\Models\\User but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Repositories/UserRepository.php
-
-		-
-			message: '#^Method App\\Repositories\\UserRepository\:\:getUserWithAddresses\(\) should return App\\Models\\User\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: return.type
 			count: 1
 			path: app/Repositories/UserRepository.php

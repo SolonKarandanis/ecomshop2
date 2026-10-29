@@ -13,6 +13,7 @@ use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SavedAddressController;
 use App\Http\Controllers\StripeRedirectController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SupplierOrderController;
@@ -73,5 +74,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::patch('/profile/password', [ProfileController::class, 'changePassword']);
-    Route::get('/profile/addresses', [ProfileController::class, 'addresses']);
+    Route::get('/profile/addresses', [SavedAddressController::class, 'index']);
+    Route::post('/profile/addresses', [SavedAddressController::class, 'store']);
+    Route::patch('/profile/addresses/{address}', [SavedAddressController::class, 'update']);
+    Route::delete('/profile/addresses/{address}', [SavedAddressController::class, 'destroy']);
+    Route::post('/profile/addresses/{address}/default', [SavedAddressController::class, 'makeDefault']);
 });

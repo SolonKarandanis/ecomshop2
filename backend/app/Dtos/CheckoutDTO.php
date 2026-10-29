@@ -22,6 +22,8 @@ class CheckoutDTO
 
     private string $paymentMethod;
 
+    private bool $saveAddress = false;
+
     public static function fromRequest(CheckoutRequest $request): self
     {
         $instance = new self();
@@ -33,6 +35,7 @@ class CheckoutDTO
         $instance->setCountry($request->input('country'));
         $instance->setZipCode($request->input('zipCode'));
         $instance->setPaymentMethod($request->input('paymentMethod'));
+        $instance->setSaveAddress($request->boolean('saveAddress'));
         return $instance;
     }
 
@@ -46,6 +49,7 @@ class CheckoutDTO
         $instance->setCountry($data['country']);
         $instance->setZipCode($data['zipCode']);
         $instance->setPaymentMethod($data['paymentMethod']);
+        $instance->setSaveAddress((bool) ($data['saveAddress'] ?? false));
         return $instance;
     }
 
@@ -127,5 +131,15 @@ class CheckoutDTO
     public function setPaymentMethod(string $paymentMethod): void
     {
         $this->paymentMethod = $paymentMethod;
+    }
+
+    public function shouldSaveAddress(): bool
+    {
+        return $this->saveAddress;
+    }
+
+    public function setSaveAddress(bool $saveAddress): void
+    {
+        $this->saveAddress = $saveAddress;
     }
 }
