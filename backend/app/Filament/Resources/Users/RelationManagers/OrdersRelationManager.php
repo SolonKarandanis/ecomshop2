@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\RelationManagers;
 
+use App\Enums\OrderStatusEnum;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -10,6 +11,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -29,9 +31,10 @@ class OrdersRelationManager extends RelationManager
                     ->numeric(),
                 TextInput::make('payment_method'),
                 TextInput::make('payment_status'),
-                TextInput::make('order_status')
+                Select::make('order_status')
+                    ->options(OrderStatusEnum::labels())
                     ->required()
-                    ->default('new'),
+                    ->default(OrderStatusEnum::Draft->value),
                 TextInput::make('currency'),
                 TextInput::make('shipping_amount')
                     ->numeric(),
@@ -49,20 +52,21 @@ class OrdersRelationManager extends RelationManager
                 TextColumn::make('id')
                     ->sortable(),
                 TextColumn::make('order_status')
+                    ->formatStateUsing(fn ($state) => OrderStatusEnum::labels()[$state] ?? $state)
                     ->badge()
                     ->color(fn(string $state)=> match ($state) {
-                        'new'=>'info',
-                        'processing'=>'warning',
-                        'shipped'=>'success',
-                        'delivered'=>'success',
-                        'cancelled'=>'danger',
+                        OrderStatusEnum::Draft->value => 'info',
+                        OrderStatusEnum::Paid->value => 'warning',
+                        OrderStatusEnum::Shipped->value => 'success',
+                        OrderStatusEnum::Delivered->value => 'success',
+                        OrderStatusEnum::Cancelled->value => 'danger',
                     })
                     ->icon(fn(string $state)=>match ($state) {
-                        'new'=>'heroicon-m-sparkles',
-                        'processing'=>'heroicon-m-arrow-path',
-                        'shipped'=>'heroicon-m-truck',
-                        'delivered'=>'heroicon-m-check-badge',
-                        'cancelled'=>'heroicon-m-x-circle',
+                        OrderStatusEnum::Draft->value => 'heroicon-m-sparkles',
+                        OrderStatusEnum::Paid->value => 'heroicon-m-arrow-path',
+                        OrderStatusEnum::Shipped->value => 'heroicon-m-truck',
+                        OrderStatusEnum::Delivered->value => 'heroicon-m-check-badge',
+                        OrderStatusEnum::Cancelled->value => 'heroicon-m-x-circle',
                     })
                     ->sortable()
                     ->searchable(),

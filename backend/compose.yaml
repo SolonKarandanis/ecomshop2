@@ -1,0 +1,24 @@
+# Local MariaDB matching production (Hostinger runs 11.8).
+# Credentials come from .env, so Laravel and the container stay in sync.
+services:
+  mariadb:
+    image: mariadb:11.8
+    container_name: ecomshop-mariadb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MARIADB_DATABASE: ${DB_DATABASE:-ecomshop}
+      MARIADB_USER: ${DB_USERNAME:-ecomshop}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mariadb-data:
