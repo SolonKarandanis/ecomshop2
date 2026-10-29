@@ -49,7 +49,7 @@ readonly class OrdersExport implements FromCollection, WithHeadings, WithMapping
             $row->created_at->format('d M, Y'),
             OrderStatusEnum::labels()[$row->order_status] ?? $row->order_status,
             OrderPaymentStatusEnum::labels()[$row->payment_status] ?? $row->payment_status,
-            Number::currency($row->grand_total ?? 0, 'eur'),
+            Number::currency($row->grand_total?->toFloat() ?? 0, 'eur'),
         ];
     }
 }

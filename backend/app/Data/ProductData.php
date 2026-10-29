@@ -31,7 +31,7 @@ class ProductData extends BaseData
             name: $product->name,
             slug: $product->slug,
             description: $product->description,
-            price: (float) $product->price,
+            price: $product->price->toFloat(),
             is_featured: $product->is_featured,
             in_stock: $product->in_stock,
             on_sale: $product->on_sale,

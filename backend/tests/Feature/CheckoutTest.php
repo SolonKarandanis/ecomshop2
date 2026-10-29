@@ -1,19 +1,24 @@
 <?php
 
+use App\Enums\AttributeValueMethodEnum;
 use App\Enums\PaymentMethodEnum;
 use App\Enums\RolesEnum;
 use App\Exceptions\CartException;
 use App\Exceptions\EmptyCartException;
 use App\Mail\OrderPlaced;
+use App\Models\Attribute;
+use App\Models\AttributeOptions;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\ProductAttributeValues;
 use App\Models\SavedAddress;
 use App\Models\StripeOrderDetail;
 use App\Models\User;
 use App\Notifications\OrderNotification;
+use App\ValueObjects\Money;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -181,10 +186,10 @@ it('charges the exact price, cents included, on the Order', function () {
     simulateNextCheckoutRequest($add)->postJson('/api/checkout', validCheckoutPayload())->assertOk();
 
     $order = Order::where('user_id', $buyer->id)->sole();
-    expect((float) $order->grand_total)->toBe(39.98);
+    expect($order->grand_total->toDecimal())->toBe('39.98');
     expect($order->items()->sole())
-        ->unit_amount->toEqual('19.99')
-        ->total_amount->toEqual('39.98');
+        ->unit_amount->toDecimal()->toBe('19.99')
+        ->total_amount->toDecimal()->toBe('39.98');
 });
 
 it('totals the Order from the cart after the Buyer adds more of an item', function () {
@@ -199,7 +204,7 @@ it('totals the Order from the cart after the Buyer adds more of an item', functi
     simulateNextCheckoutRequest($again)->postJson('/api/checkout', validCheckoutPayload())->assertOk();
 
     $order = Order::where('user_id', $buyer->id)->sole();
-    expect((float) $order->grand_total)->toBe(30.0);
+    expect($order->grand_total->toDecimal())->toBe('30.00');
     expect((float) $order->items()->sum('total_amount'))->toBe(30.0);
 });
 
@@ -402,4 +407,78 @@ it('rejects checkout with a missing required field', function () {
         ->postJson('/api/checkout', $payload)
         ->assertUnprocessable()
         ->assertJsonValidationErrors('address');
+});
+
+/**
+ * A Product with one priced option (a fixed amount or a percentage on top of its price).
+ *
+ * @return array{0: Product, 1: array<int, int>} the Product and the cart `attributes` choosing that option
+ */
+function productWithPricedOption(string $price, AttributeValueMethodEnum $method, string $value): array
+{
+    $product = Product::factory()->create(['price' => $price, 'is_active' => true]);
+    $attribute = Attribute::create(['name' => 'attribute.ram', 'type' => 'Select']);
+    $option = AttributeOptions::create(['attribute_id' => $attribute->id, 'option_name' => 'attribute.option.ram.32gb']);
+    ProductAttributeValues::create([
+        'product_id' => $product->id,
+        'attribute_id' => $attribute->id,
+        'attribute_option_id' => $option->id,
+        'attribute_value_method' => $method->value,
+        'attribute_value' => $value,
+    ]);
+
+    return [$product, [$attribute->id => $option->id]];
+}
+
+it('prices a cart item with an option to the cent, and carries that exact price to the Order and Stripe', function (AttributeValueMethodEnum $method, string $value, string $unitPrice, int $cents) {
+    Notification::fake();
+    Mail::fake();
+    config(['app.stripe_secret_key' => 'sk_test_fake']);
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::STRIPE->value]);
+    [$buyer, $login] = loggedInBuyer();
+    [$product, $attributes] = productWithPricedOption('899.50', $method, $value);
+    $stripe = new FakeStripeHttpClient;
+    ApiRequestor::setHttpClient($stripe);
+
+    try {
+        $add = simulateNextCheckoutRequest($login)
+            ->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 2, 'attributes' => $attributes])
+            ->assertOk();
+        expect(CartItem::sole()->unit_price->toDecimal())->toBe($unitPrice);
+
+        simulateNextCheckoutRequest($add)
+            ->postJson('/api/checkout', validCheckoutPayload(PaymentMethodEnum::STRIPE->value))
+            ->assertOk();
+    } finally {
+        ApiRequestor::setHttpClient(null);
+    }
+
+    $item = Order::where('user_id', $buyer->id)->sole()->items()->sole();
+    expect($item->unit_amount->toDecimal())->toBe($unitPrice)
+        ->and($item->total_amount->equals(Money::fromDecimal($unitPrice)->multiply(2)))->toBeTrue()
+        ->and($stripe->requests[0]['params']['line_items'][0]['price_data']['unit_amount'])->toBe($cents);
+})->with([
+    // 899.50 * 1.15 = 1034.425, rounded half-up.
+    '15% option' => [AttributeValueMethodEnum::PERCENT, '15', '1034.43', 103443],
+    '+25.10 option' => [AttributeValueMethodEnum::FIXED, '25.10', '924.60', 92460],
+]);
+
+it("totals an Order as its items plus shipping, to the cent", function () {
+    Notification::fake();
+    Mail::fake();
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
+    [$buyer, $login] = loggedInBuyer();
+    $supplier = User::factory()->create();
+    $mug = Product::factory()->create(['price' => '0.10', 'supplier_id' => $supplier->id]);
+    $pen = Product::factory()->create(['price' => '0.20', 'supplier_id' => $supplier->id]);
+
+    $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', ['product_id' => $mug->id, 'quantity' => 3])->assertOk();
+    $add = simulateNextCheckoutRequest($add)->postJson('/api/cart/items', ['product_id' => $pen->id, 'quantity' => 1])->assertOk();
+    simulateNextCheckoutRequest($add)->postJson('/api/checkout', validCheckoutPayload())->assertOk();
+
+    $order = Order::where('user_id', $buyer->id)->sole();
+    $itemsTotal = $order->items->reduce(fn (Money $sum, $item) => $sum->add($item->total_amount), Money::zero());
+    // 3 × 0.10 + 0.20 is 0.5000000000000001 in floats.
+    expect($order->grand_total->toDecimal())->toBe('0.50')
+        ->and($order->grand_total->equals($itemsTotal->add($order->shipping_amount)))->toBeTrue();
 });

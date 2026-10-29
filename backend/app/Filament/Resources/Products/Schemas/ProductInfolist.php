@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\Models\Product;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -27,6 +28,7 @@ class ProductInfolist
                     ->placeholder('-')
                     ->columnSpanFull(),
                 TextEntry::make('price')
+                    ->state(fn (Product $record) => $record->price->toFloat())
                     ->money('$'),
                 IconEntry::make('is_active')
                     ->boolean(),

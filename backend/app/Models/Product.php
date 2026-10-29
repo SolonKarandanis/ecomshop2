@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyCast;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,7 +23,7 @@ use Stripe\Climate\Supplier;
  * @property string $slug
  * @property string|null $images
  * @property string|null $description
- * @property numeric $price
+ * @property \App\ValueObjects\Money $price
  * @property bool $is_active
  * @property bool $is_featured
  * @property bool $in_stock
@@ -101,6 +102,7 @@ class Product extends Model implements HasMedia
     ];
 
     protected $casts=[
+        'price' => MoneyCast::class,
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
         'in_stock' => 'boolean',
@@ -126,7 +128,7 @@ class Product extends Model implements HasMedia
             'category_id' => $this->category_id,
             'brand_id' => $this->brand_id,
             'supplier_id' => $this->supplier_id,
-            'price' => (float) $this->price,
+            'price' => $this->price->toFloat(),
             'is_featured' => $this->is_featured,
             'on_sale' => $this->on_sale,
             'created_at' => $this->created_at?->timestamp,

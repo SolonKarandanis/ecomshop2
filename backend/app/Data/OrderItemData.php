@@ -26,8 +26,8 @@ class OrderItemData extends BaseData
             product_id: $orderItem->product_id,
             product: Lazy::whenLoaded('product', $orderItem, fn () => ProductData::fromModel($orderItem->product)),
             quantity: $orderItem->quantity,
-            unit_amount: $orderItem->unit_amount !== null ? (float) $orderItem->unit_amount : null,
-            total_amount: $orderItem->total_amount !== null ? (float) $orderItem->total_amount : null,
+            unit_amount: $orderItem->unit_amount?->toFloat(),
+            total_amount: $orderItem->total_amount?->toFloat(),
             attributes: $orderItem->attributes,
             attribute_labels: $orderItem->getAttributeNamesAndOptions(),
         );

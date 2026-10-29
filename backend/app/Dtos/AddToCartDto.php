@@ -2,21 +2,23 @@
 
 namespace App\Dtos;
 
+use App\ValueObjects\Money;
+
 class AddToCartDto
 {
     private int $productId;
     private int $quantity;
-    private float $price;
+    private Money $price;
     private array $attributes;
 
-    public function __construct(int $productId, int $quantity, float $price){
+    public function __construct(int $productId, int $quantity, Money $price){
         $this->productId = $productId;
         $this->quantity = $quantity;
         $this->price = $price;
         $this->attributes = [];
     }
 
-    public static function withAttributes(int $productId, int $quantity, float $price, array $attributes): self
+    public static function withAttributes(int $productId, int $quantity, Money $price, array $attributes): self
     {
         $dto = new self($productId, $quantity, $price);
         $dto->setAttributes($attributes);
@@ -43,12 +45,12 @@ class AddToCartDto
         $this->quantity = $quantity;
     }
 
-    public function getPrice(): float
+    public function getPrice(): Money
     {
         return $this->price;
     }
 
-    public function setPrice(float $price): void
+    public function setPrice(Money $price): void
     {
         $this->price = $price;
     }

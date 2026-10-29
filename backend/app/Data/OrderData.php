@@ -37,10 +37,10 @@ class OrderData extends BaseData
             id: $order->id,
             order_status: $order->order_status,
             payment_status: $order->payment_status,
-            grand_total: $order->grand_total !== null ? (float) $order->grand_total : null,
+            grand_total: $order->grand_total?->toFloat(),
             currency: $order->currency,
             shipping_method: $order->shipping_method,
-            shipping_amount: $order->shipping_amount !== null ? (float) $order->shipping_amount : null,
+            shipping_amount: $order->shipping_amount?->toFloat(),
             notes: $order->notes,
             created_at: $order->created_at,
             // Buyer-facing responses don't need to know which Supplier fulfills their

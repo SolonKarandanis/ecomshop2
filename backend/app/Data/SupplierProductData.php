@@ -35,7 +35,7 @@ class SupplierProductData extends BaseData
             name: $product->name,
             slug: $product->slug,
             description: $product->description,
-            price: (float) $product->price,
+            price: $product->price->toFloat(),
             category_id: $product->category_id,
             brand_id: $product->brand_id,
             is_active: $product->is_active,

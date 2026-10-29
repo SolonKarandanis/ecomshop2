@@ -18,7 +18,7 @@ class CartData extends BaseData
     public static function fromModel(Cart $cart): self
     {
         return new self(
-            total_price: (float) $cart->total_price,
+            total_price: $cart->total_price->toFloat(),
             items: CartItemData::collect($cart->cartItems, DataCollection::class),
         );
     }

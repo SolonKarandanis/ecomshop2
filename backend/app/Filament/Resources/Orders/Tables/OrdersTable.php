@@ -26,6 +26,7 @@ class OrdersTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('grand_total')
+                    ->state(fn (Order $record) => $record->grand_total?->toFloat())
                     ->numeric()
                     ->sortable()
                     ->money('eur'),

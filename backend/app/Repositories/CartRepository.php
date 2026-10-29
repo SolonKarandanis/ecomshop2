@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Dtos\AddToCartDto;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\ValueObjects\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -83,24 +84,24 @@ class CartRepository
             ->first();
     }
 
-    public function updateItemQuantity(int $cartItemId, int $quantity, float $unitPrice, float $totalPrice): void
+    // Query-builder update() and insert() skip model casts, so prices are written as decimal strings.
+    public function updateItemQuantity(int $cartItemId, int $quantity, Money $unitPrice, Money $totalPrice): void
     {
         $this->itemModelQuery()->where('id', $cartItemId)->update([
             'quantity' => $quantity,
-            'unit_price' => $unitPrice,
-            'total_price' => $totalPrice,
+            'unit_price' => $unitPrice->toDecimal(),
+            'total_price' => $totalPrice->toDecimal(),
         ]);
     }
 
     public function createCartItem(int $cartId, AddToCartDto $addToCartDto): void
     {
-        $total_price = $addToCartDto->getQuantity() * $addToCartDto->getPrice();
         $this->itemModelQuery()->create([
             'cart_id' => $cartId,
             'product_id' => $addToCartDto->getProductId(),
             'quantity' => $addToCartDto->getQuantity(),
             'unit_price' => $addToCartDto->getPrice(),
-            'total_price' => $total_price,
+            'total_price' => $addToCartDto->getPrice()->multiply($addToCartDto->getQuantity()),
             'attributes' => $addToCartDto->getAttributes(),
         ]);
     }
@@ -139,8 +140,8 @@ class CartRepository
             'cart_id' => $cartId,
             'product_id' => $dto->getProductId(),
             'quantity' => $dto->getQuantity(),
-            'unit_price' => $dto->getPrice(),
-            'total_price' => $dto->getQuantity() * $dto->getPrice(),
+            'unit_price' => $dto->getPrice()->toDecimal(),
+            'total_price' => $dto->getPrice()->multiply($dto->getQuantity())->toDecimal(),
             'attributes' => json_encode($dto->getAttributes()),
             'created_at' => now(),
             'updated_at' => now(),
@@ -183,7 +184,7 @@ class CartRepository
 
         $params = collect($updates)->flatMap(fn ($update) => [
             $update['id'], $update['quantity'],
-            $update['id'], $update['total_price'],
+            $update['id'], $update['total_price']->toDecimal(),
             $update['id'], is_array($update['attributes']) ? json_encode($update['attributes']) : $update['attributes'],
         ])->all();
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyCast;
 use App\Models\Attribute;
 use App\Models\AttributeOptions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,8 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $order_id
  * @property int $product_id
  * @property int $quantity
- * @property numeric|null $unit_amount
- * @property numeric|null $total_amount
+ * @property \App\ValueObjects\Money|null $unit_amount
+ * @property \App\ValueObjects\Money|null $total_amount
  * @property array|null $attributes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -62,6 +63,8 @@ class OrderItem extends Model
     ];
 
     protected $casts = [
+        'unit_amount' => MoneyCast::class,
+        'total_amount' => MoneyCast::class,
         'attributes' => 'array',
     ];
 

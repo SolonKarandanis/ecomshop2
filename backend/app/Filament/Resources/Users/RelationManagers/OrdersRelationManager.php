@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\RelationManagers;
 
 use App\Enums\OrderStatusEnum;
+use App\Models\Order;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -71,6 +72,7 @@ class OrdersRelationManager extends RelationManager
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('grand_total')
+                    ->state(fn (Order $record) => $record->grand_total?->toFloat())
                     ->numeric()
                     ->sortable()
                     ->money('eur'),
@@ -83,6 +85,7 @@ class OrdersRelationManager extends RelationManager
                 TextColumn::make('currency')
                     ->searchable(),
                 TextColumn::make('shipping_amount')
+                    ->state(fn (Order $record) => $record->shipping_amount?->toFloat())
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('shipping_method')
