@@ -11,11 +11,11 @@ use Stringable;
  * Immutable: every operation returns a new Money. Rounding is half-up (away from
  * zero) to the cent, and happens only in fromDecimal() and addPercent().
  */
-final class Money implements JsonSerializable, Stringable
+final readonly class Money implements JsonSerializable, Stringable
 {
     private function __construct(
-        private readonly int $cents,
-        private readonly string $currency,
+        private int $cents,
+        private string $currency,
     ) {}
 
     public static function fromCents(int $cents, ?string $currency = null): self
@@ -52,6 +52,14 @@ final class Money implements JsonSerializable, Stringable
         $this->assertSameCurrency($other);
 
         return new self($this->cents + $other->cents, $this->currency);
+    }
+
+    // Can go below zero: a refund or a discount larger than the amount is a negative Money.
+    public function subtract(Money $other): self
+    {
+        $this->assertSameCurrency($other);
+
+        return new self($this->cents - $other->cents, $this->currency);
     }
 
     public function multiply(int $quantity): self

@@ -47,6 +47,15 @@ it('adds and multiplies without float drift', function () {
         ->and(Money::fromDecimal('4.35')->multiply(3)->toDecimal())->toBe('13.05');
 });
 
+it('subtracts, going below zero when the other amount is larger', function (string $amount, string $other, string $result) {
+    expect(Money::fromDecimal($amount)->subtract(Money::fromDecimal($other))->toDecimal())->toBe($result);
+})->with([
+    '44.98 - 5.00' => ['44.98', '5.00', '39.98'],
+    '0.30 - 0.10' => ['0.30', '0.10', '0.20'],
+    '5.00 - 5.00' => ['5.00', '5.00', '0.00'],
+    '5.00 - 7.25' => ['5.00', '7.25', '-2.25'],
+]);
+
 it('adds a percentage rounded half-up to the cent', function (string $amount, string|int|float $percent, string $result) {
     expect(Money::fromDecimal($amount)->addPercent($percent)->toDecimal())->toBe($result);
 })->with([
@@ -60,6 +69,7 @@ it('adds a percentage rounded half-up to the cent', function (string $amount, st
 it('is immutable', function () {
     $price = Money::fromDecimal('10.00');
     $price->add(Money::fromDecimal('5.00'));
+    $price->subtract(Money::fromDecimal('5.00'));
     $price->multiply(4);
     $price->addPercent(20);
 
@@ -79,6 +89,6 @@ it('uses the app currency by default', function () {
     expect(Money::fromDecimal('1.00')->currency())->toBe('gbp');
 });
 
-it("refuses to add amounts in different currencies", function () {
-    Money::fromCents(100, 'eur')->add(Money::fromCents(100, 'usd'));
-})->throws(InvalidArgumentException::class);
+it('refuses to add or subtract amounts in different currencies', function (string $operation) {
+    Money::fromCents(100, 'eur')->{$operation}(Money::fromCents(100, 'usd'));
+})->throws(InvalidArgumentException::class)->with(['add', 'subtract']);

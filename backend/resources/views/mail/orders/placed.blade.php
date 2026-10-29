@@ -21,7 +21,7 @@ View Order Details
 @foreach($order->items as $item)
 | {{ $item->product->name }}@php $displayAttributes = $item->getAttributeNamesAndOptions(); @endphp @if(!empty($displayAttributes))<br><small>@foreach($displayAttributes as $name => $option){{ $name }}: {{ $option }}{{ !$loop->last ? ', ' : '' }}@endforeach</small>@endif | {{ $item->quantity }} | {{ \Illuminate\Support\Number::currency($item->unit_amount?->toFloat() ?? 0) }} | {{ \Illuminate\Support\Number::currency($item->total_amount?->toFloat() ?? 0) }} |
 @endforeach
-| | | **Subtotal** | {{ \Illuminate\Support\Number::currency(($order->grand_total?->cents() - ($order->shipping_amount?->cents() ?? 0)) / 100) }} |
+| | | **Subtotal** | {{ \Illuminate\Support\Number::currency(($order->grand_total ?? \App\ValueObjects\Money::zero())->subtract($order->shipping_amount ?? \App\ValueObjects\Money::zero())->toFloat()) }} |
 | | | **Shipping** | {{ \Illuminate\Support\Number::currency($order->shipping_amount?->toFloat() ?? 0) }} |
 | | | **Total** | **{{ \Illuminate\Support\Number::currency($order->grand_total?->toFloat() ?? 0) }}** |
 </x-mail::table>

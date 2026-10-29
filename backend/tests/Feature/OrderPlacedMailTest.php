@@ -23,5 +23,7 @@ it('renders the Order placed email with the item prices and totals', function ()
         ->toContain('$19.99')
         ->toContain('$39.98')
         ->toContain('$5.00')
-        ->toContain('$44.98');
+        ->toContain('$44.98')
+        // Subtotal is the total minus shipping: 44.98 - 5.00.
+        ->toMatch('/Subtotal.*?\$39\.98.*?Shipping.*?\$5\.00.*?Total.*?\$44\.98/s');
 });
