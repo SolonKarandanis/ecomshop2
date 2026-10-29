@@ -23,6 +23,7 @@ use App\Repositories\AddressRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\PaymentMethodRepository;
 use App\Repositories\ProductRepository;
+use App\ValueObjects\Money;
 use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -258,8 +259,7 @@ class OrderService
         return $cartItems->map(fn (CartItem $cartItem) => [
             'price_data' => [
                 'currency' => config('app.currency'),
-                // Stripe wants whole cents; price * 100 in floating point isn't exact (19.99 * 100 = 1998.99…).
-                'unit_amount' => (int) round($cartItem->unit_price * 100),
+                'unit_amount' => $cartItem->unit_price->cents(),
                 'product_data' => ['name' => $cartItem->product->name],
             ],
             'quantity' => $cartItem->quantity,
@@ -277,7 +277,7 @@ class OrderService
     /**
      * @throws OrderException
      */
-    protected function createNewOrder(float $totalPrice, int $paymentMethodId, array $orderItems, int $supplierId): Order
+    protected function createNewOrder(Money $totalPrice, int $paymentMethodId, array $orderItems, int $supplierId): Order
     {
         try {
             /** @var User $user */

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Orders\Schemas;
 use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Enums\PaymentMethodEnum;
+use App\Models\Order;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -18,6 +19,7 @@ class OrderInfolist
                 TextEntry::make('user.name')
                     ->label('User'),
                 TextEntry::make('grand_total')
+                    ->state(fn (Order $record) => $record->grand_total?->toFloat())
                     ->numeric()
                     ->placeholder('-'),
                 TextEntry::make('paymentMethod.resource_key')
@@ -32,6 +34,7 @@ class OrderInfolist
                 TextEntry::make('currency')
                     ->placeholder('-'),
                 TextEntry::make('shipping_amount')
+                    ->state(fn (Order $record) => $record->shipping_amount?->toFloat())
                     ->numeric()
                     ->placeholder('-'),
                 TextEntry::make('shipping_method')

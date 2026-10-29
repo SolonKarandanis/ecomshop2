@@ -5,23 +5,24 @@ namespace App\Dtos;
 use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Enums\ShippingMethodEnum;
+use App\ValueObjects\Money;
 
 class CreateOrderDTO
 {
     private int $userId;
     private int $supplierId;
-    private float $totalPrice;
+    private Money $totalPrice;
     private int $paymentMethodId;
     private string $paymentStatus;
     private string $orderStatus;
     private string $currency;
-    private float $shippingAmount;
+    private Money $shippingAmount;
     private string $shippingMethod;
     private string $notes;
     private array $orderItems;
 
     public function __construct(
-        int $userId, int $supplierId, float $totalPrice, int $paymentMethodId, array $orderItems, string $userName){
+        int $userId, int $supplierId, Money $totalPrice, int $paymentMethodId, array $orderItems, string $userName){
         $this->userId = $userId;
         $this->supplierId = $supplierId;
         $this->totalPrice = $totalPrice;
@@ -29,7 +30,7 @@ class CreateOrderDTO
         $this->paymentStatus=OrderPaymentStatusEnum::PENDING->value;
         $this->orderStatus=OrderStatusEnum::Draft->value;
         $this->currency = config('app.currency');
-        $this->shippingAmount = 0;
+        $this->shippingAmount = Money::zero();
         $this->shippingMethod = ShippingMethodEnum::NONE->value;
         $this->notes = 'Order placed'.$userName;
         $this->orderItems = $orderItems;
@@ -45,7 +46,7 @@ class CreateOrderDTO
         return $this->supplierId;
     }
 
-    public function getTotalPrice(): float
+    public function getTotalPrice(): Money
     {
         return $this->totalPrice;
     }
@@ -70,7 +71,7 @@ class CreateOrderDTO
         return $this->currency;
     }
 
-    public function getShippingAmount(): float
+    public function getShippingAmount(): Money
     {
         return $this->shippingAmount;
     }
@@ -90,7 +91,7 @@ class CreateOrderDTO
         return $this->orderItems;
     }
 
-    public function setShippingAmount(float $shippingAmount): void
+    public function setShippingAmount(Money $shippingAmount): void
     {
         $this->shippingAmount = $shippingAmount;
     }

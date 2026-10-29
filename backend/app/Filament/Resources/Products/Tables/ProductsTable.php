@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Models\Product;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -32,6 +33,7 @@ class ProductsTable
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('price')
+                    ->state(fn (Product $record) => $record->price->toFloat())
                     ->money()
                     ->sortable(),
                 IconColumn::make('is_active')

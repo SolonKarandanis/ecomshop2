@@ -8,6 +8,7 @@ use App\Dtos\UpdateCartItemsDTO;
 use App\Http\Requests\AddCartItemRequest;
 use App\Http\Requests\UpdateCartItemQuantityRequest;
 use App\Services\CartService;
+use App\ValueObjects\Money;
 use Illuminate\Support\Facades\Gate;
 
 class CartController extends Controller
@@ -31,7 +32,7 @@ class CartController extends Controller
         $dto = AddToCartDto::withAttributes(
             $request->integer('product_id'),
             $request->integer('quantity', 1),
-            0,
+            Money::zero(),
             $request->input('attributes', []),
         );
 

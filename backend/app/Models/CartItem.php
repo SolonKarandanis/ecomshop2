@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyCast;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,9 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $product_id
  * @property int $cart_id
- * @property float $unit_price
+ * @property \App\ValueObjects\Money $unit_price
  * @property int $quantity
- * @property float $total_price
+ * @property \App\ValueObjects\Money $total_price
  * @property array|null $attributes
  * @property string|null $id_from_cookie
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -50,6 +51,8 @@ class CartItem extends Model
     ];
 
     protected $casts = [
+        'unit_price' => MoneyCast::class,
+        'total_price' => MoneyCast::class,
         'attributes' => 'array',
     ];
 

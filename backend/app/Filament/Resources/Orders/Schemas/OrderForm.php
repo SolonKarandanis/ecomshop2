@@ -102,8 +102,8 @@ class OrderForm
                                     ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                                     ->columnSpan(4)
                                     ->reactive()
-                                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('unit_amount', Product::find($state)?->price ?? 0))
-                                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('total_amount', Product::find($state)?->price ?? 0)),
+                                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('unit_amount', Product::find($state)?->price->toDecimal() ?? 0))
+                                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('total_amount', Product::find($state)?->price->toDecimal() ?? 0)),
 
                                 TextInput::make('quantity')
                                     ->numeric()

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Casts\MoneyCast;
+use App\ValueObjects\Money;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart query()
  * @property int $id
  * @property int $user_id
- * @property float $total_price
+ * @property \App\ValueObjects\Money $total_price
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart whereCreatedAt($value)
@@ -38,11 +40,15 @@ class Cart extends Model
         'total_price'
     ];
 
+    protected $casts = [
+        'total_price' => MoneyCast::class,
+    ];
+
     public function recalculateCartTotalPrice(): void
     {
-        $total = 0;
+        $total = Money::zero();
         foreach ($this->cartItems as $item) {
-            $total += $item->total_price;
+            $total = $total->add($item->total_price);
         }
         $this->total_price = $total;
     }

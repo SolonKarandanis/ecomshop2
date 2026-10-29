@@ -10,6 +10,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Repositories\CartRepository;
+use App\ValueObjects\Money;
 use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -111,8 +112,8 @@ class CartService
             $modelData = [
                 'product_id' => $productId,
                 'quantity' => $itemData['quantity'],
-                'unit_price' => $itemData['price'],
-                'total_price' => $itemData['price'] * $itemData['quantity'],
+                'unit_price' => Money::fromDecimal($itemData['price']),
+                'total_price' => Money::fromDecimal($itemData['price'])->multiply($itemData['quantity']),
                 'attributes' => $itemData['attribute_ids'],
             ];
             $cartItem = new CartItem($modelData);
@@ -191,7 +192,7 @@ class CartService
                 $request->setPrice($price);
                 if ($existingItem) {
                     $request->setQuantity($existingItem->quantity + $request->getQuantity());
-                    $totalPrice = $request->getQuantity() * $request->getPrice();
+                    $totalPrice = $request->getPrice()->multiply($request->getQuantity());
                     $this->cartRepository->updateItemQuantity($existingItem->id, $request->getQuantity(), $request->getPrice(), $totalPrice);
                 } else {
                     $newCartItems[] = $request;
@@ -298,11 +299,13 @@ class CartService
             $price = $this->calculatePriceWithAttributes($product, $attributes);
             if ($existingItem) {
                 $existingItem->quantity += $request->getQuantity();
+                $existingItem->total_price = $existingItem->unit_price->multiply($existingItem->quantity);
             } else {
                 $newItemData = [
                     'product_id' => $request->getProductId(),
                     'quantity' => $request->getQuantity(),
                     'unit_price' => $price,
+                    'total_price' => $price->multiply($request->getQuantity()),
                     'attributes' => $attributes,
                 ];
                 $newItem = new CartItem($newItemData);
@@ -318,7 +321,7 @@ class CartService
                 'id' => $item->id_from_cookie,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
-                'price' => $item->unit_price,
+                'price' => $item->unit_price->toDecimal(),
                 'attribute_ids' => $itemAttributes,
             ];
         }
@@ -362,7 +365,7 @@ class CartService
                 ksort($attributes);
                 $existingCartItem = $this->findExistingCartItemForUpdate($cartItems, $cartItemId);
                 if ($existingCartItem !== null) {
-                    $totalPrice = $quantity * $existingCartItem->unit_price;
+                    $totalPrice = $existingCartItem->unit_price->multiply($quantity);
                     $updates[] = [
                         'id' => $existingCartItem->id,
                         'quantity' => $quantity,
@@ -408,7 +411,7 @@ class CartService
                 'id' => $item->id_from_cookie,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
-                'price' => $item->unit_price,
+                'price' => $item->unit_price->toDecimal(),
                 'attribute_ids' => $attributeIds,
             ];
         }
@@ -430,8 +433,8 @@ class CartService
             $modelData = [
                 'product_id' => $itemData['product_id'],
                 'quantity' => $itemData['quantity'],
-                'unit_price' => $itemData['price'],
-                'total_price' => $itemData['price'] * $itemData['quantity'],
+                'unit_price' => Money::fromDecimal($itemData['price']),
+                'total_price' => Money::fromDecimal($itemData['price'])->multiply($itemData['quantity']),
                 'attributes' => $itemData['attribute_ids'],
             ];
             $cartItem = new CartItem($modelData);
@@ -522,7 +525,7 @@ class CartService
             // so the cookies are still readable within this request. Seed the cache with
             // an empty cart so any subsequent getCart() call in the same request doesn't
             // re-read the stale cookies.
-            $empty = new Cart(['total_price' => 0]);
+            $empty = new Cart(['total_price' => Money::zero()]);
             $empty->setRelation('cartItems', collect());
             $this->cachedCart = $empty;
         }
@@ -599,7 +602,7 @@ class CartService
             $existingItem = $this->findExistingCartItem($dbCartItems, $cookieItem->product_id, $attributes);
             if ($existingItem) {
                 $newQuantity = $existingItem->quantity + $cookieItem->quantity;
-                $totalPrice = $newQuantity * $existingItem->unit_price;
+                $totalPrice = $existingItem->unit_price->multiply($newQuantity);
                 $itemsToUpdate[] = [
                     'id' => $existingItem->id,
                     'quantity' => $newQuantity,
@@ -653,7 +656,7 @@ class CartService
             'id' => $item->id_from_cookie ?? (string) Str::uuid(),
             'product_id' => $item->product_id,
             'quantity' => $item->quantity,
-            'price' => $item->unit_price,
+            'price' => $item->unit_price->toDecimal(),
             'attribute_ids' => $attributeIds,
         ];
         $cartItemsForCookie[$key] = $itemData;
@@ -690,7 +693,7 @@ class CartService
         }
     }
 
-    private function calculatePriceWithAttributes(Product $product, array $attributes): float
+    private function calculatePriceWithAttributes(Product $product, array $attributes): Money
     {
         $newPrice = $product->price;
         $attributeValues = $product->productAttributeValues;
@@ -702,9 +705,9 @@ class CartService
 
             if ($value) {
                 if ($value->attribute_value_method === 'attribute.value.method.fixed') {
-                    $newPrice += (float) $value->attribute_value;
+                    $newPrice = $newPrice->add(Money::fromDecimal($value->attribute_value ?? 0));
                 } elseif ($value->attribute_value_method === 'attribute.value.method.percent') {
-                    $newPrice *= (1 + (float) $value->attribute_value / 100);
+                    $newPrice = $newPrice->addPercent($value->attribute_value ?? 0);
                 }
             }
         }

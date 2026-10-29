@@ -43,12 +43,6 @@ parameters:
 			path: app/Filament/Resources/Orders/RelationManagers/AddressRelationManager.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>price" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Filament/Resources/Orders/Schemas/OrderForm.php
-
-		-
 			message: '#^Cannot access property \$id on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
 			identifier: property.nonObject
 			count: 1
@@ -345,18 +339,6 @@ parameters:
 		-
 			message: '#^Call to function is_string\(\) with array will always evaluate to false\.$#'
 			identifier: function.impossibleType
-			count: 1
-			path: app/Services/CartService.php
-
-		-
-			message: '#^Parameter \#1 \$price of method App\\Dtos\\AddToCartDto\:\:setPrice\(\) expects int, float given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/CartService.php
-
-		-
-			message: '#^Parameter \#3 \$price of static method App\\Dtos\\AddToCartDto\:\:withAttributes\(\) expects int, float given\.$#'
-			identifier: argument.type
 			count: 1
 			path: app/Services/CartService.php
 

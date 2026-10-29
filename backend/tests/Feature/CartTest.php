@@ -237,7 +237,7 @@ it('does not leave a stale cached empty cart after transferring an empty guest c
         'product_id' => $product->id,
         'quantity' => 2,
         'unit_price' => $product->price,
-        'total_price' => $product->price * 2,
+        'total_price' => $product->price->multiply(2),
     ]);
 
     $this->actingAs($buyer);
@@ -322,7 +322,7 @@ it('keeps the saved cart at login when the guest cart is empty', function () {
         'product_id' => $product->id,
         'quantity' => 2,
         'unit_price' => $product->price,
-        'total_price' => $product->price * 2,
+        'total_price' => $product->price->multiply(2),
     ]);
 
     $login = simulateNextRequest()
@@ -358,8 +358,8 @@ it("keeps the cents of an authenticated Buyer's cart item price", function () {
     expect($add->json('data.items.0.unit_price'))->toBe(19.99);
     expect($add->json('data.items.0.total_price'))->toBe(39.98);
     expect(CartItem::sole())
-        ->unit_price->toEqualWithDelta(19.99, 0.001)
-        ->total_price->toEqualWithDelta(39.98, 0.001);
+        ->unit_price->toDecimal()->toBe('19.99')
+        ->total_price->toDecimal()->toBe('39.98');
 });
 
 it('keeps the cents when an authenticated Buyer adds more of an item already in the cart', function () {
@@ -387,7 +387,7 @@ it('keeps the cents when a guest cart is transferred to the database on login', 
         ->postJson('/api/login', ['email' => $buyer->email, 'password' => 'password'])
         ->assertOk();
 
-    expect(CartItem::sole()->unit_price)->toEqualWithDelta(8.20, 0.001);
+    expect(CartItem::sole()->unit_price->toDecimal())->toBe('8.20');
     $show = simulateNextRequest($login)->getJson('/api/cart')->assertOk();
     expect($show->json('data.items.0.unit_price'))->toBe(8.2);
 });

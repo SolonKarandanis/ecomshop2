@@ -25,8 +25,8 @@ class CartItemData extends BaseData
             product_name: $cartItem->product?->name,
             product_slug: $cartItem->product?->slug,
             quantity: $cartItem->quantity,
-            unit_price: (float) $cartItem->unit_price,
-            total_price: (float) $cartItem->total_price,
+            unit_price: $cartItem->unit_price->toFloat(),
+            total_price: $cartItem->total_price->toFloat(),
             attributes: $cartItem->attributes ?? [],
         );
     }

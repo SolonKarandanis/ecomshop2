@@ -124,7 +124,7 @@ it('creates a Product owned by the Supplier, with a slug generated from its name
 
     $product = Product::findOrFail($response->json('data.id'));
     expect($product->supplier_id)->toBe($supplier->id);
-    expect((float) $product->price)->toBe(899.5);
+    expect($product->price->toDecimal())->toBe('899.50');
 });
 
 it('makes a generated slug unique', function () {

@@ -21,7 +21,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property int $attribute_id
  * @property int $attribute_option_id
  * @property string|null $attribute_value_method
- * @property float|null $attribute_value
+ * @property numeric|null $attribute_value
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductAttributeValues whereAttributeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductAttributeValues whereAttributeOptionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductAttributeValues whereAttributeValue($value)
