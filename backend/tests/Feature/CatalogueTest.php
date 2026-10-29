@@ -5,6 +5,8 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Review;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 it('lists active products as a paginated resource collection', function () {
     Product::factory()->count(3)->create(['is_active' => true]);
@@ -39,13 +41,29 @@ it('filters products by price range', function () {
 });
 
 it('searches products by name', function () {
-    $match = Product::factory()->create(['is_active' => true, 'name' => 'Wireless Keyboard']);
-    Product::factory()->create(['is_active' => true, 'name' => 'Desk Lamp']);
+    // On MySQL/MariaDB this is a FULLTEXT search, and InnoDB's FULLTEXT index only sees
+    // committed rows, while RefreshDatabase keeps each test in a transaction. So commit
+    // the Products, and delete them (and what their factory created) afterwards.
+    DB::commit();
+    $products = collect();
 
-    $response = $this->getJson('/api/products?q=keyboard')->assertOk();
+    try {
+        $products->push($match = Product::factory()->create(['is_active' => true, 'name' => 'Wireless Keyboard']));
+        $products->push(Product::factory()->create(['is_active' => true, 'name' => 'Desk Lamp']));
 
-    expect($response->json('data'))->toHaveCount(1);
-    expect($response->json('data.0.id'))->toBe($match->id);
+        $response = $this->getJson('/api/products?q=keyboard')->assertOk();
+
+        expect($response->json('data'))->toHaveCount(1);
+        expect($response->json('data.0.id'))->toBe($match->id);
+    } finally {
+        foreach ($products as $product) {
+            $product->delete();
+            $product->category->delete();
+            $product->brand->delete();
+            User::whereKey($product->supplier_id)->delete();
+        }
+        DB::beginTransaction();
+    }
 });
 
 it('rejects an invalid sort value', function () {

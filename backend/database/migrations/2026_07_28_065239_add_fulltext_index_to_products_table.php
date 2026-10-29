@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        if(DB::connection()->getDriverName() !== 'mysql') return;
+        if(! in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) return;
         Schema::table('products', function (Blueprint $table) {
             $table->fullText(['name','description']);
         });
@@ -16,7 +16,7 @@ return new class extends Migration {
 
     public function down(): void
     {
-        if(DB::connection()->getDriverName() !== 'mysql') return;
+        if(! in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) return;
         Schema::table('products', function (Blueprint $table) {
             $table->dropFulltext(['name','description']);
         });

@@ -22,7 +22,8 @@ class ProductSearchEngineFactory
         if ($this->ftsEnabled) {
             return ProductSearchEngineEnum::Meilisearch;
         }
-        return $this->driver === 'mysql'
+        // MariaDB has its own driver name since Laravel 11, but the same FULLTEXT support.
+        return in_array($this->driver, ['mysql', 'mariadb'], true)
             ? ProductSearchEngineEnum::FullText
             : ProductSearchEngineEnum::Like;
     }
