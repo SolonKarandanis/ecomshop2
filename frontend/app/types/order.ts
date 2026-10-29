@@ -80,6 +80,13 @@ export interface OrderItem {
   attribute_labels: Record<string, string>
 }
 
+// App\Data\OrderStatusHistoryData: one status change, oldest first.
+export interface OrderStatusHistoryEntry {
+  order_status: string
+  payment_status: string | null
+  created_at: string | null
+}
+
 // GET /api/orders/{order}: OrderData with its relations loaded.
 export interface OrderDetail extends Order {
   currency: string | null
@@ -88,4 +95,5 @@ export interface OrderDetail extends Order {
   payment_method: string | null
   address: OrderAddress | null
   items: OrderItem[]
+  status_history: OrderStatusHistoryEntry[]
 }
