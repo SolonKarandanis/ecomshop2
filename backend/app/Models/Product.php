@@ -23,10 +23,10 @@ use Stripe\Climate\Supplier;
  * @property string|null $images
  * @property string|null $description
  * @property numeric $price
- * @property int $is_active
- * @property int $is_featured
- * @property int $in_stock
- * @property int $on_sale
+ * @property bool $is_active
+ * @property bool $is_featured
+ * @property bool $in_stock
+ * @property bool $on_sale
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product newModelQuery()
@@ -100,7 +100,12 @@ class Product extends Model implements HasMedia
         'supplier_id',
     ];
 
-    protected $casts=[];
+    protected $casts=[
+        'is_active' => 'boolean',
+        'is_featured' => 'boolean',
+        'in_stock' => 'boolean',
+        'on_sale' => 'boolean',
+    ];
 
     public function registerMediaConversions(?Media $media = null): void
     {
@@ -122,8 +127,8 @@ class Product extends Model implements HasMedia
             'brand_id' => $this->brand_id,
             'supplier_id' => $this->supplier_id,
             'price' => (float) $this->price,
-            'is_featured' => (bool) $this->is_featured,
-            'on_sale' => (bool) $this->on_sale,
+            'is_featured' => $this->is_featured,
+            'on_sale' => $this->on_sale,
             'created_at' => $this->created_at?->timestamp,
             'average_rating' => $this->average_rating !== null ? (float) $this->average_rating : null,
         ];
@@ -131,7 +136,7 @@ class Product extends Model implements HasMedia
 
     public function shouldBeSearchable(): bool
     {
-        return (bool) $this->is_active;
+        return $this->is_active;
     }
 
     public function searchableAs(): string

@@ -18,3 +18,19 @@ export interface ChangePasswordPayload {
   newPassword: string
   newPasswordConfirmation: string
 }
+
+// Mirrors the backend's App\Data\SavedAddressData (/api/profile/addresses).
+export interface SavedAddress {
+  id: number
+  first_name: string
+  last_name: string
+  phone: string
+  street_address: string
+  city: string
+  country: string
+  postal_code: string
+  is_default: boolean
+}
+
+// StoreSavedAddressRequest's fields.
+export type SavedAddressPayload = Omit<SavedAddress, 'id' | 'is_default'>

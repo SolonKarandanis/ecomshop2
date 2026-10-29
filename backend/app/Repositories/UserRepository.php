@@ -31,13 +31,6 @@ class UserRepository
         return $user;
     }
 
-    public function getUserWithAddresses(int $userId): ?User
-    {
-        return $this->modelQuery()
-            ->with(['addresses' => fn($q) => $q->with('order')->latest()->limit(5)])
-            ->find($userId);
-    }
-
     public function getUsersWithOrderedItems(): Collection{
         return $this->modelQuery()
             ->select('users.name')

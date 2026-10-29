@@ -84,10 +84,6 @@ class UserService
         return $this->userRepository->getUsersWithOrderedItems();
     }
 
-    public function getUserWithAddresses(int $userId): ?User{
-        return $this->userRepository->getUserWithAddresses($userId);
-    }
-
     public function resetPassword(ResetPasswordDTO $dto):string{
         return Password::reset([
             'email' => $dto->getEmail(),

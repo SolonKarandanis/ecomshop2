@@ -16,6 +16,8 @@ export interface CheckoutPayload {
   country: string
   zipCode: string
   paymentMethod: string
+  // Also add the shipping address to the Buyer's address book.
+  saveAddress: boolean
 }
 
 // POST /api/checkout: Stripe's hosted payment page, or /success?order_id=… for Cash on Delivery.
