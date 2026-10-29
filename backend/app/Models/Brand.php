@@ -15,7 +15,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $name
  * @property string $slug
  * @property string|null $image
- * @property int $is_active
+ * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Brand newModelQuery()
@@ -41,6 +41,8 @@ class Brand extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
 
     protected $fillable=['name','slug','image','is_active'];
+
+    protected $casts=['is_active' => 'boolean'];
 
     public function registerMediaConversions(?Media $media = null): void
     {

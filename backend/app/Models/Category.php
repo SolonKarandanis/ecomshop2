@@ -14,7 +14,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property int $id
  * @property string $name
  * @property string $slug
- * @property int $is_active
+ * @property bool $is_active
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
@@ -39,6 +39,8 @@ class Category extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
 
     protected $fillable=['name','slug','is_active'];
+
+    protected $casts=['is_active' => 'boolean'];
 
     public function registerMediaConversions(?Media $media = null): void
     {
