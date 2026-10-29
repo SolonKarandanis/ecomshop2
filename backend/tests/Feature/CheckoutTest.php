@@ -14,7 +14,6 @@ use App\Models\SavedAddress;
 use App\Models\StripeOrderDetail;
 use App\Models\User;
 use App\Notifications\OrderNotification;
-use App\Services\CartService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -34,7 +33,7 @@ function simulateNextCheckoutRequest(?TestResponse $previous = null): TestCase
         }
     }
 
-    app()->forgetInstance(CartService::class);
+    forgetRequestState();
     app('auth')->forgetGuards();
 
     return $client;
@@ -186,6 +185,22 @@ it('charges the exact price, cents included, on the Order', function () {
     expect($order->items()->sole())
         ->unit_amount->toEqual('19.99')
         ->total_amount->toEqual('39.98');
+});
+
+it('totals the Order from the cart after the Buyer adds more of an item', function () {
+    Notification::fake();
+    Mail::fake();
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
+    [$buyer, $login] = loggedInBuyer();
+    $product = Product::factory()->create(['price' => 10]);
+
+    $first = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
+    $again = simulateNextCheckoutRequest($first)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 2])->assertOk();
+    simulateNextCheckoutRequest($again)->postJson('/api/checkout', validCheckoutPayload())->assertOk();
+
+    $order = Order::where('user_id', $buyer->id)->sole();
+    expect((float) $order->grand_total)->toBe(30.0);
+    expect((float) $order->items()->sum('total_amount'))->toBe(30.0);
 });
 
 it('sends Stripe each unit price as a whole number of cents', function (float $price, int $cents) {

@@ -1,5 +1,7 @@
 <?php
 
+use App\Services\CartService;
+use App\Services\OrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +46,18 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Drops what one simulated request would otherwise hand the next. Requests in one test share
+ * the app, and Laravel keeps each route's controller instance, so the next request would reuse
+ * the old controller and the services it was built with: CartService caches the cart it read,
+ * and the OrderService singleton holds its own CartService. Real requests never share these.
+ */
+function forgetRequestState(): void
 {
-    // ..
+    foreach (app('router')->getRoutes() as $route) {
+        $route->flushController();
+    }
+
+    app()->forgetInstance(CartService::class);
+    app()->forgetInstance(OrderService::class);
 }

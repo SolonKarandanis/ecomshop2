@@ -31,7 +31,7 @@ function simulateNextRequest(?TestResponse $previous = null): TestCase
         }
     }
 
-    app()->forgetInstance(CartService::class);
+    forgetRequestState();
     app('auth')->forgetGuards();
 
     return $client;
@@ -368,12 +368,12 @@ it('keeps the cents when an authenticated Buyer adds more of an item already in 
 
     $first = simulateNextRequest($login)->postJson('/api/cart/items', ['product_id' => $product->id])->assertOk();
     $again = simulateNextRequest($first)->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 2])->assertOk();
-    $show = simulateNextRequest($again)->getJson('/api/cart')->assertOk();
 
-    expect($show->json('data.items'))->toHaveCount(1);
-    expect($show->json('data.items.0.quantity'))->toBe(3);
-    expect($show->json('data.items.0.unit_price'))->toBe(4.35);
-    expect($show->json('data.items.0.total_price'))->toBe(13.05);
+    expect($again->json('data.items'))->toHaveCount(1);
+    expect($again->json('data.items.0.quantity'))->toBe(3);
+    expect($again->json('data.items.0.unit_price'))->toBe(4.35);
+    expect($again->json('data.items.0.total_price'))->toBe(13.05);
+    expect($again->json('data.total_price'))->toBe(13.05);
 });
 
 it('keeps the cents when a guest cart is transferred to the database on login', function () {
