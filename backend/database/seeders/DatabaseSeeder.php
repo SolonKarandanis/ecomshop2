@@ -3,10 +3,10 @@
 namespace Database\Seeders;
 
 use App\Enums\RolesEnum;
+use App\Enums\UserStatusEnum;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,20 +19,35 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(PaymentMethodSeeder::class);
         $this->call(RoleSeeder::class);
-        $adminRole = Role::query()->where('name', RolesEnum::ROLE_ADMIN->value)->first();
-        $adminUser = User::query()->where('email','skarandanis@gmail.com')->first();
+        $this->seedAdmin();
+    }
 
-        if(is_null($adminUser)){
-            $adminUser = User::factory()->create([
-                'name' => 'Admin',
-                'email' => 'skarandanis@gmail.com',
-                'password' => bcrypt('7ujm&UJM'),
-            ]);
+    /**
+     * Create the Filament admin from ADMIN_EMAIL / ADMIN_PASSWORD. The password only
+     * applies when the account is created, so re-seeding on every deploy (ADR-0001)
+     * never resets a password changed since. Uses User::create() rather than the
+     * factory, because Faker isn't installed in production (composer --no-dev).
+     */
+    private function seedAdmin(): void
+    {
+        $email = config('app.admin_email');
+        $password = config('app.admin_password');
+
+        if (blank($email) || blank($password)) {
+            $this->command?->warn('ADMIN_EMAIL or ADMIN_PASSWORD is not set; skipping the admin user.');
+
+            return;
         }
 
-        if ($adminRole && !$adminUser->hasRole($adminRole)) {
-            $adminUser->assignRole($adminRole);
-        }
+        $admin = User::query()->firstOrCreate(['email' => $email], [
+            'name' => 'Admin',
+            'password' => $password,
+            'status' => UserStatusEnum::ACTIVE->value,
+            'email_verified_at' => now(),
+        ]);
 
+        if (! $admin->hasRole(RolesEnum::ROLE_ADMIN->value)) {
+            $admin->assignRole(RolesEnum::ROLE_ADMIN->value);
+        }
     }
 }
