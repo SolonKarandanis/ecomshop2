@@ -99,6 +99,21 @@ jobs:
       - run: php artisan key:generate --env=testing
       - run: vendor/bin/pest
 
+  # The single required status check for main's branch protection (#42). The
+  # frontend and backend-test jobs are path-filtered and show as skipped when
+  # their side didn't change, so requiring them directly would block unrelated
+  # PRs. This always runs and fails only if a job it depends on failed or was
+  # cancelled; skipped counts as passing.
+  ci-ok:
+    needs: [changes, frontend, backend-test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any required job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - run: echo "All required jobs passed or were skipped."
+
   # Deploys to the Hostinger site api.<domain> over SSH, only after the tests pass
   # on a push to main. The server's CLI `php` is 8.4, so every PHP call uses the
   # PHP 8.5 binary explicitly.
