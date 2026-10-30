@@ -14,6 +14,7 @@ jobs:
       pull-requests: read
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -22,6 +23,8 @@ jobs:
           filters: |
             frontend:
               - 'frontend/**'
+            backend:
+              - 'backend/**'
 
   # Pre-merge quality gate only. Hostinger's Node.js hosting deploys the
   # frontend from its own git webhook, so there is no deploy step here.
@@ -42,3 +45,98 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run test
+
+  # Pest against MariaDB 11.8, matching production. SQLite doesn't enforce ENUMs
+  # or JSON validity, so a SQLite-only suite can pass on schema production rejects.
+  backend-test:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_DATABASE: ecomshop_test
+          MARIADB_USER: ecomshop
+          MARIADB_PASSWORD: secret
+          MARIADB_ROOT_PASSWORD: secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    # phpunit.xml sets DB_CONNECTION/DB_DATABASE without force="true", so these
+    # win in CI while local runs stay on in-memory SQLite.
+    env:
+      DB_CONNECTION: mariadb
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: ecomshop_test
+      DB_USERNAME: ecomshop
+      DB_PASSWORD: secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: intl, gd, exif, iconv, bcmath, pdo_mysql
+          coverage: none
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: cp .env.example .env.testing
+      - run: php artisan key:generate --env=testing
+      - run: vendor/bin/pest
+
+  # Deploys to the Hostinger site api.<domain> over SSH, only after the tests pass
+  # on a push to main. The server's CLI `php` is 8.4, so every PHP call uses the
+  # PHP 8.5 binary explicitly.
+  backend-deploy:
+    needs: [changes, backend-test]
+    if: github.event_name == 'push' && needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: backend-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: appleboy/ssh-action@v1
+        env:
+          APP_PATH: ${{ secrets.ECOMSHOP2_APP_PATH }}
+        with:
+          host: ${{ secrets.ECOMSHOP2_SSH_HOST }}
+          username: ${{ secrets.ECOMSHOP2_SSH_USERNAME }}
+          key: ${{ secrets.ECOMSHOP2_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.ECOMSHOP2_SSH_PORT }}
+          envs: APP_PATH
+          script: |
+            set -e
+            PHP=/opt/alt/php85/usr/bin/php
+            cd "$APP_PATH"
+            git fetch origin main
+            git reset --hard origin/main
+            cd backend
+            rm -f bootstrap/cache/*.php
+            $PHP /usr/local/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts
+            $PHP artisan config:clear
+            $PHP artisan migrate --force
+            $PHP artisan db:seed --force
+            $PHP artisan filament:assets
+            $PHP artisan config:cache
+            $PHP artisan route:cache
+            $PHP artisan view:cache
+            # Hostinger's PHP disables symlink(), so link storage with ln instead
+            # of `artisan storage:link`. public/storage is git-ignored, so the
+            # reset above leaves an existing link in place.
+            [ -e public/storage ] || ln -s ../storage/app/public public/storage
+            $PHP artisan queue:restart
