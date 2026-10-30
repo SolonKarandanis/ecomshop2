@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Orders\Pages;
 
+use App\Enums\OrderPaymentStatusEnum;
+use App\Enums\OrderStatusEnum;
 use App\Filament\Resources\Orders\Concerns\ValidatesSingleSupplierItems;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Services\OrderService;
@@ -22,6 +24,9 @@ class CreateOrder extends CreateRecord
     {
         $items = $this->form->getRawState()['items'] ?? [];
         $data['supplier_id'] = app(OrderService::class)->resolveSupplierIdForItems($items, auth()->id());
+        // Every Order starts here; the state machine takes it from there (#82).
+        $data['order_status'] = OrderStatusEnum::Draft->value;
+        $data['payment_status'] = OrderPaymentStatusEnum::PENDING->value;
 
         return $data;
     }

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Data\OrderData;
 use App\Dtos\OrderSearchRequestDTO;
-use App\Enums\OrderStatusEnum;
+use App\Enums\OrderEventEnum;
 use App\Http\Requests\OrderSearchRequest;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
@@ -28,25 +28,25 @@ class SupplierOrderController extends Controller
 
     public function ship(int $order, Request $request): OrderData
     {
-        return $this->transition($order, $request, OrderStatusEnum::Shipped);
+        return $this->transition($order, $request, OrderEventEnum::Ship);
     }
 
     public function deliver(int $order, Request $request): OrderData
     {
-        return $this->transition($order, $request, OrderStatusEnum::Delivered);
+        return $this->transition($order, $request, OrderEventEnum::Deliver);
     }
 
     public function cancel(int $order, Request $request): OrderData
     {
-        return $this->transition($order, $request, OrderStatusEnum::Cancelled);
+        return $this->transition($order, $request, OrderEventEnum::Cancel);
     }
 
-    private function transition(int $orderId, Request $request, OrderStatusEnum $toStatus): OrderData
+    private function transition(int $orderId, Request $request, OrderEventEnum $event): OrderData
     {
         abort_unless(Gate::allows('supplier-action'), 403);
 
         $order = $this->orderService->getOrderForSupplierAction($orderId, $request->user());
-        $order = $this->orderService->transitionOrderStatusBySupplier($order, $request->user(), $toStatus);
+        $order = $this->orderService->applySupplierEvent($order, $request->user(), $event);
 
         return OrderData::from($order->load('statusHistory'))->wrap('data');
     }

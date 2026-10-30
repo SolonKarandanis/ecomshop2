@@ -32,7 +32,7 @@ return [
         'create_order' => 'Failed to create new order',
         'checkout' => 'Something went wrong during checkout!',
         'stripe_processing' => 'Something went wrong during stripe order processing!',
-        'supplier_action_not_allowed' => 'This order cannot be updated from its current status.',
+        'transition_not_allowed' => 'This order cannot be updated from its current status.',
         'supplier_mismatch' => 'An order can only contain products from a single supplier. Remove the items from the other supplier before saving.',
     ],
     'payment_exceptions' => [

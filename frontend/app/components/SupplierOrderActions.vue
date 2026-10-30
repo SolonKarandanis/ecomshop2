@@ -2,13 +2,14 @@
 import type { Order } from '~/types/order'
 
 const props = defineProps<{
-  order: Pick<Order, 'id' | 'order_status' | 'payment_status'>
+  order: Pick<Order, 'id' | 'order_status' | 'payment_status' | 'supplier_actions'>
 }>()
 
 const { pending, run } = useSupplierOrderActions()
 const confirmingCancel = ref(false)
 
-const actions = computed(() => supplierActionsFor(props.order.order_status))
+// The backend decides what's allowed (#82); this only shows what it sends.
+const actions = computed(() => props.order.supplier_actions ?? [])
 
 async function cancel() {
   confirmingCancel.value = false

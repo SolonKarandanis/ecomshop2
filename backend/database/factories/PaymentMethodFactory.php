@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Enums\PaymentMethodEnum;
+use App\Models\PaymentMethod;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PaymentMethod>
+ * @extends Factory<PaymentMethod>
  */
 class PaymentMethodFactory extends Factory
 {
@@ -15,5 +16,10 @@ class PaymentMethodFactory extends Factory
         return [
             'resource_key' => PaymentMethodEnum::STRIPE->value,
         ];
+    }
+
+    public function cashOnDelivery(): static
+    {
+        return $this->state(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
     }
 }

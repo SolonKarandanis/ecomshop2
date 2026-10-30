@@ -1,14 +1,17 @@
 <?php
 
 use App\Enums\NotificationEventTypeEnum;
+use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Enums\RolesEnum;
 use App\Enums\UserStatusEnum;
 use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
+use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Order;
 use App\Models\User;
 use App\Notifications\OrderNotification;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -33,51 +36,51 @@ function assertSentEventTo(User $user, NotificationEventTypeEnum $eventType, int
     );
 }
 
-function changeStatusFromOrdersList(Order $order, OrderStatusEnum $status): void
+function applyFromOrdersList(Order $order, string $action): void
 {
-    Livewire::test(ListOrders::class)
-        ->call('updateTableColumnState', 'order_status', (string) $order->getKey(), $status->value);
+    Livewire::test(ListOrders::class)->callAction(TestAction::make($action)->table($order));
 }
 
-it('notifies the Buyer and Supplier when an admin marks a COD Order Paid from the edit form', function () {
+it('lets an admin ship and deliver a Cash-on-Delivery Order from the Order page, notifying the Buyer (#82)', function () {
     Notification::fake();
     $this->actingAs(paidNotificationsAdmin());
-    $order = Order::factory()->create();
+    $order = Order::factory()->cashOnDelivery()->create();
 
-    Livewire::test(EditOrder::class, ['record' => $order->getRouteKey()])
-        ->fillForm(['order_status' => OrderStatusEnum::Paid->value])
-        ->call('save')
-        ->assertHasNoFormErrors();
+    Livewire::test(ViewOrder::class, ['record' => $order->getRouteKey()])->callAction('ship');
+    Livewire::test(ViewOrder::class, ['record' => $order->getRouteKey()])->callAction('deliver');
 
-    // EditOrder re-resolves supplier_id from the items (the admin, when there are none).
     $order->refresh();
-    expect($order->order_status)->toBe(OrderStatusEnum::Paid->value);
-    assertSentEventTo($order->user, NotificationEventTypeEnum::ORDER_PAYMENT_CONFIRMED);
-    assertSentEventTo($order->supplier, NotificationEventTypeEnum::ORDER_READY_FOR_SUPPLIER);
+    expect($order->order_status)->toBe(OrderStatusEnum::Delivered->value)
+        ->and($order->payment_status)->toBe(OrderPaymentStatusEnum::PAID->value);
+    Notification::assertSentTo(
+        $order->user,
+        OrderNotification::class,
+        fn ($notification, $channels, $notifiable) => $notification->toDatabase($notifiable)['event_type'] === NotificationEventTypeEnum::ORDER_DELIVERED->value
+    );
 });
 
-it('notifies the Buyer and Supplier when an admin marks a COD Order Paid from the Orders list', function () {
-    Notification::fake();
-    $this->actingAs(paidNotificationsAdmin());
-    $order = Order::factory()->create();
-
-    changeStatusFromOrdersList($order, OrderStatusEnum::Paid);
-
-    expect($order->fresh()->order_status)->toBe(OrderStatusEnum::Paid->value);
-    assertSentEventTo($order->user, NotificationEventTypeEnum::ORDER_PAYMENT_CONFIRMED);
-    assertSentEventTo($order->supplier, NotificationEventTypeEnum::ORDER_READY_FOR_SUPPLIER);
-});
-
-it('sends the ready-for-supplier Notification to the admin who is the Order\'s Supplier when suppliers are disabled', function () {
+it('sends the ready-for-supplier Notification for a new Cash-on-Delivery Order to the admin who is its Supplier when suppliers are disabled', function () {
     config(['features.suppliers_enabled' => false]);
     Notification::fake();
     $admin = paidNotificationsAdmin();
-    $this->actingAs($admin);
-    $order = Order::factory()->create(['supplier_id' => $admin->id]);
 
-    changeStatusFromOrdersList($order, OrderStatusEnum::Paid);
+    Order::factory()->cashOnDelivery()->create(['supplier_id' => $admin->id]);
 
     assertSentEventTo($admin, NotificationEventTypeEnum::ORDER_READY_FOR_SUPPLIER);
+});
+
+it('offers an admin no "mark paid" action, and no status fields on the Order form (#82)', function () {
+    $this->actingAs(paidNotificationsAdmin());
+    $order = Order::factory()->cashOnDelivery()->create();
+
+    Livewire::test(ListOrders::class)
+        ->assertActionVisible(TestAction::make('ship')->table($order))
+        ->assertActionVisible(TestAction::make('cancel')->table($order))
+        ->assertActionHidden(TestAction::make('deliver')->table($order));
+
+    Livewire::test(EditOrder::class, ['record' => $order->getRouteKey()])
+        ->assertFormFieldDoesNotExist('order_status')
+        ->assertFormFieldDoesNotExist('payment_status');
 });
 
 it('sends no Notifications when an Order is saved without a status change', function () {
@@ -94,25 +97,28 @@ it('sends no Notifications when an Order is saved without a status change', func
     Notification::assertNothingSent();
 });
 
-it("doesn't let a terminal Order's status change from the Orders list", function (OrderStatusEnum $terminal) {
+it('offers no status actions on a terminal Order', function (string $state) {
     Notification::fake();
     $this->actingAs(paidNotificationsAdmin());
-    $order = Order::factory()->create(['order_status' => $terminal->value]);
+    $order = Order::factory()->{$state}()->create();
 
-    changeStatusFromOrdersList($order, OrderStatusEnum::Draft);
+    $list = Livewire::test(ListOrders::class);
+    foreach (['ship', 'deliver', 'cancel'] as $action) {
+        $list->assertActionHidden(TestAction::make($action)->table($order));
+    }
 
-    expect($order->fresh()->order_status)->toBe($terminal->value);
     Notification::assertNothingSent();
-})->with([OrderStatusEnum::Delivered, OrderStatusEnum::Cancelled]);
+})->with(['delivered', 'cancelled']);
 
-it('still lets a non-terminal Order\'s status change from the Orders list', function () {
+it('lets an admin ship a paid Order from the Orders list', function () {
     Notification::fake();
     $this->actingAs(paidNotificationsAdmin());
-    $order = Order::factory()->create(['order_status' => OrderStatusEnum::Paid->value]);
+    $order = Order::factory()->paid()->create();
 
-    changeStatusFromOrdersList($order, OrderStatusEnum::Shipped);
+    applyFromOrdersList($order, 'ship');
 
     expect($order->fresh()->order_status)->toBe(OrderStatusEnum::Shipped->value);
+    assertSentEventTo($order->user, NotificationEventTypeEnum::ORDER_SHIPPED);
 });
 
 it('sends no Notifications for a status change whose transaction rolls back', function () {

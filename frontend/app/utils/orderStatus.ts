@@ -8,6 +8,7 @@ import {
   PAYMENT_PAID,
   PAYMENT_PENDING,
 } from '~/types/order'
+import type { SupplierAction } from '~/types/order'
 
 type BadgeColor = 'neutral' | 'info' | 'primary' | 'success' | 'warning' | 'error'
 
@@ -51,20 +52,11 @@ export function paymentMethodLabel(method: string | null): string {
   return method ? PAYMENT_METHODS[method] ?? method : '—'
 }
 
-export type SupplierAction = 'ship' | 'deliver' | 'cancel'
+export type { SupplierAction } from '~/types/order'
 
 // The status each action moves the Order to (POST /supplier-orders/{order}/{action}).
 export const SUPPLIER_ACTION_TARGET: Record<SupplierAction, string> = {
   ship: ORDER_SHIPPED,
   deliver: ORDER_DELIVERED,
   cancel: ORDER_CANCELLED,
-}
-
-/** Mirrors OrderService::isLegalSupplierTransition: Paid → Shipped/Cancelled, Shipped → Delivered. */
-export function supplierActionsFor(status: string): SupplierAction[] {
-  switch (status) {
-    case ORDER_PAID: return ['ship', 'cancel']
-    case ORDER_SHIPPED: return ['deliver']
-    default: return []
-  }
 }

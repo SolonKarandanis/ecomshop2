@@ -6,12 +6,13 @@ use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Enums\PaymentMethodEnum;
 use App\Enums\ShippingMethodEnum;
+use App\Filament\Resources\Orders\Actions\OrderTransitionActions;
 use App\Models\Order;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -39,11 +40,18 @@ class OrdersTable
                     ->formatStateUsing(fn ($state) => OrderPaymentStatusEnum::labels()[$state] ?? $state)
                     ->searchable()
                     ->sortable(),
-                // Filament re-checks disabled() on the server before saving, so a
-                // terminal Order can't be changed from here even by a forged request.
-                SelectColumn::make('order_status')
-                    ->options(OrderStatusEnum::labels())
-                    ->disabled(fn (Order $record) => OrderStatusEnum::from($record->order_status)->isTerminal())
+                // Read-only: status changes go through the Ship/Deliver/Cancel actions,
+                // which only offer what the transition table allows (#82).
+                TextColumn::make('order_status')
+                    ->formatStateUsing(fn ($state) => OrderStatusEnum::labels()[$state] ?? $state)
+                    ->badge()
+                    ->color(fn (string $state) => match ($state) {
+                        OrderStatusEnum::Draft->value => 'info',
+                        OrderStatusEnum::Paid->value => 'warning',
+                        OrderStatusEnum::Shipped->value, OrderStatusEnum::Delivered->value => 'success',
+                        OrderStatusEnum::Cancelled->value => 'danger',
+                        default => 'gray',
+                    })
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('currency')
@@ -68,6 +76,9 @@ class OrdersTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                ActionGroup::make(OrderTransitionActions::make())
+                    ->label('Status')
+                    ->icon('heroicon-m-arrow-right-circle'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

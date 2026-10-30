@@ -6,8 +6,8 @@ use App\Dtos\CheckoutDTO;
 use App\Dtos\CreateOrderDTO;
 use App\Dtos\OrderSearchRequestDTO;
 use App\Dtos\SaveAddressDto;
+use App\Enums\OrderEventEnum;
 use App\Enums\OrderPaymentStatusEnum;
-use App\Enums\OrderStatusEnum;
 use App\Exceptions\CartException;
 use App\Exceptions\EmptyCartException;
 use App\Exceptions\OrderCountException;
@@ -23,6 +23,7 @@ use App\Repositories\AddressRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\PaymentMethodRepository;
 use App\Repositories\ProductRepository;
+use App\StateMachines\OrderStateMachine;
 use App\ValueObjects\Money;
 use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Database\Eloquent\Collection;
@@ -50,6 +51,7 @@ class OrderService
         private readonly NotificationHandlerService $notificationService,
         private readonly ProductRepository $productRepository,
         private readonly SavedAddressService $savedAddressService,
+        private readonly OrderStateMachine $stateMachine,
     ) {}
 
     public function getOrderById(int $orderId, User $user): Order
@@ -67,11 +69,15 @@ class OrderService
             || ($user->isSupplier() && $this->supplierOwnsOrder($order, $user));
     }
 
+    /**
+     * Whether the Supplier owns the Order and the transition table allows them at
+     * least one event on it from its current state (e.g. not once it's terminal).
+     */
     public function canSupplierActOn(Order $order, User $user): bool
     {
         return $user->isSupplier()
             && $this->supplierOwnsOrder($order, $user)
-            && in_array($order->order_status, [OrderStatusEnum::Paid->value, OrderStatusEnum::Shipped->value], true);
+            && $this->stateMachine->availableEvents($order, $user) !== [];
     }
 
     public function getOrderForSupplierAction(int $orderId, User $user): Order
@@ -85,16 +91,9 @@ class OrderService
     /**
      * @throws OrderException
      */
-    public function transitionOrderStatusBySupplier(Order $order, User $user, OrderStatusEnum $toStatus): Order
+    public function applySupplierEvent(Order $order, User $user, OrderEventEnum $event): Order
     {
-        if (! $this->canSupplierActOn($order, $user) || ! $this->isLegalSupplierTransition($order->order_status, $toStatus->value)) {
-            throw OrderException::supplierActionNotAllowed();
-        }
-
-        $order->order_status = $toStatus->value;
-        $this->orderRepository->updateOrder($order);
-
-        return $order;
+        return $this->stateMachine->apply($order, $event, $user);
     }
 
     /**
@@ -149,15 +148,6 @@ class OrderService
     private function supplierOwnsOrder(Order $order, User $user): bool
     {
         return $order->supplier_id === $user->id;
-    }
-
-    private function isLegalSupplierTransition(string $from, string $to): bool
-    {
-        return match ($from) {
-            OrderStatusEnum::Paid->value => in_array($to, [OrderStatusEnum::Shipped->value, OrderStatusEnum::Cancelled->value], true),
-            OrderStatusEnum::Shipped->value => $to === OrderStatusEnum::Delivered->value,
-            default => false,
-        };
     }
 
     public function getUsersLatestOrder(int $userId): Order
@@ -384,10 +374,7 @@ class OrderService
         }
 
         // OrderObserver sends the payment-confirmed and ready-for-supplier Notifications.
-        return $this->transitionPendingStripeOrder($order, function (Order $order) {
-            $order->payment_status = OrderPaymentStatusEnum::PAID->value;
-            $order->order_status = OrderStatusEnum::Paid->value;
-        });
+        return $this->applyStripeEvent($order, OrderEventEnum::Pay);
     }
 
     /**
@@ -395,11 +382,9 @@ class OrderService
      */
     public function failStripePayment(Order $order): Order
     {
-        return $this->transitionPendingStripeOrder(
+        return $this->applyStripeEvent(
             $order,
-            function (Order $order) {
-                $order->payment_status = OrderPaymentStatusEnum::FAILED->value;
-            },
+            OrderEventEnum::FailPayment,
             fn (Order $order) => $this->notificationService->orderPaymentFailed($order),
         );
     }
@@ -412,49 +397,36 @@ class OrderService
      */
     public function expireStripePayment(Order $order): Order
     {
-        return $this->transitionPendingStripeOrder($order, function (Order $order) {
-            $order->payment_status = OrderPaymentStatusEnum::FAILED->value;
-            $order->order_status = OrderStatusEnum::Cancelled->value;
-        });
+        return $this->applyStripeEvent($order, OrderEventEnum::Expire);
     }
 
     /**
      * The webhook and the success redirect routinely arrive within milliseconds of
-     * each other. Locking the row before checking for PENDING means only one of them
-     * applies the change, so its Notifications are sent exactly once.
+     * each other, and Stripe retries. The state machine locks the row before
+     * checking the table, so only one of them applies the change and its
+     * Notifications are sent exactly once; the others are no-ops.
      *
-     * @param  callable(Order): void  $apply
-     * @param  (callable(Order): void)|null  $afterCommit
+     * @param  (callable(Order): void)|null  $afterTransition  runs after the commit, only if the event applied
      *
      * @throws OrderException
      */
-    private function transitionPendingStripeOrder(Order $order, callable $apply, ?callable $afterCommit = null): Order
+    private function applyStripeEvent(Order $order, OrderEventEnum $event, ?callable $afterTransition = null): Order
     {
-        $transitioned = false;
-
         try {
-            $order = DB::transaction(function () use ($order, $apply, &$transitioned) {
-                $locked = $this->orderRepository->lockOrderById($order->id);
-
-                if ($locked->payment_status !== OrderPaymentStatusEnum::PENDING->value) {
-                    return $locked;
-                }
-
-                $apply($locked);
-                $this->orderRepository->updateOrder($locked);
-                $transitioned = true;
-
-                return $locked;
-            });
+            $transitioned = $this->stateMachine->applyIfAllowed($order, $event, null);
         } catch (Throwable $exception) {
             Log::error($exception);
             throw OrderException::stripeProcessing();
         }
 
-        if ($transitioned && $afterCommit !== null) {
-            $afterCommit($order);
+        if ($transitioned === null) {
+            return $order->fresh();
         }
 
-        return $order;
+        if ($afterTransition !== null) {
+            $afterTransition($transitioned);
+        }
+
+        return $transitioned;
     }
 }

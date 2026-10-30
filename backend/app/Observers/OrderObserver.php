@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Enums\OrderStatusEnum;
+use App\Enums\PaymentMethodEnum;
 use App\Models\Order;
 use App\Services\NotificationHandlerService;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
@@ -19,6 +20,17 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
         private readonly NotificationHandlerService $notificationService,
     ) {}
 
+    /**
+     * A Cash-on-Delivery Order never passes through Paid (#82): it's shippable as
+     * soon as it's placed, so its Supplier is told then rather than on payment.
+     */
+    public function created(Order $order): void
+    {
+        if ($order->paymentMethod?->resource_key === PaymentMethodEnum::CASH_ON_DELIVERY->value) {
+            $this->notificationService->orderReadyForSupplier($order);
+        }
+    }
+
     public function updated(Order $order): void
     {
         if (! $order->wasChanged('order_status')) {
@@ -26,11 +38,11 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
         }
 
         match ($order->order_status) {
-            OrderStatusEnum::Paid->value      => $this->orderPaid($order),
-            OrderStatusEnum::Shipped->value   => $this->notificationService->orderShipped($order),
+            OrderStatusEnum::Paid->value => $this->orderPaid($order),
+            OrderStatusEnum::Shipped->value => $this->notificationService->orderShipped($order),
             OrderStatusEnum::Delivered->value => $this->notificationService->orderDelivered($order),
             OrderStatusEnum::Cancelled->value => $this->notificationService->orderCancelled($order),
-            default                           => null,
+            default => null,
         };
     }
 

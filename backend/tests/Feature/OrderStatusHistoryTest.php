@@ -4,12 +4,13 @@ use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Enums\RolesEnum;
 use App\Enums\UserStatusEnum;
-use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
+use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Models\StripeOrderDetail;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -66,14 +67,14 @@ it('records the acting user when an Order is created during a request', function
 it('adds one entry, by the Supplier, when a Supplier ships an Order', function () {
     config(['features.suppliers_enabled' => true]);
     $supplier = historyUser(RolesEnum::ROLE_SUPPLIER);
-    $order = Order::factory()->create(['supplier_id' => $supplier->id, 'order_status' => OrderStatusEnum::Paid->value]);
+    $order = Order::factory()->paid()->create(['supplier_id' => $supplier->id]);
 
     $this->actingAs($supplier)->postJson("/api/supplier-orders/{$order->id}/ship")->assertOk();
 
     expect(historyOf($order))->toHaveCount(2)
         ->and(historyOf($order)[1])->toBe([
             'order_status' => OrderStatusEnum::Shipped->value,
-            'payment_status' => OrderPaymentStatusEnum::PENDING->value,
+            'payment_status' => OrderPaymentStatusEnum::PAID->value,
             'changed_by' => $supplier->id,
         ]);
 });
@@ -102,23 +103,18 @@ it('adds one entry, with no user, when the Stripe webhook marks an Order Paid', 
     ]]);
 });
 
-it('adds one entry, by the admin, for a status change from the Filament edit form or the Orders list', function () {
+it('adds one entry, by the admin, for each status action from the Orders list or the Order page', function () {
     $admin = historyUser(RolesEnum::ROLE_ADMIN);
     $this->actingAs($admin);
-    $order = Order::factory()->create();
+    $order = Order::factory()->paid()->create();
 
-    Livewire::test(EditOrder::class, ['record' => $order->getRouteKey()])
-        ->fillForm(['order_status' => OrderStatusEnum::Paid->value])
-        ->call('save')
-        ->assertHasNoFormErrors();
-
-    Livewire::test(ListOrders::class)
-        ->call('updateTableColumnState', 'order_status', (string) $order->getKey(), OrderStatusEnum::Shipped->value);
+    Livewire::test(ListOrders::class)->callAction(TestAction::make('ship')->table($order));
+    Livewire::test(ViewOrder::class, ['record' => $order->getRouteKey()])->callAction('deliver');
 
     expect(collect(historyOf($order))->pluck('order_status')->all())->toBe([
-        OrderStatusEnum::Draft->value,
         OrderStatusEnum::Paid->value,
         OrderStatusEnum::Shipped->value,
+        OrderStatusEnum::Delivered->value,
     ]);
     expect(collect(historyOf($order))->skip(1)->pluck('changed_by')->unique()->all())->toBe([$admin->id]);
 });

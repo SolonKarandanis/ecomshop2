@@ -116,7 +116,12 @@ describe('my orders list', () => {
     await button(page, 'Export').trigger('click')
     await settle()
 
-    expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob))
+    // Checked by shape: the Blob can come from a different realm than the global `Blob`
+    // (Node's under happy-dom in CI), so `expect.any(Blob)` fails for a real Blob there.
+    expect(URL.createObjectURL).toHaveBeenCalledTimes(1)
+    const blob = vi.mocked(URL.createObjectURL).mock.calls[0]![0] as Blob
+    expect(blob.type).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    expect(blob.size).toBe(4)
     expect(downloads).toEqual([{ href: 'blob:orders', filename: 'orders.xlsx' }])
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:orders')
     expect(page.find('[role="alert"]').exists()).toBe(false)
