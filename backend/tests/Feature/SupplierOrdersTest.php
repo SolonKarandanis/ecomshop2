@@ -37,7 +37,7 @@ beforeEach(function () {
     config(['features.suppliers_enabled' => true]);
 });
 
-it("lists only the authenticated Supplier's own Orders, excluding Draft", function () {
+it("lists only the authenticated Supplier's own Orders, excluding unpaid Draft Stripe Orders", function () {
     $supplier = supplierOrdersSupplier();
     $otherSupplier = supplierOrdersSupplier();
     $buyer = supplierOrdersBuyer();
@@ -110,4 +110,15 @@ it('checks the Suppliers Feature flag live rather than cached', function () {
 
     config(['features.suppliers_enabled' => true]);
     $this->actingAs($supplier)->getJson('/api/supplier-orders')->assertOk();
+});
+
+it("lists a Supplier's Draft Cash-on-Delivery Orders, since they're shippable once placed (#82)", function () {
+    $supplier = supplierOrdersSupplier();
+    $cod = Order::factory()->cashOnDelivery()->create(['supplier_id' => $supplier->id]);
+    Order::factory()->create(['supplier_id' => $supplier->id]);
+
+    $response = $this->actingAs($supplier)->getJson('/api/supplier-orders')->assertOk();
+
+    expect($response->json('data'))->toHaveCount(1)
+        ->and($response->json('data.0.id'))->toBe($cod->id);
 });

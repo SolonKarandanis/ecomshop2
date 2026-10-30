@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Orders\Pages;
 
-use App\Enums\OrderStatusEnum;
 use App\Filament\Resources\Orders\Concerns\ValidatesSingleSupplierItems;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Services\OrderService;
@@ -35,11 +34,8 @@ class EditOrder extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $currentStatus = OrderStatusEnum::from($this->getRecord()->order_status);
-
-        if ($currentStatus->isTerminal()) {
-            $data['order_status'] = $currentStatus->value;
-        }
+        // Statuses aren't on the form; they change only through the state machine (#82).
+        unset($data['order_status'], $data['payment_status']);
 
         $items = $this->form->getRawState()['items'] ?? [];
         $data['supplier_id'] = app(OrderService::class)->resolveSupplierIdForItems($items, auth()->id());

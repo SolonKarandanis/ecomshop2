@@ -1,9 +1,11 @@
 <?php
 
+use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Enums\RolesEnum;
 use App\Enums\UserStatusEnum;
 use App\Filament\Resources\Orders\Pages\CreateOrder;
+use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Filament\Resources\Products\Pages\EditProduct;
@@ -64,17 +66,36 @@ it('serves the Order, Product, and User resource index pages to an admin', funct
     $this->actingAs($admin)->get('/admin/users')->assertOk();
 });
 
-it('locks order_status once an Order reaches a terminal status (ADR-0009)', function () {
+it("can't change an Order's status by saving the edit form, even with a forged status (#82)", function () {
     $admin = makeAdmin();
-    $order = Order::factory()->create(['order_status' => OrderStatusEnum::Delivered->value]);
+    $order = Order::factory()->delivered()->create();
 
     $this->actingAs($admin);
 
-    Livewire::test(\App\Filament\Resources\Orders\Pages\EditOrder::class, ['record' => $order->getRouteKey()])
-        ->fillForm(['order_status' => OrderStatusEnum::Cancelled->value])
+    Livewire::test(EditOrder::class, ['record' => $order->getRouteKey()])
+        ->set('data.order_status', OrderStatusEnum::Cancelled->value)
+        ->set('data.payment_status', 'anything')
         ->call('save');
 
-    expect($order->fresh()->order_status)->toBe(OrderStatusEnum::Delivered->value);
+    expect($order->fresh()->order_status)->toBe(OrderStatusEnum::Delivered->value)
+        ->and($order->fresh()->payment_status)->toBe(OrderPaymentStatusEnum::PAID->value);
+});
+
+it('starts an Order created in Filament as Draft / Pending (#82)', function () {
+    $admin = makeAdmin();
+    $this->actingAs($admin);
+    $paymentMethod = PaymentMethod::factory()->cashOnDelivery()->create();
+
+    Livewire::test(CreateOrder::class)
+        ->fillForm(['user_id' => $admin->id, 'payment_method_id' => $paymentMethod->id, 'currency' => 'eur', 'items' => []])
+        ->set('data.order_status', OrderStatusEnum::Delivered->value)
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $order = Order::query()->latest('id')->first();
+    expect($order)->not->toBeNull()
+        ->and($order->order_status)->toBe(OrderStatusEnum::Draft->value)
+        ->and($order->payment_status)->toBe(OrderPaymentStatusEnum::PENDING->value);
 });
 
 it('rejects an Order whose items span more than one Supplier (ADR-0011 / #23)', function () {
@@ -94,7 +115,7 @@ it('rejects an Order whose items span more than one Supplier (ADR-0011 / #23)', 
         ->fillForm([
             'user_id' => $buyer->id,
             'payment_method_id' => $paymentMethod->id,
-            'payment_status' => \App\Enums\OrderPaymentStatusEnum::PENDING->value,
+            'payment_status' => OrderPaymentStatusEnum::PENDING->value,
             'order_status' => OrderStatusEnum::Draft->value,
             'currency' => 'eur',
             'items' => [

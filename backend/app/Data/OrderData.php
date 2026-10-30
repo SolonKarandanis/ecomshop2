@@ -2,7 +2,9 @@
 
 namespace App\Data;
 
+use App\Enums\OrderEventEnum;
 use App\Models\Order;
+use App\StateMachines\OrderStateMachine;
 use Illuminate\Support\Carbon;
 use Spatie\LaravelData\DataCollection;
 use Spatie\LaravelData\Lazy;
@@ -27,6 +29,10 @@ class OrderData extends BaseData
         // Only on single-Order responses, which load it; list endpoints don't.
         /** @var Lazy|DataCollection<int, OrderStatusHistoryData> */
         public Lazy|DataCollection $status_history,
+        // The events the viewing Supplier may apply now ('ship', 'deliver', 'cancel'),
+        // from the transition table (#82), so the storefront doesn't duplicate it.
+        /** @var Lazy|list<string> */
+        public Lazy|array $supplier_actions,
     ) {}
 
     public static function fromModel(Order $order): self
@@ -53,6 +59,13 @@ class OrderData extends BaseData
             address: Lazy::whenLoaded('address', $order, fn () => $order->address ? AddressData::fromModel($order->address) : null),
             items: Lazy::whenLoaded('items', $order, fn () => OrderItemData::collect($order->items, DataCollection::class)),
             status_history: Lazy::whenLoaded('statusHistory', $order, fn () => OrderStatusHistoryData::collect($order->statusHistory, DataCollection::class)),
+            supplier_actions: Lazy::when(
+                fn () => $viewer !== null && $viewer->isSupplier() && $viewer->id === $order->supplier_id,
+                fn () => array_map(
+                    fn (OrderEventEnum $event) => $event->value,
+                    app(OrderStateMachine::class)->availableEvents($order, $viewer),
+                ),
+            ),
         );
     }
 }

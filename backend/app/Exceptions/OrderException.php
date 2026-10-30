@@ -21,9 +21,9 @@ class OrderException extends \Exception
         return new self(__('messages.order_exceptions.stripe_processing'), HttpStatusCodeEnum::BAD_REQUEST->value);
     }
 
-    public static function supplierActionNotAllowed(): OrderException
+    public static function transitionNotAllowed(): OrderException
     {
-        return new self(__('messages.order_exceptions.supplier_action_not_allowed'), HttpStatusCodeEnum::BAD_REQUEST->value);
+        return new self(__('messages.order_exceptions.transition_not_allowed'), HttpStatusCodeEnum::BAD_REQUEST->value);
     }
 
     public static function supplierMismatch(): OrderException

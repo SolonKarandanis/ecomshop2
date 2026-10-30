@@ -3,47 +3,22 @@
 namespace App\Filament\Resources\Users\RelationManagers;
 
 use App\Enums\OrderStatusEnum;
+use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Order;
+use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class OrdersRelationManager extends RelationManager
 {
     protected static string $relationship = 'orders';
-
-    public function form(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
-                TextInput::make('grand_total')
-                    ->numeric(),
-                TextInput::make('payment_method'),
-                TextInput::make('payment_status'),
-                Select::make('order_status')
-                    ->options(OrderStatusEnum::labels())
-                    ->required()
-                    ->default(OrderStatusEnum::Draft->value),
-                TextInput::make('currency'),
-                TextInput::make('shipping_amount')
-                    ->numeric(),
-                TextInput::make('shipping_method'),
-                Textarea::make('notes')
-                    ->columnSpanFull(),
-            ]);
-    }
 
     public function table(Table $table): Table
     {
@@ -55,14 +30,14 @@ class OrdersRelationManager extends RelationManager
                 TextColumn::make('order_status')
                     ->formatStateUsing(fn ($state) => OrderStatusEnum::labels()[$state] ?? $state)
                     ->badge()
-                    ->color(fn(string $state)=> match ($state) {
+                    ->color(fn (string $state) => match ($state) {
                         OrderStatusEnum::Draft->value => 'info',
                         OrderStatusEnum::Paid->value => 'warning',
                         OrderStatusEnum::Shipped->value => 'success',
                         OrderStatusEnum::Delivered->value => 'success',
                         OrderStatusEnum::Cancelled->value => 'danger',
                     })
-                    ->icon(fn(string $state)=>match ($state) {
+                    ->icon(fn (string $state) => match ($state) {
                         OrderStatusEnum::Draft->value => 'heroicon-m-sparkles',
                         OrderStatusEnum::Paid->value => 'heroicon-m-arrow-path',
                         OrderStatusEnum::Shipped->value => 'heroicon-m-truck',
@@ -103,12 +78,17 @@ class OrdersRelationManager extends RelationManager
             ->filters([
                 //
             ])
+            // Orders aren't created or edited here: the Orders resource validates
+            // single-Supplier items and changes statuses only through the state
+            // machine (#82), so each row links to the Order's own page instead.
             ->headerActions([
-                CreateAction::make(),
                 AssociateAction::make(),
             ])
             ->recordActions([
-                EditAction::make(),
+                Action::make('open')
+                    ->label('Open')
+                    ->icon('heroicon-m-arrow-top-right-on-square')
+                    ->url(fn (Order $record) => OrderResource::getUrl('view', ['record' => $record])),
                 DissociateAction::make(),
                 DeleteAction::make(),
             ])

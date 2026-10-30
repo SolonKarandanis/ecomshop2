@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\ValueObjects\Money;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,12 +16,12 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $user_id
- * @property \App\ValueObjects\Money|null $grand_total
+ * @property Money|null $grand_total
  * @property int|null $payment_method_id
  * @property string|null $payment_status
  * @property string $order_status
  * @property string|null $currency
- * @property \App\ValueObjects\Money|null $shipping_amount
+ * @property Money|null $shipping_amount
  * @property string|null $shipping_method
  * @property string|null $notes
  * @property Carbon|null $created_at
@@ -46,7 +47,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, OrderItem> $items
  * @property-read int|null $items_count
  * @property-read User $user
- * @property-read PaymentMethod $paymentMethod
+ * @property-read PaymentMethod|null $paymentMethod
  * @property-read StripeOrderDetail|null $stripeOrderDetail
  * @property-read Collection<int, OrderStatusHistory> $statusHistory
  * @property-read mixed $created_at_diff

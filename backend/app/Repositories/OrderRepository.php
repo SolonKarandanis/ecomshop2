@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Dtos\CreateOrderDTO;
 use App\Dtos\OrderSearchRequestDTO;
 use App\Enums\OrderStatusEnum;
+use App\Enums\PaymentMethodEnum;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Database\Eloquent\Builder;
@@ -109,7 +110,10 @@ class OrderRepository
     {
         $orderQuery = $this->applySearchFilters($dto);
 
+        // OrderData needs the payment method for each row (and the Supplier's
+        // available actions), so load it up front instead of once per Order.
         return $orderQuery
+            ->with('paymentMethod')
             ->orderBy($dto->getSortColumn(), $dto->getSortDirection())
             ->paginate($dto->getPerPage());
     }
@@ -129,8 +133,13 @@ class OrderRepository
         $orderQuery = $this->modelQuery();
 
         if ($dto->getSupplierId() !== null) {
+            // A Draft Stripe Order isn't paid yet, so it's not the Supplier's to act on.
+            // A Draft Cash-on-Delivery Order is: it's shippable once placed (#82).
             $orderQuery->where('supplier_id', $dto->getSupplierId())
-                ->where('order_status', '!=', OrderStatusEnum::Draft->value);
+                ->where(fn (Builder $query) => $query
+                    ->where('order_status', '!=', OrderStatusEnum::Draft->value)
+                    ->orWhereHas('paymentMethod', fn (Builder $method) => $method
+                        ->where('resource_key', PaymentMethodEnum::CASH_ON_DELIVERY->value)));
         } else {
             $orderQuery->where('user_id', $dto->getUserId());
         }

@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\Orders\Schemas;
 
-use App\Enums\OrderPaymentStatusEnum;
-use App\Enums\OrderStatusEnum;
 use App\Enums\PaymentMethodEnum;
 use App\Models\Order;
 use App\Models\PaymentMethod;
@@ -13,7 +11,6 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
@@ -43,33 +40,9 @@ class OrderForm
                             ->searchable()
                             ->preload()
                             ->required(),
-                        Select::make('payment_status')
-                            ->options(OrderPaymentStatusEnum::labels())
-                            ->default(OrderPaymentStatusEnum::PENDING->value)
-                            ->required(),
-                        ToggleButtons::make('order_status')
-                            ->inline()
-                            ->default(OrderStatusEnum::Draft->value)
-                            ->required()
-                            ->options(OrderStatusEnum::labels())
-                            ->colors([
-                                OrderStatusEnum::Draft->value => 'info',
-                                OrderStatusEnum::Paid->value => 'warning',
-                                OrderStatusEnum::Shipped->value => 'success',
-                                OrderStatusEnum::Delivered->value => 'success',
-                                OrderStatusEnum::Cancelled->value => 'danger',
-                            ])
-                            ->icons([
-                                OrderStatusEnum::Draft->value => 'heroicon-m-sparkles',
-                                OrderStatusEnum::Paid->value => 'heroicon-m-arrow-path',
-                                OrderStatusEnum::Shipped->value => 'heroicon-m-truck',
-                                OrderStatusEnum::Delivered->value => 'heroicon-m-check-badge',
-                                OrderStatusEnum::Cancelled->value => 'heroicon-m-x-circle',
-                            ])
-                            ->disabled(fn (?Order $record) => $record && OrderStatusEnum::from($record->order_status)->isTerminal())
-                            ->helperText(fn (?Order $record) => $record && OrderStatusEnum::from($record->order_status)->isTerminal()
-                                ? 'This order has reached a terminal status and can no longer be changed.'
-                                : null),
+                        // No status fields: a new Order starts Draft / Pending (CreateOrder),
+                        // and statuses change only through the Ship/Deliver/Cancel
+                        // actions, which follow the transition table (#82).
                         Select::make('currency')
                             ->options([
                                 'usd' => 'USD',

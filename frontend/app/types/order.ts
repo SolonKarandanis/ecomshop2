@@ -48,6 +48,9 @@ export interface StripeCancelResult extends OrderPaymentResult {
   retry_url: string | null
 }
 
+// An event a Supplier can apply to their Order (POST /supplier-orders/{order}/{action}).
+export type SupplierAction = 'ship' | 'deliver' | 'cancel'
+
 // App\Data\OrderData, the fields these pages use (GET /api/orders/{order}, wrapped in `data`).
 export interface Order {
   id: number
@@ -55,6 +58,9 @@ export interface Order {
   payment_status: string | null
   grand_total: number | null
   created_at: string | null
+  // Only for the Order's own Supplier: the actions the backend's transition table
+  // allows right now (#82). The storefront shows exactly these.
+  supplier_actions?: SupplierAction[]
 }
 
 // App\Data\AddressData.

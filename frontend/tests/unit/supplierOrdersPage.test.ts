@@ -9,9 +9,17 @@ import SupplierOrderPage from '~/pages/supplier/orders/[id].vue'
 const { toastAdd } = vi.hoisted(() => ({ toastAdd: vi.fn() }))
 mockNuxtImport('useToast', () => () => ({ add: toastAdd }))
 
-function order(id: number, status: string) {
-  return { id, order_status: status, payment_status: 'order.payment.status.paid', grand_total: 25, created_at: '2026-10-01T10:00:00Z' }
+// What the backend's transition table (#82) sends for a paid Stripe Order in each status.
+const ACTIONS_BY_STATUS: Record<string, string[]> = {
+  'order.status.paid': ['ship', 'cancel'],
+  'order.status.shipped': ['deliver'],
 }
+
+function order(id: number, status: string, supplierActions = ACTIONS_BY_STATUS[status] ?? []) {
+  return { id, order_status: status, payment_status: 'order.payment.status.paid', grand_total: 25, created_at: '2026-10-01T10:00:00Z', supplier_actions: supplierActions }
+}
+
+let listOrders: ReturnType<typeof order>[]
 
 let listQueries: Record<string, unknown>[]
 let actionCalls: string[]
@@ -20,6 +28,7 @@ let actionFails: boolean
 
 beforeEach(() => {
   listQueries = []
+  listOrders = [order(1, 'order.status.paid'), order(2, 'order.status.shipped'), order(3, 'order.status.delivered')]
   actionCalls = []
   actionFails = false
   toastAdd.mockClear()
@@ -31,8 +40,8 @@ beforeEach(() => {
   registerEndpoint('/api/supplier-orders', (event) => {
     listQueries.push(getQuery(event))
     return {
-      data: [order(1, 'order.status.paid'), order(2, 'order.status.shipped'), order(3, 'order.status.delivered')],
-      meta: { current_page: 1, last_page: 1, per_page: 20, total: 3 },
+      data: listOrders,
+      meta: { current_page: 1, last_page: 1, per_page: 20, total: listOrders.length },
     }
   })
   for (const action of ['ship', 'deliver', 'cancel']) {
@@ -93,6 +102,15 @@ describe('supplier orders list', () => {
     expect(buttons(2)).toEqual([])
   })
 
+  it('shows exactly the actions the API allows, e.g. Ship and Cancel on a Draft Cash-on-Delivery Order', async () => {
+    listOrders = [order(4, 'order.status.draft', ['ship', 'cancel']), order(5, 'order.status.paid', [])]
+    const page = await mountSuspended(SupplierOrdersPage)
+    const buttons = (index: number) => rows(page)[index]!.findAll('button').map(b => b.text())
+
+    expect(buttons(0)).toEqual(['Ship', 'Cancel'])
+    expect(buttons(1)).toEqual([])
+  })
+
   it('ships an Order and updates its row in place', async () => {
     const page = await mountSuspended(SupplierOrdersPage)
 
@@ -103,7 +121,8 @@ describe('supplier orders list', () => {
     await vi.waitFor(() => expect(actionCalls).toEqual(['1/ship']))
     await flushPromises()
     expect(rows(page)[0]!.text()).toContain('Shipped')
-    expect(rows(page)[0]!.findAll('button').map(b => b.text())).toEqual(['Mark delivered'])
+    // The next actions come from the API's answer (#82).
+    await vi.waitFor(() => expect(rows(page)[0]!.findAll('button').map(b => b.text())).toEqual(['Mark delivered']))
     expect(listQueries).toHaveLength(1)
   })
 
