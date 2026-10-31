@@ -2,23 +2,28 @@
 
 namespace App\Filament\Resources\Orders\Widgets;
 
+use App\Enums\OrderPaymentStatusEnum;
+use App\Enums\OrderStatusEnum;
 use App\Models\Order;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Number;
 
 class OrderBuyerStatsWidget extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
-        $stats = Order::query()
-            ->select(
-                DB::raw("AVG(grand_total) as average_price")
-            )
-            ->first();
+        // Only Orders that actually sold: paid (a Stripe payment, or COD cash
+        // collected on delivery) and not cancelled afterwards. Unpaid drafts and
+        // cancelled Orders would skew the figure.
+        $average = Order::query()
+            ->where('payment_status', OrderPaymentStatusEnum::PAID->value)
+            ->where('order_status', '!=', OrderStatusEnum::Cancelled->value)
+            ->avg('grand_total');
+
         return [
-            Stat::make('Average Price', Number::currency($stats->average_price ?? 0, 'eur'))
+            Stat::make('Average order value', Number::currency((float) ($average ?? 0), 'eur'))
+                ->description('Paid orders, excluding cancelled'),
         ];
     }
 }
