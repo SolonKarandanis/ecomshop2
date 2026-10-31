@@ -9,8 +9,14 @@ use App\Observers\OrderObserver;
 use App\Observers\OrderStatusHistoryObserver;
 use App\Search\ProductSearchEngineFactory;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -43,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerObservers();
         $this->registerGates();
         $this->registerPasswordResetUrl();
+        $this->registerQueryLogging();
 
         Schema::defaultStringLength(191);
     }
@@ -76,6 +83,34 @@ class AppServiceProvider extends ServiceProvider
             'token' => $token,
             'email' => $user->getEmailForPasswordReset(),
         ]));
+    }
+
+    // Opt-in with LOG_QUERIES=true. Logs each query with its bindings filled in
+    // and how long it took; never in production, where it would flood the log.
+    private function registerQueryLogging(): void
+    {
+        if (! config('app.log_queries') || app()->isProduction()) {
+            return;
+        }
+
+        // An idle queue worker reads the cache every few seconds for restart and
+        // pause signals, so in a worker only the queries run by a job are logged.
+        $logging = true;
+        if ($this->app->runningConsoleCommand('queue:work')) {
+            $logging = false;
+            Event::listen(JobProcessing::class, function () use (&$logging) {
+                $logging = true;
+            });
+            Event::listen([JobProcessed::class, JobFailed::class], function () use (&$logging) {
+                $logging = false;
+            });
+        }
+
+        DB::listen(function (QueryExecuted $query) use (&$logging) {
+            if ($logging) {
+                Log::debug(sprintf('[%s, %.2f ms] %s', $query->connectionName, $query->time, $query->toRawSql()));
+            }
+        });
     }
 
     private function registerConfig(): void
