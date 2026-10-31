@@ -11,12 +11,8 @@ class OrderStatsWidget extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
-        $statuses = [
-            OrderStatusEnum::Draft,
-            OrderStatusEnum::Paid,
-            OrderStatusEnum::Shipped,
-            OrderStatusEnum::Cancelled,
-        ];
+        // Every status, so none is left off the dashboard (Delivered used to be).
+        $statuses = OrderStatusEnum::cases();
 
         $counts = Order::query()
             ->whereIn('order_status', array_map(fn (OrderStatusEnum $status) => $status->value, $statuses))
