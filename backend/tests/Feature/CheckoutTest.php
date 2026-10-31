@@ -18,7 +18,9 @@ use App\Models\SavedAddress;
 use App\Models\StripeOrderDetail;
 use App\Models\User;
 use App\Notifications\OrderNotification;
+use App\Repositories\CartRepository;
 use App\ValueObjects\Money;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -309,6 +311,54 @@ it("doesn't touch the address book when saveAddress isn't set", function () {
     expect(SavedAddress::count())->toBe(0);
 });
 
+it('locks the cart before reading it, so two checkouts at once cannot both order it', function () {
+    Notification::fake();
+    Mail::fake();
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
+    [$buyer, $login] = loggedInBuyer();
+    $product = Product::factory()->create(['price' => 25]);
+
+    $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', [
+        'product_id' => $product->id,
+        'quantity' => 1,
+    ])->assertOk();
+
+    // The test database is SQLite, which has no row locks, so this checks the
+    // order of the calls: the lock is taken inside the checkout transaction,
+    // before the cart is read.
+    $client = simulateNextCheckoutRequest($add);
+    $outsideCheckout = DB::transactionLevel();
+    $levelWhenLocked = null;
+    $repository = $this->partialMock(CartRepository::class);
+    $repository->shouldReceive('lockForUpdate')->once()->with($buyer->id)->ordered()
+        ->andReturnUsing(function () use (&$levelWhenLocked) {
+            $levelWhenLocked = DB::transactionLevel();
+        });
+    $repository->shouldReceive('getCart')->atLeast()->once()->ordered()->passthru();
+
+    $client->postJson('/api/checkout', validCheckoutPayload())->assertOk();
+
+    expect($levelWhenLocked)->toBe($outsideCheckout + 1);
+});
+
+it('rejects a repeated checkout after the first one placed the Order', function () {
+    Notification::fake();
+    Mail::fake();
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
+    [$buyer, $login] = loggedInBuyer();
+    $product = Product::factory()->create(['price' => 25]);
+
+    $add = simulateNextCheckoutRequest($login)->postJson('/api/cart/items', [
+        'product_id' => $product->id,
+        'quantity' => 1,
+    ])->assertOk();
+
+    $first = simulateNextCheckoutRequest($add)->postJson('/api/checkout', validCheckoutPayload())->assertOk();
+    simulateNextCheckoutRequest($first)->postJson('/api/checkout', validCheckoutPayload())->assertBadRequest();
+
+    expect(Order::where('user_id', $buyer->id)->count())->toBe(1);
+});
+
 it('rejects checkout with an empty cart', function () {
     PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
     [$buyer, $login] = loggedInBuyer();
@@ -463,7 +513,7 @@ it('prices a cart item with an option to the cent, and carries that exact price 
     '+25.10 option' => [AttributeValueMethodEnum::FIXED, '25.10', '924.60', 92460],
 ]);
 
-it("totals an Order as its items plus shipping, to the cent", function () {
+it('totals an Order as its items plus shipping, to the cent', function () {
     Notification::fake();
     Mail::fake();
     PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
