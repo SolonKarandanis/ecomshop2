@@ -3,22 +3,23 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
-use App\Models\Attribute;
-use App\Models\AttributeOptions;
+use App\ValueObjects\Money;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $order_id
  * @property int $product_id
  * @property int $quantity
- * @property \App\ValueObjects\Money|null $unit_amount
- * @property \App\ValueObjects\Money|null $total_amount
+ * @property Money|null $unit_amount
+ * @property Money|null $total_amount
  * @property array|null $attributes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem query()
@@ -31,8 +32,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem whereUnitAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem whereAttributes($value)
- * @property-read \App\Models\Order $order
- * @property-read \App\Models\Product $product
+ *
+ * @property-read Order $order
+ * @property-read Product $product
+ *
  * @mixin IdeHelperOrderItem
  * @mixin \Eloquent
  */
@@ -40,17 +43,22 @@ class OrderItem extends Model
 {
     use HasFactory;
 
-
-    public function __construct(CartItem $cartItem = null)
+    /**
+     * An unsaved Order Item for what's in a cart line: product, quantity, prices
+     * and the chosen attributes. A named constructor rather than an override of
+     * Eloquent's __construct(array $attributes), which other code relies on.
+     */
+    public static function fromCartItem(CartItem $cartItem): self
     {
-        parent::__construct();
-        if ($cartItem) {
-            $this->product_id = $cartItem->product_id;
-            $this->quantity = $cartItem->quantity;
-            $this->unit_amount = $cartItem->unit_price;
-            $this->total_amount = $cartItem->total_price;
-            $this->setAttribute('attributes', $cartItem->attributes);
-        }
+        return new self([
+            'product_id' => $cartItem->product_id,
+            'quantity' => $cartItem->quantity,
+            'unit_amount' => $cartItem->unit_price,
+            'total_amount' => $cartItem->total_price,
+            // getAttribute(), not ->attributes: inside a model class that reaches
+            // Eloquent's protected $attributes array instead of the column.
+            'attributes' => $cartItem->getAttribute('attributes'),
+        ]);
     }
 
     protected $fillable = [
@@ -89,11 +97,13 @@ class OrderItem extends Model
         return $result;
     }
 
-    public function order():BelongsTo{
+    public function order(): BelongsTo
+    {
         return $this->belongsTo(Order::class);
     }
 
-    public function product():BelongsTo{
+    public function product(): BelongsTo
+    {
         return $this->belongsTo(Product::class);
     }
 }

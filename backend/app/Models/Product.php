@@ -3,17 +3,19 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\ValueObjects\Money;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Stripe\Climate\Supplier;
 
 /**
  * @property int $id
@@ -23,13 +25,14 @@ use Stripe\Climate\Supplier;
  * @property string $slug
  * @property string|null $images
  * @property string|null $description
- * @property \App\ValueObjects\Money $price
+ * @property Money $price
  * @property bool $is_active
  * @property bool $is_featured
  * @property bool $in_stock
  * @property bool $on_sale
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product query()
@@ -47,32 +50,35 @@ use Stripe\Climate\Supplier;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereUpdatedAt($value)
- * @property-read \App\Models\Brand $brand
- * @property-read \App\Models\Category $category
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\OrderItem> $orderItems
+ *
+ * @property-read Brand $brand
+ * @property-read Category $category
+ * @property-read Collection<int, OrderItem> $orderItems
  * @property-read int|null $order_items_count
- * @property-read \App\Models\ProductAttributeValues|null $pivot
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Attribute> $attributes
+ * @property-read ProductAttributeValues|null $pivot
+ * @property-read Collection<int, Attribute> $attributes
  * @property-read int|null $attributes_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductAttributeValues> $productAttributeValues
+ * @property-read Collection<int, ProductAttributeValues> $productAttributeValues
  * @property-read int|null $product_attribute_values_count
- * @property-read mixed $color_attribute_values
- * @property-read mixed $gpu_attribute_values
- * @property-read mixed $hard_drive_attribute_values
- * @property-read mixed $keyboard_attribute_values
- * @property-read mixed $panel_type_attribute_values
- * @property-read mixed $ram_attribute_values
- * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
+ * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
+ *
  * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
+ *
  * @property numeric|null $average_rating
  * @property int $reviews_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereAverageRating($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereReviewsCount($value)
+ *
  * @mixin IdeHelperProduct
+ *
  * @property int $supplier_id
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereSupplierId($value)
- * @property-read \App\Models\User $supplier
+ *
+ * @property-read User $supplier
+ *
  * @mixin \Eloquent
  */
 class Product extends Model implements HasMedia
@@ -87,7 +93,7 @@ class Product extends Model implements HasMedia
     // Per image, in kilobytes (Laravel's `max` rule for files).
     public const MAX_IMAGE_KB = 5120;
 
-    protected $fillable=[
+    protected $fillable = [
         'category_id',
         'brand_id',
         'name',
@@ -101,7 +107,7 @@ class Product extends Model implements HasMedia
         'supplier_id',
     ];
 
-    protected $casts=[
+    protected $casts = [
         'price' => MoneyCast::class,
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
@@ -156,11 +162,13 @@ class Product extends Model implements HasMedia
         return $this->belongsTo(Category::class);
     }
 
-    public function brand(): BelongsTo{
+    public function brand(): BelongsTo
+    {
         return $this->belongsTo(Brand::class);
     }
 
-    public function orderItems(): HasMany{
+    public function orderItems(): HasMany
+    {
         return $this->hasMany(OrderItem::class);
     }
 
@@ -175,68 +183,31 @@ class Product extends Model implements HasMedia
         return $this->hasMany(ProductAttributeValues::class);
     }
 
-    public function getColorAttributeValuesAttribute()
+    public function getThumbnailImage(): string
     {
-        return $this->productAttributeValues->where('attribute.name', 'attribute.color');
+        return $this->colorImageUrl('thumb');
     }
 
-    public function getPanelTypeAttributeValuesAttribute()
+    public function getSmallImage(): string
     {
-        return $this->productAttributeValues->where('attribute.name', 'attribute.panel.type');
+        return $this->colorImageUrl('small');
     }
 
-    public function getHardDriveAttributeValuesAttribute()
+    public function getLargeImage(): string
     {
-        return $this->productAttributeValues->where('attribute.name', 'attribute.hard.drive');
+        return $this->colorImageUrl('large');
     }
 
-    public function getKeyboardAttributeValuesAttribute()
+    /**
+     * A Product's images are attached to its color attribute value, so its picture
+     * is that value's image in the given media conversion, or '' if it has none.
+     */
+    private function colorImageUrl(string $conversion): string
     {
-        return $this->productAttributeValues->where('attribute.name', 'attribute.keyboard');
-    }
+        $colorValue = $this->productAttributeValues->firstWhere('attribute.name', 'attribute.color');
 
-    public function getRamAttributeValuesAttribute()
-    {
-        return $this->productAttributeValues->where('attribute.name', 'attribute.ram');
-    }
-
-    public function getGpuAttributeValuesAttribute()
-    {
-        return $this->productAttributeValues->where('attribute.name', 'attribute.gpu');
-    }
-
-
-    protected function checkIfProductAttributeValueExists(ProductAttributeValues|null $productAttributeValue):bool{
-        return $productAttributeValue && $productAttributeValue->hasMedia('product-attribute-images');
-    }
-
-    public function getThumbnailImage():string
-    {
-        $productAttributeValue = $this->getColorAttributeValuesAttribute()->first();
-        if ($this->checkIfProductAttributeValueExists($productAttributeValue)) {
-            return $productAttributeValue->getFirstMediaUrl('product-attribute-images', 'thumb');
-        }
-
-        return '';
-    }
-
-    public function getSmallImage():string
-    {
-        $productAttributeValue = $this->getColorAttributeValuesAttribute()->first();
-        if ($this->checkIfProductAttributeValueExists($productAttributeValue)) {
-            return $productAttributeValue->getFirstMediaUrl('product-attribute-images', 'small');
-        }
-
-        return '';
-    }
-
-    public function getLargeImage():string
-    {
-        $productAttributeValue = $this->getColorAttributeValuesAttribute()->first();
-        if ($this->checkIfProductAttributeValueExists($productAttributeValue)) {
-            return $productAttributeValue->getFirstMediaUrl('product-attribute-images', 'large');
-        }
-
-        return '';
+        return $colorValue?->hasMedia('product-attribute-images')
+            ? $colorValue->getFirstMediaUrl('product-attribute-images', $conversion)
+            : '';
     }
 }
