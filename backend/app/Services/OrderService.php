@@ -261,7 +261,7 @@ class OrderService
      */
     protected function createOrderItems(Collection $cartItems): array
     {
-        return $cartItems->map(fn (CartItem $cartItem) => (new OrderItem($cartItem))->attributesToArray())->values()->all();
+        return $cartItems->map(fn (CartItem $cartItem) => OrderItem::fromCartItem($cartItem)->attributesToArray())->values()->all();
     }
 
     /**
