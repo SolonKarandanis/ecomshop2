@@ -194,6 +194,10 @@ class OrderService
         $paymentMethod = $dto->getPaymentMethod();
         try {
             DB::beginTransaction();
+            // Two checkouts of the same cart at once (two tabs, a client retry)
+            // would otherwise both read the full cart and create two Orders. The
+            // second now waits here and then finds the cart already emptied.
+            $this->cartService->lockCart();
             $cart = $this->cartService->getCart();
             Log::debug('OrderService checkout cartItems count: ', [$cart->cartItems->count()]);
             $this->handleEmptyCart($cart->cartItems);

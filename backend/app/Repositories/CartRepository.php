@@ -36,6 +36,16 @@ class CartRepository
             );
     }
 
+    /**
+     * Locks the user's cart row until the surrounding transaction ends. A
+     * second transaction calling this waits here, then reads the cart as the
+     * first one left it.
+     */
+    public function lockForUpdate(int $userId): void
+    {
+        $this->modelQuery()->where('user_id', $userId)->lockForUpdate()->first();
+    }
+
     public function getCartId(int $userId): int
     {
         $cart = $this->modelQuery()

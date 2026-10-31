@@ -134,6 +134,21 @@ class CartService
         return $cart;
     }
 
+    /**
+     * Locks the logged-in user's cart for the rest of the current transaction
+     * and drops the cached copy, so the next getCart() reads it after the lock.
+     * Guest carts live in cookies and have nothing to lock.
+     */
+    public function lockCart(): void
+    {
+        if (! Auth::check()) {
+            return;
+        }
+
+        $this->cartRepository->lockForUpdate(Auth::id());
+        $this->cachedCart = null;
+    }
+
     protected function getCartFromDatabase(): Cart
     {
         $userId = Auth::id();
