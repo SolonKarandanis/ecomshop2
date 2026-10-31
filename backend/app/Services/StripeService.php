@@ -17,8 +17,8 @@ use UnexpectedValueException;
 #[Singleton]
 class StripeService
 {
-
-    public function __construct(){
+    public function __construct()
+    {
         Stripe::setApiKey(config('app.stripe_secret_key'));
     }
 
@@ -29,18 +29,20 @@ class StripeService
      *
      * @throws PaymentException
      */
-    public function createSession(Order $order, array $line_items):Session{
+    public function createSession(Order $order, array $line_items): Session
+    {
         $frontendUrl = config('app.frontend_url');
 
         try {
             /** @var array[] $line_items */
             return Session::create([
-                'payment_method_types' => ['card'],
+                // stripe-php 22 removed `payment_method_types` from Checkout Session creation.
+                'allowed_payment_method_types' => ['card'],
                 'customer_email' => (string) auth()->user()->email,
-                'line_items'=>$line_items,
-                'mode'=>'payment',
-                'success_url'=>$frontendUrl.'/success?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url'=>$frontendUrl.'/cancel?'.http_build_query(['order_id' => $order->id]),
+                'line_items' => $line_items,
+                'mode' => 'payment',
+                'success_url' => $frontendUrl.'/success?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => $frontendUrl.'/cancel?'.http_build_query(['order_id' => $order->id]),
             ]);
         } catch (ApiErrorException $e) {
             Log::error($e);
@@ -48,11 +50,11 @@ class StripeService
         }
     }
 
-
     /**
      * @throws PaymentException
      */
-    public function retrieveSession(string $sessionId):Session{
+    public function retrieveSession(string $sessionId): Session
+    {
         try {
             return Session::retrieve($sessionId);
         } catch (ApiErrorException $e) {
