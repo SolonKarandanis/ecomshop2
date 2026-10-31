@@ -114,6 +114,8 @@ return [
     |
     */
 
+    // Off: an hourly scheduled session:garbage-collect deletes expired
+    // sessions instead (routes/console.php).
     'lottery' => [0, 100],
 
     /*
