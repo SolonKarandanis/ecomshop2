@@ -60,6 +60,10 @@ return [
 
     'currency' => env('APP_CURRENCY', 'eur'),
 
+    // Writes every SQL query to the log, so `composer run dev` shows it in the
+    // pail pane. Ignored in production (AppServiceProvider::registerQueryLogging).
+    'log_queries' => (bool) env('LOG_QUERIES', false),
+
     // Stripe API key, and the signing secret for the Stripe webhook (ADR-0004).
     'stripe_secret_key' => env('STRIPE_SECRET_KEY'),
     'stripe_webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
