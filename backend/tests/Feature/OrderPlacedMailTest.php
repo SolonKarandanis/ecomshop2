@@ -20,10 +20,11 @@ it('renders the Order placed email with the item prices and totals', function ()
 
     expect($html)
         ->toContain('Mug')
-        ->toContain('$19.99')
-        ->toContain('$39.98')
-        ->toContain('$5.00')
-        ->toContain('$44.98')
+        // EUR, the shop's currency, like every other price.
+        ->toContain('€19.99')
+        ->toContain('€39.98')
+        ->toContain('€5.00')
+        ->toContain('€44.98')
         // Subtotal is the total minus shipping: 44.98 - 5.00.
-        ->toMatch('/Subtotal.*?\$39\.98.*?Shipping.*?\$5\.00.*?Total.*?\$44\.98/s');
+        ->toMatch('/Subtotal.*?€39\.98.*?Shipping.*?€5\.00.*?Total.*?€44\.98/s');
 });

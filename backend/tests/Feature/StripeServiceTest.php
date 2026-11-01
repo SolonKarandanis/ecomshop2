@@ -68,3 +68,18 @@ it('sends the API version pinned by the installed stripe-php', function () {
 
     expect($this->stripeClient->requests[0]['headers'])->toContain('Stripe-Version: '.ApiVersion::CURRENT);
 });
+
+it("sends the Buyer to Stripe, and back, in the language they're checking out in", function () {
+    config(['app.frontend_url' => 'https://shop.test']);
+    $this->actingAs(User::factory()->create());
+    app()->setLocale('el');
+    $order = Order::factory()->create();
+
+    app(StripeService::class)->createSession($order, []);
+
+    expect($this->stripeClient->requests[0]['params'])->toMatchArray([
+        'locale' => 'el',
+        'success_url' => 'https://shop.test/el/success?session_id={CHECKOUT_SESSION_ID}',
+        'cancel_url' => "https://shop.test/el/cancel?order_id={$order->id}",
+    ]);
+});

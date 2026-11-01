@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\UserStatusEnum;
 use App\Models\User;
+use App\Support\FrontendUrl;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Queue\Events\JobFailed;
@@ -59,12 +60,13 @@ class AppServiceProvider extends ServiceProvider
 
     // There is no `password.reset` web route in this API-only app; the reset
     // form is the Nuxt `/reset-password` page, which posts to `/api/reset-password`.
+    // The link opens it in the user's saved language, like the email itself.
     private function registerPasswordResetUrl(): void
     {
-        ResetPassword::createUrlUsing(fn (User $user, string $token) => config('app.frontend_url').'/reset-password?'.http_build_query([
+        ResetPassword::createUrlUsing(fn (User $user, string $token) => FrontendUrl::forUser($user, '/reset-password?'.http_build_query([
             'token' => $token,
             'email' => $user->getEmailForPasswordReset(),
-        ]));
+        ])));
     }
 
     // Opt-in with LOG_QUERIES=true. Logs each query with its bindings filled in

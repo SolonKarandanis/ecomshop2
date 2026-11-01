@@ -1,33 +1,38 @@
+@php
+    // Rendered in the Buyer's locale (#80): amounts in the shop's currency
+    // (EUR), formatted for that language, like the storefront's prices.
+    $money = fn ($amount) => \Illuminate\Support\Number::currency($amount ?? 0, in: strtoupper(config('app.currency')), locale: app()->getLocale());
+@endphp
 <x-mail::message>
-# Order Confirmation
+# {{ __('mail.order_placed.heading') }}
 
-Hello {{ $order->user->name }},
+{{ __('mail.greeting', ['name' => $order->user->name]) }}
 
-Thank you for your order! We've received it and are currently processing it. You'll receive another email once your items have shipped.
+{{ __('mail.order_placed.intro') }}
 
 <x-mail::button :url="$url">
-View Order Details
+{{ __('mail.order_placed.button') }}
 </x-mail::button>
 
-## Order Summary
+## {{ __('mail.order_placed.summary') }}
 
-**Order Number:** {{ $order->id }}
-**Order Date:** {{ $order->created_at->format('M d, Y H:i') }}
-**Payment Status:** {{ \App\Enums\OrderPaymentStatusEnum::labels()[$order->payment_status] ?? $order->payment_status }}
+**{{ __('mail.order_placed.number') }}:** {{ $order->id }}
+**{{ __('mail.order_placed.date') }}:** {{ $order->created_at->locale(app()->getLocale())->isoFormat('LLL') }}
+**{{ __('mail.order_placed.payment_status') }}:** {{ \App\Enums\OrderPaymentStatusEnum::labels()[$order->payment_status] ?? $order->payment_status }}
 
 <x-mail::table>
-| Item | Quantity | Unit Price | Total Price |
+| {{ __('mail.order_placed.item') }} | {{ __('mail.order_placed.quantity') }} | {{ __('mail.order_placed.unit_price') }} | {{ __('mail.order_placed.total_price') }} |
 | :--- | :---: | :---: | :---: |
 @foreach($order->items as $item)
-| {{ $item->product->name }}@php $displayAttributes = $item->getAttributeNamesAndOptions(); @endphp @if(!empty($displayAttributes))<br><small>@foreach($displayAttributes as $name => $option){{ $name }}: {{ $option }}{{ !$loop->last ? ', ' : '' }}@endforeach</small>@endif | {{ $item->quantity }} | {{ \Illuminate\Support\Number::currency($item->unit_amount?->toFloat() ?? 0) }} | {{ \Illuminate\Support\Number::currency($item->total_amount?->toFloat() ?? 0) }} |
+| {{ $item->product->name }}@php $displayAttributes = $item->getAttributeNamesAndOptions(); @endphp @if(!empty($displayAttributes))<br><small>@foreach($displayAttributes as $name => $option){{ $name }}: {{ $option }}{{ !$loop->last ? ', ' : '' }}@endforeach</small>@endif | {{ $item->quantity }} | {{ $money($item->unit_amount?->toFloat()) }} | {{ $money($item->total_amount?->toFloat()) }} |
 @endforeach
-| | | **Subtotal** | {{ \Illuminate\Support\Number::currency(($order->grand_total ?? \App\ValueObjects\Money::zero())->subtract($order->shipping_amount ?? \App\ValueObjects\Money::zero())->toFloat()) }} |
-| | | **Shipping** | {{ \Illuminate\Support\Number::currency($order->shipping_amount?->toFloat() ?? 0) }} |
-| | | **Total** | **{{ \Illuminate\Support\Number::currency($order->grand_total?->toFloat() ?? 0) }}** |
+| | | **{{ __('mail.order_placed.subtotal') }}** | {{ $money(($order->grand_total ?? \App\ValueObjects\Money::zero())->subtract($order->shipping_amount ?? \App\ValueObjects\Money::zero())->toFloat()) }} |
+| | | **{{ __('mail.order_placed.shipping') }}** | {{ $money($order->shipping_amount?->toFloat()) }} |
+| | | **{{ __('mail.order_placed.total') }}** | **{{ $money($order->grand_total?->toFloat()) }}** |
 </x-mail::table>
 
 @if($order->address)
-## Shipping Address
+## {{ __('mail.order_placed.shipping_address') }}
 {{ $order->address->full_name }}
 {{ $order->address->street_address }}
 {{ $order->address->city }}, {{ $order->address->postal_code }}
@@ -35,9 +40,9 @@ View Order Details
 @endif
 
 <x-mail::panel>
-If you have any questions, please reply to this email or contact our support team.
+{{ __('mail.order_placed.questions') }}
 </x-mail::panel>
 
-Thanks,<br>
+{{ __('mail.thanks') }}<br>
 {{ config('app.name') }}
 </x-mail::message>

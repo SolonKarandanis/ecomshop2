@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Exceptions\PaymentException;
 use App\Models\Order;
+use App\Support\FrontendUrl;
 use Illuminate\Container\Attributes\Config;
 use Illuminate\Container\Attributes\Singleton;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session;
 use Stripe\Event;
@@ -24,7 +26,8 @@ class StripeService
     }
 
     /**
-     * Stripe sends the Buyer back to the Nuxt frontend, not the API (ADR-0004).
+     * Stripe sends the Buyer back to the Nuxt frontend, not the API (ADR-0004),
+     * in the language they're checking out in; Stripe's own page uses it too.
      * Stripe fills in {CHECKOUT_SESSION_ID} on success_url only, so cancel_url
      * carries the Order id instead.
      *
@@ -32,7 +35,7 @@ class StripeService
      */
     public function createSession(Order $order, array $line_items): Session
     {
-        $frontendUrl = config('app.frontend_url');
+        $locale = App::getLocale();
 
         try {
             /** @var array[] $line_items */
@@ -42,8 +45,10 @@ class StripeService
                 'customer_email' => (string) auth()->user()->email,
                 'line_items' => $line_items,
                 'mode' => 'payment',
-                'success_url' => $frontendUrl.'/success?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => $frontendUrl.'/cancel?'.http_build_query(['order_id' => $order->id]),
+                // en, el and tr are all Stripe Checkout languages.
+                'locale' => $locale,
+                'success_url' => FrontendUrl::to('/success?session_id={CHECKOUT_SESSION_ID}', $locale),
+                'cancel_url' => FrontendUrl::to('/cancel?'.http_build_query(['order_id' => $order->id]), $locale),
             ]);
         } catch (ApiErrorException $e) {
             Log::error($e);
