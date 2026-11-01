@@ -100,6 +100,10 @@ return [
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
+    // Languages the API answers in and a user can save as their locale (#77).
+    // The first is used when a request asks for none of them.
+    'supported_locales' => ['en', 'el', 'tr'],
+
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
     /*

@@ -11,6 +11,7 @@ class ProfileData extends BaseData
     public function __construct(
         public string $name,
         public string $email,
+        public string $locale,
         public Lazy|UserStatusEnum|null $status,
     ) {}
 
@@ -19,6 +20,7 @@ class ProfileData extends BaseData
         return new self(
             name: $user->name,
             email: $user->email,
+            locale: $user->locale,
             // Only an Admin's own profile view needs their User Status; a Buyer/Supplier
             // has no in-app use for it (ADR-0001 API Resources).
             status: Lazy::when(fn () => $user->isAdmin(), fn () => $user->status),

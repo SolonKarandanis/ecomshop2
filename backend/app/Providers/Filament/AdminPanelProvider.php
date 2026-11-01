@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\Orders\Widgets\OrderStatsWidget;
+use App\Http\Middleware\SetLocaleFromUser;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -52,6 +53,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            // Persistent so Livewire's own requests are in the admin's language too.
+            ->authMiddleware([
+                SetLocaleFromUser::class,
+            ], isPersistent: true);
     }
 }
