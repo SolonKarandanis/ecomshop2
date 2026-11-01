@@ -3,11 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\UserStatusEnum;
-use App\Models\Order;
 use App\Models\User;
-use App\Observers\OrderObserver;
-use App\Observers\OrderStatusHistoryObserver;
-use App\Search\ProductSearchEngineFactory;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Queue\Events\JobFailed;
@@ -30,14 +26,6 @@ class AppServiceProvider extends ServiceProvider
         DB::prohibitDestructiveCommands(
             app()->isProduction()
         );
-
-        // Not attribute-bindable: needs computed constructor args (DB driver name,
-        // a config value), not just class dependencies. Every other Service/Payment
-        // handler singleton is declared via #[Singleton] on the class itself instead.
-        $this->app->singleton(ProductSearchEngineFactory::class, fn ($app) => new ProductSearchEngineFactory(
-            DB::connection()->getDriverName(),
-            (bool) config('search.fts_enabled'),
-        ));
     }
 
     /**
@@ -46,17 +34,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerConfig();
-        $this->registerObservers();
         $this->registerGates();
         $this->registerPasswordResetUrl();
         $this->registerQueryLogging();
 
         Schema::defaultStringLength(191);
-    }
-
-    private function registerObservers(): void
-    {
-        Order::observe([OrderObserver::class, OrderStatusHistoryObserver::class]);
     }
 
     private function registerGates(): void

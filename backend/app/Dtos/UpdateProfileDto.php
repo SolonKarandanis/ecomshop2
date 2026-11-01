@@ -2,18 +2,12 @@
 
 namespace App\Dtos;
 
-use App\Attributes\Required;
 use App\Http\Requests\UpdateProfileRequest;
-use App\Validation\Concerns\ValidatesAttributes;
 
 class UpdateProfileDto
 {
-    use ValidatesAttributes;
-
-    #[Required]
     private string $name;
 
-    #[Required]
     private string $email;
 
     // Left unchanged when the request doesn't send one.
@@ -25,7 +19,6 @@ class UpdateProfileDto
         $instance->setName($request->input('name'));
         $instance->setEmail($request->input('email'));
         $instance->setLocale($request->input('locale'));
-        $instance->validate();
 
         return $instance;
     }
@@ -36,7 +29,6 @@ class UpdateProfileDto
         $instance->setName($data['name']);
         $instance->setEmail($data['email']);
         $instance->setLocale($data['locale'] ?? null);
-        $instance->validate();
 
         return $instance;
     }

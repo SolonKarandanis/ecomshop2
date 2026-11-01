@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,7 @@ use Illuminate\Notifications\DatabaseNotification as BaseNotification;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Model $notifiable
+ *
  * @method static \Illuminate\Notifications\DatabaseNotificationCollection<int, static> all($columns = ['*'])
  * @method static Builder<static>|Notification forUser(\App\Models\User|string|int $user)
  * @method static \Illuminate\Notifications\DatabaseNotificationCollection<int, static> get($columns = ['*'])
@@ -37,6 +39,7 @@ use Illuminate\Notifications\DatabaseNotification as BaseNotification;
  * @method static Builder<static>|Notification whereReadAt($value)
  * @method static Builder<static>|Notification whereType($value)
  * @method static Builder<static>|Notification whereUpdatedAt($value)
+ *
  * @mixin IdeHelperNotification
  * @mixin \Eloquent
  */
@@ -53,57 +56,39 @@ class Notification extends BaseNotification
 
     /**
      * Scope a query to only include unread notifications.
-     *
-     * @param Builder $query
-     * @return Builder
      */
-    public function scopeOnlyUnread(Builder $query): Builder
+    #[Scope]
+    protected function onlyUnread(Builder $query): void
     {
         $query->whereNull('read_at');
-
-        return $query;
     }
 
     /**
      * Scope a query to only include read notifications.
-     *
-     * @param Builder $query
-     * @return Builder
      */
-    public function scopeOnlyRead(Builder $query): Builder
+    #[Scope]
+    protected function onlyRead(Builder $query): void
     {
         $query->whereNotNull('read_at');
-
-        return $query;
     }
 
     /**
      * Scope a query to only include notifications of a certain type.
-     *
-     * @param Builder $query
-     * @param string $type
-     * @return Builder
      */
-    public function scopeOfType(Builder $query, string $type): Builder
+    #[Scope]
+    protected function ofType(Builder $query, string $type): void
     {
         $query->where('type', $type);
-
-        return $query;
     }
 
     /**
      * Scope a query to only include notifications for a specific user.
-     *
-     * @param Builder $query
-     * @param int|string|User $user
-     * @return Builder
      */
-    public function scopeForUser(Builder $query, User|int|string $user): Builder
+    #[Scope]
+    protected function forUser(Builder $query, User|int|string $user): void
     {
         $userId = $user instanceof User ? $user->id : $user;
         $query->where('notifiable_type', User::class)
             ->where('notifiable_id', $userId);
-
-        return $query;
     }
 }
