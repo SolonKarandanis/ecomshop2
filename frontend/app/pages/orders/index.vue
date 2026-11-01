@@ -4,9 +4,10 @@ import type { Paginated } from '~/types/catalogue'
 import type { Order } from '~/types/order'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: 'auth' })
-useSeoMeta({ title: 'My orders' })
+useSeoMeta({ title: () => t('orders.title') })
 
 const route = useRoute()
 
@@ -32,31 +33,31 @@ async function exportOrders() {
   }
   catch (e) {
     // e.g. 400 when there are more than 10,000 Orders to export.
-    exportError.value = await blobErrorMessage(e, 'Your orders couldn\'t be exported. Please try again.')
+    exportError.value = await blobErrorMessage(e, t('orders.export_error'))
   }
   finally {
     exporting.value = false
   }
 }
 
-const columns: TableColumn<Order>[] = [
-  { accessorKey: 'id', header: 'Order' },
-  { accessorKey: 'created_at', header: 'Placed' },
-  { accessorKey: 'order_status', header: 'Status' },
-  { accessorKey: 'payment_status', header: 'Payment' },
-  { accessorKey: 'grand_total', header: 'Total' },
-]
+const columns = computed<TableColumn<Order>[]>(() => [
+  { accessorKey: 'id', header: t('orders.column.order') },
+  { accessorKey: 'created_at', header: t('orders.column.placed') },
+  { accessorKey: 'order_status', header: t('orders.column.status') },
+  { accessorKey: 'payment_status', header: t('orders.column.payment') },
+  { accessorKey: 'grand_total', header: t('orders.column.total') },
+])
 </script>
 
 <template>
   <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <h1 class="text-3xl font-bold">
-        My orders
+        {{ t('orders.title') }}
       </h1>
       <UButton
         v-if="orders?.data.length"
-        label="Export"
+        :label="t('orders.export')"
         icon="i-lucide-download"
         color="neutral"
         variant="outline"
@@ -77,7 +78,7 @@ const columns: TableColumn<Order>[] = [
       v-if="error"
       color="error"
       variant="subtle"
-      :title="apiErrorMessage(error, 'We couldn\'t load your orders. Reload the page to try again.')"
+      :title="apiErrorMessage(error, t('orders.load_error'))"
     />
 
     <template v-else>
@@ -85,7 +86,7 @@ const columns: TableColumn<Order>[] = [
         :data="orders?.data ?? []"
         :columns="columns"
         :loading="loadStatus === 'pending'"
-        empty="You haven't placed any orders yet."
+        :empty="t('orders.empty')"
       >
         <template #id-cell="{ row }">
           <ULink

@@ -31,6 +31,6 @@ export function apiValidationErrors(error: unknown): FormError[] {
     .map(([name, messages]) => ({ name, message: messages[0]! }))
 }
 
-export function apiErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
+export function apiErrorMessage(error: unknown, fallback = translate('common.error')): string {
   return errorBody(error)?.message || fallback
 }

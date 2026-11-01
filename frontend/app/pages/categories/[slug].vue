@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Paginated, Product } from '~/types/catalogue'
 
+const { t } = useI18n()
 const route = useRoute()
 
 // The products filter takes category ids, so resolve the slug against the
@@ -9,7 +10,7 @@ const { data: categories } = await useCategories()
 const category = computed(() => categories.value?.find(c => c.slug === route.params.slug))
 
 if (!category.value) {
-  throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
+  throw createError({ statusCode: 404, statusMessage: t('categories.not_found'), fatal: true })
 }
 
 const filters = computed(() => ({ ...filtersFromQuery(route.query), categories: [category.value!.id] }))

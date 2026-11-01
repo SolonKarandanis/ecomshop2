@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { locale, locales } = useI18n()
+const { locale, locales, t } = useI18n()
 const { switchTo } = useLocaleSwitch()
 
 const items = computed(() => locales.value.map(item => ({ label: item.name ?? item.code, value: item.code })))
@@ -12,7 +12,7 @@ const items = computed(() => locales.value.map(item => ({ label: item.name ?? it
     icon="i-lucide-languages"
     color="neutral"
     variant="ghost"
-    aria-label="Language"
+    :aria-label="t('nav.language')"
     class="w-36"
     @update:model-value="code => isLocale(code) && switchTo(code)"
   />

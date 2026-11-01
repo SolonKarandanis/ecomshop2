@@ -2,8 +2,10 @@
 import type { FormError } from '@nuxt/ui'
 import type { ChangePasswordPayload } from '~/types/profile'
 
+const { t } = useI18n()
+
 definePageMeta({ middleware: 'auth' })
-useSeoMeta({ title: 'Change password' })
+useSeoMeta({ title: () => t('password.title') })
 
 const toast = useToast()
 
@@ -14,10 +16,10 @@ const submitting = ref(false)
 // ChangePasswordRequest's own rules, checked here first; the API still decides.
 function validate(data: Partial<ChangePasswordPayload>): FormError[] {
   const errors: FormError[] = []
-  if (!data.currentPassword) errors.push({ name: 'currentPassword', message: 'Enter your current password.' })
-  if ((data.newPassword ?? '').length < 8) errors.push({ name: 'newPassword', message: 'Use at least 8 characters.' })
+  if (!data.currentPassword) errors.push({ name: 'currentPassword', message: t('password.validation.current') })
+  if ((data.newPassword ?? '').length < 8) errors.push({ name: 'newPassword', message: t('password.validation.length') })
   if (data.newPasswordConfirmation !== data.newPassword) {
-    errors.push({ name: 'newPasswordConfirmation', message: 'The passwords don\'t match.' })
+    errors.push({ name: 'newPasswordConfirmation', message: t('auth.validation.passwords_match') })
   }
   return errors
 }
@@ -30,7 +32,7 @@ async function onSubmit() {
     state.currentPassword = ''
     state.newPassword = ''
     state.newPasswordConfirmation = ''
-    toast.add({ title: 'Your password was changed.', color: 'success' })
+    toast.add({ title: t('password.changed'), color: 'success' })
   })
   submitting.value = false
 }
@@ -39,7 +41,7 @@ async function onSubmit() {
 <template>
   <div class="mx-auto max-w-xl space-y-6">
     <h1 class="text-3xl font-bold">
-      Your account
+      {{ t('profile.heading') }}
     </h1>
     <ProfileNav />
 
@@ -51,7 +53,7 @@ async function onSubmit() {
       @submit="onSubmit"
     >
       <p class="text-sm text-muted">
-        You'll stay logged in here. Anywhere else you're logged in will be logged out.
+        {{ t('password.intro') }}
       </p>
 
       <UAlert
@@ -62,7 +64,7 @@ async function onSubmit() {
       />
 
       <UFormField
-        label="Current password"
+        :label="t('password.current')"
         name="currentPassword"
       >
         <UInput
@@ -74,9 +76,9 @@ async function onSubmit() {
       </UFormField>
 
       <UFormField
-        label="New password"
+        :label="t('reset.new_password')"
         name="newPassword"
-        help="At least 8 characters."
+        :help="t('password.help')"
       >
         <UInput
           v-model="state.newPassword"
@@ -87,7 +89,7 @@ async function onSubmit() {
       </UFormField>
 
       <UFormField
-        label="Confirm new password"
+        :label="t('reset.confirm')"
         name="newPasswordConfirmation"
       >
         <UInput
@@ -101,7 +103,7 @@ async function onSubmit() {
       <div class="flex justify-end">
         <UButton
           type="submit"
-          label="Change password"
+          :label="t('password.submit')"
           :loading="submitting"
           class="cursor-pointer"
         />

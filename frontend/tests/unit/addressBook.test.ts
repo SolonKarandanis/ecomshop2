@@ -198,8 +198,8 @@ describe('saved address form', () => {
     await settle()
 
     expect(requests).toHaveLength(0)
-    expect(form.text()).toContain('Enter the first name.')
-    expect(form.text()).toContain('Enter the postal code.')
+    expect(form.text()).toContain('First name is required.')
+    expect(form.text()).toContain('Postal code is required.')
   })
 
   it('adds an address with the API\'s field names', async () => {

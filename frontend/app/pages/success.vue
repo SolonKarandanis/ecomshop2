@@ -3,9 +3,10 @@ import type { Order, OrderPaymentResult } from '~/types/order'
 import { PAYMENT_FAILED, PAYMENT_PAID } from '~/types/order'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: 'auth' })
-useSeoMeta({ title: 'Order placed' })
+useSeoMeta({ title: () => t('success.title') })
 
 const route = useRoute()
 const cart = useCartStore()
@@ -38,11 +39,11 @@ onMounted(() => {
 })
 
 const heading = computed(() => {
-  if (result.value?.kind !== 'stripe') return 'Thank you for your order'
+  if (result.value?.kind !== 'stripe') return t('success.heading.thanks')
   switch (result.value.payment.payment_status) {
-    case PAYMENT_PAID: return 'Payment received'
-    case PAYMENT_FAILED: return 'Payment failed'
-    default: return 'Confirming your payment'
+    case PAYMENT_PAID: return t('success.heading.paid')
+    case PAYMENT_FAILED: return t('success.heading.failed')
+    default: return t('success.heading.confirming')
   }
 })
 
@@ -73,39 +74,37 @@ const orderId = computed(() => result.value?.kind === 'stripe' ? result.value.pa
         v-if="result.kind === 'cod'"
         class="text-muted"
       >
-        Order #{{ result.order.id }} is placed. You'll pay
-        <template v-if="result.order.grand_total !== null">
-          {{ formatPrice(result.order.grand_total) }}
-        </template>
-        on delivery.
+        {{ result.order.grand_total !== null
+          ? t('success.cod_with_total', { id: result.order.id, total: formatPrice(result.order.grand_total) })
+          : t('success.cod', { id: result.order.id }) }}
       </p>
       <p
         v-else-if="result.payment.payment_status === PAYMENT_PAID"
         class="text-muted"
       >
-        Order #{{ result.payment.order_id }} is paid. We'll let you know when it ships.
+        {{ t('success.paid', { id: result.payment.order_id }) }}
       </p>
       <p
         v-else-if="result.payment.payment_status === PAYMENT_FAILED"
         class="text-muted"
       >
-        Stripe couldn't take the payment for order #{{ result.payment.order_id }}, so it hasn't been placed.
+        {{ t('success.failed', { id: result.payment.order_id }) }}
       </p>
       <p
         v-else
         class="text-muted"
       >
-        Stripe is still confirming the payment for order #{{ result.payment.order_id }}. We'll notify you as soon as it's through.
+        {{ t('success.confirming', { id: result.payment.order_id }) }}
       </p>
 
       <div class="flex justify-center gap-2">
         <UButton
           :to="localePath(`/orders/${orderId}`)"
-          label="View order"
+          :label="t('orders.view')"
         />
         <UButton
           :to="localePath('/products')"
-          label="Keep shopping"
+          :label="t('common.keep_shopping')"
           color="neutral"
           variant="outline"
         />

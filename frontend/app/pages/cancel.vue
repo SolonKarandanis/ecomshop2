@@ -2,9 +2,10 @@
 import type { StripeCancelResult } from '~/types/order'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: 'auth' })
-useSeoMeta({ title: 'Payment not completed' })
+useSeoMeta({ title: () => t('cancel.title') })
 
 const route = useRoute()
 const orderId = orderIdFromQuery(route.query)
@@ -45,22 +46,22 @@ async function retry(url: string) {
   >
     <div class="space-y-4">
       <h1 class="text-xl font-semibold">
-        Payment not completed
+        {{ t('cancel.title') }}
       </h1>
 
       <template v-if="result.retry_url">
         <p class="text-muted">
-          Order #{{ result.order_id }} is waiting for payment. You can go back to Stripe and pay for it now.
+          {{ t('cancel.waiting', { id: result.order_id }) }}
         </p>
         <div class="flex justify-center gap-2">
           <UButton
-            label="Try payment again"
+            :label="t('cancel.retry')"
             :loading="retrying"
             @click="retry(result.retry_url)"
           />
           <UButton
             :to="localePath(`/orders/${result.order_id}`)"
-            label="View order"
+            :label="t('orders.view')"
             color="neutral"
             variant="outline"
           />
@@ -69,16 +70,16 @@ async function retry(url: string) {
 
       <template v-else>
         <p class="text-muted">
-          The payment window for order #{{ result.order_id }} has closed, so it can't be paid any more.
+          {{ t('cancel.closed', { id: result.order_id }) }}
         </p>
         <div class="flex justify-center gap-2">
           <UButton
             :to="localePath(`/orders/${result.order_id}`)"
-            label="View order"
+            :label="t('orders.view')"
           />
           <UButton
             :to="localePath('/products')"
-            label="Keep shopping"
+            :label="t('common.keep_shopping')"
             color="neutral"
             variant="outline"
           />

@@ -5,19 +5,20 @@ import type { Order } from '~/types/order'
 import { ORDER_CANCELLED, ORDER_DELIVERED, ORDER_PAID, ORDER_SHIPPED } from '~/types/order'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: ['auth', 'supplier'] })
-useSeoMeta({ title: 'Supplier orders' })
+useSeoMeta({ title: () => t('supplier.orders.title') })
 
 const route = useRoute()
 
 // Reka's select can't hold an empty value, so "all" stands for no filter.
 const ALL = 'all'
 // Draft Orders never reach a Supplier, so they aren't offered.
-const statusItems = [
-  { label: 'All statuses', value: ALL },
+const statusItems = computed(() => [
+  { label: t('supplier.orders.all_statuses'), value: ALL },
   ...[ORDER_PAID, ORDER_SHIPPED, ORDER_DELIVERED, ORDER_CANCELLED].map(value => ({ label: orderStatusLabel(value), value })),
-]
+])
 
 // The URL holds the filter and page, so a reload keeps them.
 const status = computed(() => typeof route.query.status === 'string' ? route.query.status : ALL)
@@ -41,26 +42,26 @@ function filterBy(value: string) {
   return navigateTo({ query: value === ALL ? {} : { status: value } })
 }
 
-const columns: TableColumn<Order>[] = [
-  { accessorKey: 'id', header: 'Order' },
-  { accessorKey: 'created_at', header: 'Placed' },
-  { accessorKey: 'order_status', header: 'Status' },
-  { accessorKey: 'payment_status', header: 'Payment' },
-  { accessorKey: 'grand_total', header: 'Total' },
+const columns = computed<TableColumn<Order>[]>(() => [
+  { accessorKey: 'id', header: t('orders.column.order') },
+  { accessorKey: 'created_at', header: t('orders.column.placed') },
+  { accessorKey: 'order_status', header: t('orders.column.status') },
+  { accessorKey: 'payment_status', header: t('orders.column.payment') },
+  { accessorKey: 'grand_total', header: t('orders.column.total') },
   { id: 'actions', header: '' },
-]
+])
 </script>
 
 <template>
   <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <h1 class="text-3xl font-bold">
-        Supplier orders
+        {{ t('supplier.orders.title') }}
       </h1>
       <USelect
         :model-value="status"
         :items="statusItems"
-        aria-label="Filter by status"
+        :aria-label="t('supplier.orders.filter')"
         class="w-48"
         @update:model-value="filterBy"
       />
@@ -70,8 +71,8 @@ const columns: TableColumn<Order>[] = [
       v-if="forbidden"
       color="warning"
       variant="subtle"
-      title="Your Supplier account can't manage orders right now."
-      description="If your account was deactivated, contact an admin."
+      :title="t('supplier.orders.forbidden')"
+      :description="t('supplier.orders.forbidden_hint')"
     />
 
     <UAlert
@@ -86,7 +87,7 @@ const columns: TableColumn<Order>[] = [
         :data="orders?.data ?? []"
         :columns="columns"
         :loading="loadStatus === 'pending'"
-        empty="No orders to show."
+        :empty="t('supplier.orders.empty')"
       >
         <template #id-cell="{ row }">
           <ULink

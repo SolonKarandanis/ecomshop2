@@ -4,6 +4,7 @@ import type { Paginated, Review } from '~/types/catalogue'
 // `initial` is the first page, embedded in the SSR-rendered product response;
 // later pages load client-side from GET /products/{product}/reviews.
 const props = defineProps<{ productId: number, initial: Paginated<Review> }>()
+const { t } = useI18n()
 
 const reviews = ref<Review[]>([...props.initial.data])
 const meta = ref(props.initial.meta)
@@ -34,14 +35,14 @@ async function loadMore() {
 <template>
   <section>
     <h2 class="text-xl font-semibold">
-      Reviews ({{ meta.total }})
+      {{ t('reviews.title', { count: meta.total }) }}
     </h2>
 
     <p
       v-if="!reviews.length"
       class="mt-4 text-muted"
     >
-      No reviews yet.
+      {{ t('reviews.empty') }}
     </p>
 
     <ul
@@ -56,7 +57,7 @@ async function loadMore() {
         <div class="flex items-center justify-between text-sm">
           <span
             class="text-warning"
-            :aria-label="`${review.rating} out of 5 stars`"
+            :aria-label="t('reviews.stars', { rating: review.rating })"
           >{{ '★'.repeat(review.rating) }}{{ '☆'.repeat(5 - review.rating) }}</span>
           <time
             v-if="review.created_at"
@@ -83,13 +84,13 @@ async function loadMore() {
       v-if="error"
       color="error"
       variant="subtle"
-      title="Couldn't load more reviews. Try again."
+      :title="t('reviews.load_error')"
       class="mt-4"
     />
 
     <UButton
       v-if="hasMore"
-      label="Load more reviews"
+      :label="t('reviews.load_more')"
       color="neutral"
       variant="outline"
       class="mt-4"

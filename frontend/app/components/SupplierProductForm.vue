@@ -3,6 +3,7 @@ import type { FormError } from '@nuxt/ui'
 import type { ProductImage, SupplierProduct, SupplierProductPayload } from '~/types/supplierProduct'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 const props = defineProps<{
   // Omitted on the "new product" page.
@@ -99,10 +100,10 @@ const slotsLeft = computed(() => maxImages.value - keptImages.value.length - new
 
 const imageHint = computed(() => {
   if (!config.value) {
-    return 'JPG, PNG or WebP.'
+    return t('product_form.image_hint_basic')
   }
   const sizeMb = Number((config.value.max_product_image_kb / 1024).toFixed(1))
-  return `JPG, PNG or WebP, up to ${sizeMb} MB each. ${Math.max(slotsLeft.value, 0)} of ${config.value.max_product_images} left.`
+  return t('product_form.image_hint', { size: sizeMb, left: Math.max(slotsLeft.value, 0), max: config.value.max_product_images })
 })
 
 function removeExistingImage(id: number) {
@@ -124,26 +125,26 @@ function validate(data: Partial<FormState>): FormError[] {
   const errors: FormError[] = []
 
   if (!data.name?.trim()) {
-    errors.push({ name: 'name', message: 'Enter a product name.' })
+    errors.push({ name: 'name', message: t('product_form.validation.name') })
   }
   if (productId.value !== undefined && !data.slug?.trim()) {
-    errors.push({ name: 'slug', message: 'Enter a slug.' })
+    errors.push({ name: 'slug', message: t('product_form.validation.slug') })
   }
   if (typeof data.price !== 'number' || Number.isNaN(data.price) || data.price < 0) {
-    errors.push({ name: 'price', message: 'Enter a price of 0 or more.' })
+    errors.push({ name: 'price', message: t('product_form.validation.price') })
   }
   if (!data.category_id) {
-    errors.push({ name: 'category_id', message: 'Choose a category.' })
+    errors.push({ name: 'category_id', message: t('product_form.validation.category') })
   }
   if (!data.brand_id) {
-    errors.push({ name: 'brand_id', message: 'Choose a brand.' })
+    errors.push({ name: 'brand_id', message: t('product_form.validation.brand') })
   }
   data.attributes?.forEach((row, index) => {
     if (!row.attribute_id) {
-      errors.push({ name: `attributes.${index}.attribute_id`, message: 'Choose an attribute.' })
+      errors.push({ name: `attributes.${index}.attribute_id`, message: t('product_form.validation.attribute') })
     }
     if (!row.attribute_option_id) {
-      errors.push({ name: `attributes.${index}.attribute_option_id`, message: 'Choose a value.' })
+      errors.push({ name: `attributes.${index}.attribute_option_id`, message: t('product_form.validation.value') })
     }
   })
 
@@ -152,13 +153,13 @@ function validate(data: Partial<FormState>): FormError[] {
 
 function imageProblem(): string | null {
   if (slotsLeft.value < 0) {
-    return `A product can have at most ${maxImages.value} images.`
+    return t('product_form.image.too_many', { max: maxImages.value })
   }
   if (newImages.value.some(file => !IMAGE_TYPES.includes(file.type))) {
-    return 'Images must be JPG, PNG or WebP files.'
+    return t('product_form.image.wrong_type')
   }
   if (newImages.value.some(file => file.size > maxImageKb.value * 1024)) {
-    return `Each image must be ${Number((maxImageKb.value / 1024).toFixed(1))} MB or smaller.`
+    return t('product_form.image.too_big', { size: Number((maxImageKb.value / 1024).toFixed(1)) })
   }
   return null
 }
@@ -188,7 +189,7 @@ async function saveImages(id: number): Promise<SupplierProduct | null> {
     }
   }
   catch (e) {
-    imageError.value = apiValidationErrors(e)[0]?.message ?? apiErrorMessage(e, 'The images couldn\'t be saved. Please try again.')
+    imageError.value = apiValidationErrors(e)[0]?.message ?? apiErrorMessage(e, t('product_form.image.save_error'))
   }
 
   if (latest) {
@@ -250,17 +251,17 @@ async function onSubmit() {
       v-if="productId !== undefined && imageError && !product"
       color="warning"
       variant="subtle"
-      title="The product was saved, but its images weren't."
-      description="Fix the images below and save again."
+      :title="t('product_form.images_not_saved')"
+      :description="t('product_form.images_not_saved_hint')"
     />
 
     <section class="space-y-4">
       <h2 class="text-lg font-semibold">
-        Details
+        {{ t('product_form.details') }}
       </h2>
       <div class="grid gap-4 sm:grid-cols-2">
         <UFormField
-          label="Name"
+          :label="t('product_form.name')"
           name="name"
           required
         >
@@ -270,10 +271,10 @@ async function onSubmit() {
           />
         </UFormField>
         <UFormField
-          label="Slug"
+          :label="t('product_form.slug')"
           name="slug"
           :required="productId !== undefined"
-          :help="productId === undefined ? 'Filled in from the name. Leave it empty to let us pick one.' : 'Changing it changes the product\'s web address.'"
+          :help="productId === undefined ? t('product_form.slug_help_new') : t('product_form.slug_help_existing')"
         >
           <UInput
             :model-value="state.slug"
@@ -282,7 +283,7 @@ async function onSubmit() {
           />
         </UFormField>
         <UFormField
-          label="Price (€)"
+          :label="t('product_form.price')"
           name="price"
           required
         >
@@ -295,31 +296,31 @@ async function onSubmit() {
           />
         </UFormField>
         <UFormField
-          label="Category"
+          :label="t('product_form.category')"
           name="category_id"
           required
         >
           <USelect
             v-model="state.category_id"
             :items="categoryItems"
-            placeholder="Choose a category"
+            :placeholder="t('product_form.choose_category')"
             class="w-full"
           />
         </UFormField>
         <UFormField
-          label="Brand"
+          :label="t('product_form.brand')"
           name="brand_id"
           required
         >
           <USelect
             v-model="state.brand_id"
             :items="brandItems"
-            placeholder="Choose a brand"
+            :placeholder="t('product_form.choose_brand')"
             class="w-full"
           />
         </UFormField>
         <UFormField
-          label="Description"
+          :label="t('product_form.description')"
           name="description"
           class="sm:col-span-2"
         >
@@ -334,26 +335,26 @@ async function onSubmit() {
 
     <section class="space-y-4">
       <h2 class="text-lg font-semibold">
-        Status
+        {{ t('product_form.status') }}
       </h2>
       <div class="flex flex-wrap gap-6">
         <UFormField name="is_active">
           <USwitch
             v-model="state.is_active"
-            label="Active"
-            description="Shown in the catalogue."
+            :label="t('product_form.active')"
+            :description="t('product_form.active_help')"
           />
         </UFormField>
         <UFormField name="in_stock">
           <USwitch
             v-model="state.in_stock"
-            label="In stock"
+            :label="t('product_form.in_stock')"
           />
         </UFormField>
         <UFormField name="on_sale">
           <USwitch
             v-model="state.on_sale"
-            label="On sale"
+            :label="t('product_form.on_sale')"
           />
         </UFormField>
       </div>
@@ -362,10 +363,10 @@ async function onSubmit() {
     <section class="space-y-4">
       <div class="flex items-center justify-between gap-4">
         <h2 class="text-lg font-semibold">
-          Attributes
+          {{ t('product_form.attributes') }}
         </h2>
         <UButton
-          label="Add attribute"
+          :label="t('product_form.add_attribute')"
           icon="i-lucide-plus"
           color="neutral"
           variant="outline"
@@ -378,7 +379,7 @@ async function onSubmit() {
         v-if="state.attributes.length === 0"
         class="text-sm text-muted"
       >
-        No attributes yet. Add one for each option Buyers can choose, such as each colour.
+        {{ t('product_form.no_attributes') }}
       </p>
       <ul
         v-else
@@ -392,27 +393,27 @@ async function onSubmit() {
         >
           <UFormField
             :name="`attributes.${index}.attribute_id`"
-            :label="index === 0 ? 'Attribute' : undefined"
+            :label="index === 0 ? t('product_form.attribute') : undefined"
           >
             <USelect
               :model-value="row.attribute_id"
               :items="attributeItems"
-              placeholder="Attribute"
-              aria-label="Attribute"
+              :placeholder="t('product_form.attribute')"
+              :aria-label="t('product_form.attribute')"
               class="w-full"
               @update:model-value="onAttributeChange(row, $event as number)"
             />
           </UFormField>
           <UFormField
             :name="`attributes.${index}.attribute_option_id`"
-            :label="index === 0 ? 'Value' : undefined"
+            :label="index === 0 ? t('product_form.value') : undefined"
           >
             <USelect
               v-model="row.attribute_option_id"
               :items="optionItems(row)"
               :disabled="!row.attribute_id"
-              placeholder="Value"
-              aria-label="Value"
+              :placeholder="t('product_form.value')"
+              :aria-label="t('product_form.value')"
               class="w-full"
             />
           </UFormField>
@@ -420,7 +421,7 @@ async function onSubmit() {
             icon="i-lucide-trash-2"
             color="error"
             variant="ghost"
-            aria-label="Remove attribute"
+            :aria-label="t('product_form.remove_attribute')"
             class="cursor-pointer"
             :class="index === 0 ? 'sm:mt-6' : undefined"
             @click="removeAttributeRow(index)"
@@ -431,7 +432,7 @@ async function onSubmit() {
 
     <section class="space-y-4">
       <h2 class="text-lg font-semibold">
-        Images
+        {{ t('product_form.images') }}
       </h2>
       <ul
         v-if="keptImages.length"
@@ -452,7 +453,7 @@ async function onSubmit() {
             icon="i-lucide-x"
             color="neutral"
             size="xs"
-            aria-label="Remove image"
+            :aria-label="t('product_form.remove_image')"
             class="absolute -right-2 -top-2 cursor-pointer rounded-full"
             @click="removeExistingImage(image.id)"
           />
@@ -463,7 +464,7 @@ async function onSubmit() {
         multiple
         accept="image/jpeg,image/png,image/webp"
         layout="grid"
-        label="Drop images here, or click to choose"
+        :label="t('product_form.drop_images')"
         :description="imageHint"
         :disabled="slotsLeft <= 0 && newImages.length === 0"
         class="w-full"
@@ -480,13 +481,13 @@ async function onSubmit() {
     <div class="flex justify-end gap-2">
       <UButton
         :to="localePath('/supplier/products')"
-        label="Cancel"
+        :label="t('common.cancel')"
         color="neutral"
         variant="ghost"
       />
       <UButton
         type="submit"
-        :label="product ? 'Save changes' : 'Create product'"
+        :label="product ? t('product_form.save') : t('product_form.create')"
         :loading="submitting"
         class="cursor-pointer"
       />

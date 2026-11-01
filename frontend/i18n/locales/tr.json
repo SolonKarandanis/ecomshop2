@@ -1,1 +1,407 @@
-{}
+{
+  "address": {
+    "add": "Adres ekle",
+    "field": {
+      "city": "Şehir",
+      "country": "Ülke",
+      "first_name": "Ad",
+      "last_name": "Soyad",
+      "phone": "Telefon",
+      "postal_code": "Posta kodu",
+      "street_address": "Açık adres"
+    },
+    "save": "Adresi kaydet"
+  },
+  "addresses": {
+    "added": "Adres eklendi.",
+    "confirm_delete": "Adresi sil",
+    "default": "Varsayılan",
+    "default_error": "Varsayılan adres değiştirilemedi. Lütfen tekrar deneyin.",
+    "default_updated": "Varsayılan adres güncellendi.",
+    "delete": "Sil",
+    "delete_error": "Adres silinemedi. Lütfen tekrar deneyin.",
+    "delete_title": "Bu adres silinsin mi?",
+    "deleted": "Adres silindi.",
+    "edit": "Düzenle",
+    "edit_title": "Adresi düzenle",
+    "empty": "Henüz kayıtlı adresiniz yok. Buradan ekleyin ya da ödeme sırasında \"Bu adresi kaydet\" seçeneğini işaretleyin.",
+    "heading": "Kayıtlı adresler",
+    "keep": "Adresi koru",
+    "load_error": "Adresleriniz yüklenemedi. Tekrar denemek için sayfayı yenileyin.",
+    "saved": "Adres kaydedildi.",
+    "set_default": "Varsayılan yap",
+    "title": "Adresleriniz"
+  },
+  "auth": {
+    "field": {
+      "email": "E-posta",
+      "name": "Ad",
+      "password": "Parola",
+      "password_confirmation": "Parolayı onayla"
+    },
+    "validation": {
+      "choose_password": "Bir parola belirleyin.",
+      "email": "E-postanızı girin.",
+      "name": "Adınızı girin.",
+      "password": "Parolanızı girin.",
+      "passwords_match": "Parolalar eşleşmiyor."
+    }
+  },
+  "cancel": {
+    "closed": "#{id} numaralı siparişin ödeme süresi doldu, artık ödenemez.",
+    "retry": "Ödemeyi tekrar dene",
+    "title": "Ödeme tamamlanmadı",
+    "waiting": "#{id} numaralı sipariş ödeme bekliyor. Stripe'a dönüp şimdi ödeyebilirsiniz."
+  },
+  "cart": {
+    "add": {
+      "added": "Sepete eklendi",
+      "button": "Sepete ekle",
+      "error": "Bu ürün sepetinize eklenemedi."
+    },
+    "browse": "Ürünlere göz atın",
+    "checkout": "Ödemeye geç",
+    "each": "Tanesi {price}",
+    "empty": "Sepetiniz boş.",
+    "icon_label": "Sepet, {count} ürün | Sepet, {count} ürün",
+    "loading": "Sepetiniz yükleniyor…",
+    "remove": "Kaldır: {name}",
+    "remove_item": "ürün",
+    "subtotal": "Ara toplam",
+    "title": "Sepetiniz",
+    "unavailable": "Mevcut olmayan ürün"
+  },
+  "catalogue": {
+    "empty": "Bu filtrelere uyan ürün yok."
+  },
+  "categories": {
+    "not_found": "Kategori bulunamadı",
+    "title": "Kategoriler"
+  },
+  "checkout": {
+    "choose_payment": "Bir ödeme yöntemi seçin.",
+    "choose_saved_address": "Kayıtlı bir adres seçin",
+    "default_address": "{address} (varsayılan)",
+    "empty": "Sepetiniz boş, ödenecek bir şey yok.",
+    "payment": "Ödeme",
+    "payment_methods_error": "Ödeme yöntemleri yüklenemedi. Tekrar denemek için sayfayı yenileyin.",
+    "place_order": "Siparişi ver",
+    "save_address": "Bu adresi adres defterime kaydet",
+    "saved_addresses": "Kayıtlı adresler",
+    "shipping_address": "Teslimat adresi",
+    "summary": "Sipariş özeti",
+    "title": "Ödeme",
+    "total": "Toplam"
+  },
+  "common": {
+    "cancel": "İptal",
+    "error": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+    "keep_shopping": "Alışverişe devam et",
+    "quantity": "Adet",
+    "validation": {
+      "required": "{field} alanı zorunludur."
+    }
+  },
+  "filters": {
+    "all_categories": "Tüm kategoriler",
+    "categories": "Kategoriler",
+    "search": "Ara",
+    "search_placeholder": "Ürün ara",
+    "sort_by": "Sırala"
+  },
+  "forgot": {
+    "back": "Girişe dön",
+    "heading": "Parolanızı mı unuttunuz?",
+    "intro": "Yeni bir parola belirlemeniz için size bir bağlantı göndereceğiz.",
+    "submit": "Sıfırlama bağlantısı gönder",
+    "title": "Parolamı unuttum"
+  },
+  "home": {
+    "browse_all": "Tümünü gör",
+    "featured": "Öne çıkan ürünler",
+    "new_arrivals": "Yeni gelenler",
+    "shop_by_category": "Kategoriye göre alışveriş"
+  },
+  "login": {
+    "forgot": "Parolanızı mı unuttunuz?",
+    "no_account": "Hesabınız yok mu?",
+    "register": "Kayıt olun",
+    "remember": "Beni hatırla",
+    "reset_done": "Parolanız sıfırlandı. Yeni parolanızla giriş yapın.",
+    "submit": "Giriş yap",
+    "title": "Giriş yap"
+  },
+  "nav": {
+    "categories": "Kategoriler",
+    "language": "Dil",
+    "log_in": "Giriş yap",
+    "log_out": "Çıkış yap",
+    "my_orders": "Siparişlerim",
+    "my_products": "Ürünlerim",
+    "products": "Ürünler",
+    "register": "Kayıt ol",
+    "supplier_orders": "Tedarikçi siparişleri"
+  },
+  "order": {
+    "back": "← Siparişlerim",
+    "forbidden": {
+      "text": "Yalnızca kendi hesabınızdan verilen siparişleri görebilirsiniz.",
+      "title": "Bu sipariş size ait değil"
+    },
+    "history": "Durum geçmişi",
+    "history_empty": "Henüz kayıtlı durum değişikliği yok.",
+    "history_payment": "Ödeme: {status}",
+    "load_error": "Bu sipariş yüklenemedi. Tekrar denemek için sayfayı yenileyin.",
+    "payment": {
+      "status": {
+        "failed": "Başarısız",
+        "paid": "Ödendi",
+        "pending": "Beklemede"
+      }
+    },
+    "placed": "Sipariş tarihi: {date}",
+    "status": {
+      "cancelled": "İptal edildi",
+      "delivered": "Teslim edildi",
+      "draft": "Taslak",
+      "paid": "Ödendi",
+      "shipped": "Kargoya verildi"
+    },
+    "title": "Sipariş #{id}"
+  },
+  "order_details": {
+    "items": "Ürünler",
+    "method": "Yöntem",
+    "no_address": "Bu siparişte teslimat adresi yok.",
+    "notes": "Notlar:",
+    "payment": "Ödeme",
+    "phone": "Telefon: {phone}",
+    "product_fallback": "Ürün #{id}",
+    "ship_to": "Teslimat adresi",
+    "shipping": "Kargo",
+    "status": "Durum",
+    "subtotal": "Ara toplam",
+    "total": "Toplam"
+  },
+  "orders": {
+    "column": {
+      "order": "Sipariş",
+      "payment": "Ödeme",
+      "placed": "Tarih",
+      "status": "Durum",
+      "total": "Toplam"
+    },
+    "empty": "Henüz sipariş vermediniz.",
+    "export": "Dışa aktar",
+    "export_error": "Siparişleriniz dışa aktarılamadı. Lütfen tekrar deneyin.",
+    "load_error": "Siparişleriniz yüklenemedi. Tekrar denemek için sayfayı yenileyin.",
+    "not_found": {
+      "text": "Bu siparişi bulamadık. Siparişleriniz hesabınızda listelenir.",
+      "title": "Sipariş bulunamadı"
+    },
+    "title": "Siparişlerim",
+    "view": "Siparişi görüntüle"
+  },
+  "password": {
+    "changed": "Parolanız değiştirildi.",
+    "current": "Mevcut parola",
+    "help": "En az 8 karakter.",
+    "intro": "Burada oturumunuz açık kalacak. Oturum açtığınız diğer tüm yerlerden çıkış yapılacak.",
+    "submit": "Parolayı değiştir",
+    "title": "Parolayı değiştir",
+    "validation": {
+      "current": "Mevcut parolanızı girin.",
+      "length": "En az 8 karakter kullanın."
+    }
+  },
+  "payment": {
+    "method": {
+      "cod": "Kapıda ödeme",
+      "paypal": "PayPal",
+      "stripe": "Stripe"
+    }
+  },
+  "product": {
+    "badge": {
+      "on_sale": "İndirimde",
+      "out_of_stock": "Stokta yok"
+    },
+    "in_stock": "Stokta",
+    "not_found": "Ürün bulunamadı",
+    "rating": "★ {rating}, {count} değerlendirme | ★ {rating}, {count} değerlendirme"
+  },
+  "product_form": {
+    "active": "Aktif",
+    "active_help": "Katalogda gösterilir.",
+    "add_attribute": "Özellik ekle",
+    "attribute": "Özellik",
+    "attributes": "Özellikler",
+    "brand": "Marka",
+    "category": "Kategori",
+    "choose_brand": "Bir marka seçin",
+    "choose_category": "Bir kategori seçin",
+    "create": "Ürün oluştur",
+    "description": "Açıklama",
+    "details": "Bilgiler",
+    "drop_images": "Görselleri buraya bırakın ya da seçmek için tıklayın",
+    "image": {
+      "save_error": "Görseller kaydedilemedi. Lütfen tekrar deneyin.",
+      "too_big": "Her görsel en fazla {size} MB olmalıdır.",
+      "too_many": "Bir ürünün en fazla {max} görseli olabilir.",
+      "wrong_type": "Görseller JPG, PNG veya WebP dosyası olmalıdır."
+    },
+    "image_hint": "JPG, PNG veya WebP, her biri en fazla {size} MB. {max} görselden {left} kaldı.",
+    "image_hint_basic": "JPG, PNG veya WebP.",
+    "images": "Görseller",
+    "images_not_saved": "Ürün kaydedildi ama görselleri kaydedilmedi.",
+    "images_not_saved_hint": "Aşağıdaki görselleri düzeltip tekrar kaydedin.",
+    "in_stock": "Stokta",
+    "name": "Ad",
+    "no_attributes": "Henüz özellik yok. Alıcıların seçebileceği her seçenek için, örneğin her renk için, bir özellik ekleyin.",
+    "on_sale": "İndirimde",
+    "price": "Fiyat (€)",
+    "remove_attribute": "Özelliği kaldır",
+    "remove_image": "Görseli kaldır",
+    "save": "Değişiklikleri kaydet",
+    "slug": "Kısa ad (slug)",
+    "slug_help_existing": "Değiştirirseniz ürünün web adresi de değişir.",
+    "slug_help_new": "Addan otomatik doldurulur. Bizim seçmemiz için boş bırakın.",
+    "status": "Durum",
+    "validation": {
+      "attribute": "Bir özellik seçin.",
+      "brand": "Bir marka seçin.",
+      "category": "Bir kategori seçin.",
+      "name": "Bir ürün adı girin.",
+      "price": "0 veya daha yüksek bir fiyat girin.",
+      "slug": "Bir kısa ad girin.",
+      "value": "Bir değer seçin."
+    },
+    "value": "Değer"
+  },
+  "products": {
+    "title": "Ürünler"
+  },
+  "profile": {
+    "heading": "Hesabınız",
+    "load_error": "Profiliniz yüklenemedi. Tekrar denemek için sayfayı yenileyin.",
+    "nav": {
+      "addresses": "Adresler",
+      "label": "Hesap",
+      "password": "Parola",
+      "profile": "Profil"
+    },
+    "save": "Profili kaydet",
+    "saved": "Profiliniz kaydedildi.",
+    "title": "Profiliniz"
+  },
+  "register": {
+    "account_type": "Hesap türü",
+    "awaiting_approval": "Tedarikçi hesabınız onay bekliyor. Bir yönetici onayladığında size e-posta göndereceğiz, o zaman giriş yapabileceksiniz.",
+    "back_to_shop": "Mağazaya dön",
+    "have_account": "Zaten hesabınız var mı?",
+    "heading": "Hesap oluşturun",
+    "log_in": "Giriş yapın",
+    "role": {
+      "buy": "Satın almak istiyorum",
+      "sell": "Satmak istiyorum (tedarikçi)"
+    },
+    "submit": "Kayıt ol",
+    "thanks": "Kaydınız için teşekkürler",
+    "title": "Kayıt ol"
+  },
+  "reset": {
+    "confirm": "Yeni parolayı onayla",
+    "heading": "Yeni bir parola belirleyin",
+    "incomplete": "Bu sıfırlama bağlantısı eksik. Yeni bir bağlantı isteyin.",
+    "new_password": "Yeni parola",
+    "request_new": "Yeni bağlantı iste",
+    "submit": "Parolayı sıfırla",
+    "title": "Parolayı sıfırla",
+    "validation": {
+      "password": "Yeni bir parola belirleyin."
+    }
+  },
+  "reviews": {
+    "empty": "Henüz değerlendirme yok.",
+    "load_error": "Daha fazla değerlendirme yüklenemedi. Tekrar deneyin.",
+    "load_more": "Daha fazla değerlendirme yükle",
+    "stars": "5 üzerinden {rating} yıldız",
+    "title": "Değerlendirmeler ({count})"
+  },
+  "sort": {
+    "latest": "En yeni",
+    "price_asc": "Fiyat: düşükten yükseğe",
+    "price_desc": "Fiyat: yüksekten düşüğe",
+    "rating": "En yüksek puanlı"
+  },
+  "success": {
+    "cod": "#{id} numaralı sipariş verildi. Ödemeyi teslimatta yapacaksınız.",
+    "cod_with_total": "#{id} numaralı sipariş verildi. Teslimatta {total} ödeyeceksiniz.",
+    "confirming": "Stripe, #{id} numaralı siparişin ödemesini hâlâ onaylıyor. Tamamlanır tamamlanmaz size haber vereceğiz.",
+    "failed": "Stripe, #{id} numaralı siparişin ödemesini alamadı, bu yüzden sipariş verilmedi.",
+    "heading": {
+      "confirming": "Ödemeniz onaylanıyor",
+      "failed": "Ödeme başarısız",
+      "paid": "Ödeme alındı",
+      "thanks": "Siparişiniz için teşekkürler"
+    },
+    "paid": "#{id} numaralı sipariş ödendi. Kargoya verildiğinde size haber vereceğiz.",
+    "title": "Sipariş verildi"
+  },
+  "supplier": {
+    "actions": {
+      "cancel": "İptal et",
+      "cancel_description": "Alıcıya bildirim gönderilecek. Bu işlem geri alınamaz.",
+      "cancel_title": "#{id} numaralı sipariş iptal edilsin mi?",
+      "confirm_cancel": "Siparişi iptal et",
+      "deliver": "Teslim edildi olarak işaretle",
+      "keep": "Siparişi koru",
+      "ship": "Kargoya ver"
+    },
+    "order": {
+      "back": "← Tüm siparişler",
+      "back_to_orders": "Siparişlerinize dönün",
+      "unavailable": "Sipariş mevcut değil",
+      "unavailable_text": "Bu sipariş yok ya da size ait değil."
+    },
+    "orders": {
+      "all_statuses": "Tüm durumlar",
+      "empty": "Gösterilecek sipariş yok.",
+      "filter": "Duruma göre filtrele",
+      "forbidden": "Tedarikçi hesabınız şu anda siparişleri yönetemiyor.",
+      "forbidden_hint": "Hesabınız devre dışı bırakıldıysa bir yöneticiyle iletişime geçin.",
+      "title": "Tedarikçi siparişleri",
+      "update_error": "Sipariş güncellenemedi. Lütfen tekrar deneyin."
+    },
+    "products": {
+      "active": "Aktif",
+      "back": "← Tüm ürünler",
+      "back_to_products": "Ürünlerinize dönün",
+      "column": {
+        "price": "Fiyat",
+        "product": "Ürün",
+        "status": "Durum"
+      },
+      "confirm_delete": "Ürünü sil",
+      "created": "\"{name}\" oluşturuldu.",
+      "delete": "Sil",
+      "delete_description": "Katalogdan ve alıcıların sepetlerinden kaldırılacak. Bu işlem geri alınamaz.",
+      "delete_error": "Ürün silinemedi. Lütfen tekrar deneyin.",
+      "delete_title": "{name} silinsin mi?",
+      "deleted": "\"{name}\" silindi.",
+      "edit": "Düzenle",
+      "edit_fallback": "Ürünü düzenle",
+      "edit_title": "Düzenle: {name}",
+      "empty": "Henüz ürün eklemediniz.",
+      "forbidden": "Tedarikçi hesabınız şu anda ürünleri yönetemiyor.",
+      "inactive": "Pasif",
+      "keep": "Ürünü koru",
+      "new": "Yeni ürün",
+      "saved": "\"{name}\" kaydedildi.",
+      "this_product": "bu ürün",
+      "title": "Ürünlerim",
+      "unavailable": "Ürün mevcut değil",
+      "unavailable_text": "Bu ürün yok ya da size ait değil."
+    }
+  }
+}

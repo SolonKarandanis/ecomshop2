@@ -4,6 +4,9 @@ import type { ProductFilters, ProductSort } from '~/utils/catalogueQuery'
 
 const props = defineProps<{ filters: ProductFilters, categories: Category[] }>()
 const emit = defineEmits<{ change: [filters: ProductFilters] }>()
+const { t } = useI18n()
+
+const sortItems = computed(() => SORT_OPTIONS.map(option => ({ label: t(option.labelKey), value: option.value })))
 
 // The search box only applies on submit; sort and categories apply immediately.
 const search = ref(props.filters.q)
@@ -24,13 +27,13 @@ function apply(changes: Partial<ProductFilters>) {
     >
       <UInput
         v-model="search"
-        placeholder="Search products"
-        aria-label="Search products"
+        :placeholder="t('filters.search_placeholder')"
+        :aria-label="t('filters.search_placeholder')"
         class="flex-1"
       />
       <UButton
         type="submit"
-        label="Search"
+        :label="t('filters.search')"
         color="neutral"
         variant="outline"
       />
@@ -42,16 +45,16 @@ function apply(changes: Partial<ProductFilters>) {
       value-key="id"
       label-key="name"
       multiple
-      placeholder="All categories"
-      aria-label="Categories"
+      :placeholder="t('filters.all_categories')"
+      :aria-label="t('filters.categories')"
       class="sm:w-56"
       @update:model-value="(ids: number[]) => apply({ categories: ids })"
     />
 
     <USelect
       :model-value="filters.sort"
-      :items="[...SORT_OPTIONS]"
-      aria-label="Sort by"
+      :items="sortItems"
+      :aria-label="t('filters.sort_by')"
       class="sm:w-48"
       @update:model-value="(sort: ProductSort) => apply({ sort })"
     />

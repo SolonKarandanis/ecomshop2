@@ -2,6 +2,7 @@
 import type { SupplierProduct } from '~/types/supplierProduct'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: ['auth', 'supplier'] })
 
@@ -13,13 +14,13 @@ const { data: product, error } = await useAsyncData(
   `supplier-product-${id}`,
   () => useApi()<{ data: SupplierProduct }>(`/supplier-products/${id}`).then(response => response.data),
 )
-useSeoMeta({ title: () => product.value ? `Edit ${product.value.name}` : 'Edit product' })
+useSeoMeta({ title: () => product.value ? t('supplier.products.edit_title', { name: product.value.name }) : t('supplier.products.edit_fallback') })
 
 // 403: another Supplier's Product. 404: no such Product.
 const unavailable = computed(() => [403, 404].includes(apiStatus(error.value) ?? 0))
 
 async function onSaved(saved: SupplierProduct) {
-  toast.add({ title: `"${saved.name}" was saved.`, color: 'success' })
+  toast.add({ title: t('supplier.products.saved', { name: saved.name }), color: 'success' })
   await navigateTo(localePath('/supplier/products'))
 }
 </script>
@@ -30,7 +31,7 @@ async function onSaved(saved: SupplierProduct) {
       :to="localePath('/supplier/products')"
       class="text-sm text-muted"
     >
-      ← All products
+      {{ t('supplier.products.back') }}
     </ULink>
 
     <UCard
@@ -39,14 +40,14 @@ async function onSaved(saved: SupplierProduct) {
     >
       <div class="space-y-4">
         <h1 class="text-xl font-semibold">
-          Product unavailable
+          {{ t('supplier.products.unavailable') }}
         </h1>
         <p class="text-muted">
-          This product doesn't exist, or it isn't one of yours.
+          {{ t('supplier.products.unavailable_text') }}
         </p>
         <UButton
           :to="localePath('/supplier/products')"
-          label="Back to your products"
+          :label="t('supplier.products.back_to_products')"
         />
       </div>
     </UCard>
@@ -60,7 +61,7 @@ async function onSaved(saved: SupplierProduct) {
 
     <template v-else-if="product">
       <h1 class="text-3xl font-bold">
-        Edit {{ product.name }}
+        {{ t('supplier.products.edit_title', { name: product.name }) }}
       </h1>
       <SupplierProductForm
         :product="product"

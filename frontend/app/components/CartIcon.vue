@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 const cart = useCartStore()
 </script>
@@ -10,7 +11,7 @@ const cart = useCartStore()
     icon="i-lucide-shopping-cart"
     color="neutral"
     variant="ghost"
-    :aria-label="`Cart, ${cart.productCount} ${cart.productCount === 1 ? 'product' : 'products'}`"
+    :aria-label="t('cart.icon_label', { count: cart.productCount }, cart.productCount)"
   >
     <UBadge
       v-if="cart.productCount > 0"

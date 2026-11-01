@@ -5,6 +5,7 @@ const props = defineProps<{
   order: Pick<Order, 'id' | 'order_status' | 'payment_status' | 'supplier_actions'>
 }>()
 
+const { t } = useI18n()
 const { pending, run } = useSupplierOrderActions()
 const confirmingCancel = ref(false)
 
@@ -24,7 +25,7 @@ async function cancel() {
   >
     <UButton
       v-if="actions.includes('ship')"
-      label="Ship"
+      :label="t('supplier.actions.ship')"
       size="sm"
       class="cursor-pointer"
       :loading="pending"
@@ -32,7 +33,7 @@ async function cancel() {
     />
     <UButton
       v-if="actions.includes('deliver')"
-      label="Mark delivered"
+      :label="t('supplier.actions.deliver')"
       size="sm"
       color="success"
       class="cursor-pointer"
@@ -41,7 +42,7 @@ async function cancel() {
     />
     <UButton
       v-if="actions.includes('cancel')"
-      label="Cancel"
+      :label="t('supplier.actions.cancel')"
       size="sm"
       color="error"
       variant="outline"
@@ -52,20 +53,20 @@ async function cancel() {
 
     <UModal
       v-model:open="confirmingCancel"
-      :title="`Cancel order #${order.id}?`"
-      description="The Buyer will be notified. This can't be undone."
+      :title="t('supplier.actions.cancel_title', { id: order.id })"
+      :description="t('supplier.actions.cancel_description')"
     >
       <template #footer>
         <div class="flex w-full justify-end gap-2">
           <UButton
-            label="Keep order"
+            :label="t('supplier.actions.keep')"
             color="neutral"
             variant="ghost"
             class="cursor-pointer"
             @click="confirmingCancel = false"
           />
           <UButton
-            label="Cancel order"
+            :label="t('supplier.actions.confirm_cancel')"
             color="error"
             class="cursor-pointer"
             @click="cancel"

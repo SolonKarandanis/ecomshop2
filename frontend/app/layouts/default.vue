@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 const auth = useAuthStore()
 const loggingOut = ref(false)
@@ -37,14 +38,14 @@ async function logout() {
             class="text-sm hover:text-primary"
             active-class="text-primary"
           >
-            Products
+            {{ t('nav.products') }}
           </NuxtLink>
           <NuxtLink
             :to="localePath('/categories')"
             class="text-sm hover:text-primary"
             active-class="text-primary"
           >
-            Categories
+            {{ t('nav.categories') }}
           </NuxtLink>
           <!-- Client-only for the same reason as the auth buttons below. -->
           <ClientOnly>
@@ -54,7 +55,7 @@ async function logout() {
               class="text-sm hover:text-primary"
               active-class="text-primary"
             >
-              My orders
+              {{ t('nav.my_orders') }}
             </NuxtLink>
             <template v-if="auth.isSupplier">
               <NuxtLink
@@ -62,14 +63,14 @@ async function logout() {
                 class="text-sm hover:text-primary"
                 active-class="text-primary"
               >
-                Supplier orders
+                {{ t('nav.supplier_orders') }}
               </NuxtLink>
               <NuxtLink
                 :to="localePath('/supplier/products')"
                 class="text-sm hover:text-primary"
                 active-class="text-primary"
               >
-                My products
+                {{ t('nav.my_products') }}
               </NuxtLink>
             </template>
           </ClientOnly>
@@ -98,7 +99,7 @@ async function logout() {
                 {{ auth.user.name }}
               </NuxtLink>
               <UButton class="cursor-pointer"
-                label="Log out"
+                :label="t('nav.log_out')"
                 color="neutral"
                 variant="ghost"
                 :loading="loggingOut"
@@ -108,13 +109,13 @@ async function logout() {
             <template v-else>
               <UButton
                 :to="localePath('/login')"
-                label="Log in"
+                :label="t('nav.log_in')"
                 color="neutral"
                 variant="ghost"
               />
               <UButton
                 :to="localePath('/register')"
-                label="Register"
+                :label="t('nav.register')"
               />
             </template>
           </div>

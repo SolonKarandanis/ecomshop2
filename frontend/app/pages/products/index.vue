@@ -2,7 +2,9 @@
 import type { Paginated, Product } from '~/types/catalogue'
 import type { ProductFilters } from '~/utils/catalogueQuery'
 
-useSeoMeta({ title: 'Products' })
+const { t } = useI18n()
+
+useSeoMeta({ title: () => t('products.title') })
 
 const route = useRoute()
 
@@ -29,7 +31,7 @@ function applyFilters(next: ProductFilters) {
 <template>
   <div class="space-y-6">
     <h1 class="text-3xl font-bold">
-      Products
+      {{ t('products.title') }}
     </h1>
 
     <ProductFilters

@@ -3,9 +3,10 @@ import type { FormError } from '@nuxt/ui'
 import type { LoginPayload } from '~/types/auth'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: 'guest' })
-useSeoMeta({ title: 'Log in' })
+useSeoMeta({ title: () => t('login.title') })
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -16,8 +17,8 @@ const { error, submit } = useApiForm(() => Object.keys(state))
 
 function validate(data: Partial<LoginPayload>): FormError[] {
   const errors: FormError[] = []
-  if (!data.email) errors.push({ name: 'email', message: 'Enter your email.' })
-  if (!data.password) errors.push({ name: 'password', message: 'Enter your password.' })
+  if (!data.email) errors.push({ name: 'email', message: t('auth.validation.email') })
+  if (!data.password) errors.push({ name: 'password', message: t('auth.validation.password') })
   return errors
 }
 
@@ -34,7 +35,7 @@ async function onSubmit() {
   <UCard class="mx-auto max-w-md">
     <template #header>
       <h1 class="text-xl font-semibold">
-        Log in
+        {{ t('login.title') }}
       </h1>
     </template>
 
@@ -49,7 +50,7 @@ async function onSubmit() {
         v-if="route.query.reset"
         class="text-sm text-success"
       >
-        Your password has been reset. Log in with your new password.
+        {{ t('login.reset_done') }}
       </p>
 
       <UAlert
@@ -60,7 +61,7 @@ async function onSubmit() {
       />
 
       <UFormField
-        label="Email"
+        :label="t('auth.field.email')"
         name="email"
       >
         <UInput
@@ -72,7 +73,7 @@ async function onSubmit() {
       </UFormField>
 
       <UFormField
-        label="Password"
+        :label="t('auth.field.password')"
         name="password"
       >
         <UInput
@@ -86,19 +87,19 @@ async function onSubmit() {
       <div class="flex items-center justify-between">
         <UCheckbox
           v-model="state.remember"
-          label="Remember me"
+          :label="t('login.remember')"
         />
         <ULink
           :to="localePath('/forgot-password')"
           class="text-sm"
         >
-          Forgot password?
+          {{ t('login.forgot') }}
         </ULink>
       </div>
 
       <UButton
         type="submit"
-        label="Log in"
+        :label="t('login.submit')"
         class="cursor-pointer"
         block
       />
@@ -106,12 +107,12 @@ async function onSubmit() {
 
     <template #footer>
       <p class="text-sm text-muted">
-        No account yet?
+        {{ t('login.no_account') }}
         <ULink
           :to="localePath('/register')"
           class="text-primary"
         >
-          Register
+          {{ t('login.register') }}
         </ULink>
       </p>
     </template>

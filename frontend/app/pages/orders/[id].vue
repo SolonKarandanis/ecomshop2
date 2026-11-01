@@ -3,12 +3,13 @@ import type { TimelineItem } from '@nuxt/ui'
 import type { OrderDetail } from '~/types/order'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: 'auth' })
 
 const route = useRoute()
 const id = route.params.id as string
-useSeoMeta({ title: `Order #${id}` })
+useSeoMeta({ title: () => t('order.title', { id }) })
 
 const { data: order, error } = await useAsyncData(
   `order-${id}`,
@@ -23,7 +24,7 @@ const notFound = computed(() => apiStatus(error.value) === 404)
 const history = computed<TimelineItem[]>(() => (order.value?.status_history ?? []).map(entry => ({
   date: formatDateTime(entry.created_at),
   title: orderStatusLabel(entry.order_status),
-  description: `Payment: ${paymentStatusLabel(entry.payment_status)}`,
+  description: t('order.history_payment', { status: paymentStatusLabel(entry.payment_status) }),
   icon: 'i-lucide-circle-dot',
 })))
 </script>
@@ -34,7 +35,7 @@ const history = computed<TimelineItem[]>(() => (order.value?.status_history ?? [
       :to="localePath('/orders')"
       class="text-sm text-muted"
     >
-      ← My orders
+      {{ t('order.back') }}
     </ULink>
 
     <OrderNotFound v-if="notFound" />
@@ -45,14 +46,14 @@ const history = computed<TimelineItem[]>(() => (order.value?.status_history ?? [
     >
       <div class="space-y-4">
         <h1 class="text-xl font-semibold">
-          This isn't your order
+          {{ t('order.forbidden.title') }}
         </h1>
         <p class="text-muted">
-          You can only view orders placed from your own account.
+          {{ t('order.forbidden.text') }}
         </p>
         <UButton
           :to="localePath('/orders')"
-          label="My orders"
+          :label="t('nav.my_orders')"
         />
       </div>
     </UCard>
@@ -61,13 +62,13 @@ const history = computed<TimelineItem[]>(() => (order.value?.status_history ?? [
       v-else-if="error"
       color="error"
       variant="subtle"
-      :title="apiErrorMessage(error, 'We couldn\'t load this order. Reload the page to try again.')"
+      :title="apiErrorMessage(error, t('order.load_error'))"
     />
 
     <template v-else-if="order">
       <div class="flex flex-wrap items-center gap-3">
         <h1 class="text-3xl font-bold">
-          Order #{{ order.id }}
+          {{ t('order.title', { id: order.id }) }}
         </h1>
         <UBadge
           :label="orderStatusLabel(order.order_status)"
@@ -77,7 +78,7 @@ const history = computed<TimelineItem[]>(() => (order.value?.status_history ?? [
         />
       </div>
       <p class="text-sm text-muted">
-        Placed {{ formatDate(order.created_at) }}
+        {{ t('order.placed', { date: formatDate(order.created_at) }) }}
       </p>
 
       <OrderDetails :order="order" />
@@ -85,19 +86,19 @@ const history = computed<TimelineItem[]>(() => (order.value?.status_history ?? [
       <UCard>
         <template #header>
           <h2 class="font-semibold">
-            Status history
+            {{ t('order.history') }}
           </h2>
         </template>
         <UTimeline
           v-if="history.length"
           :items="history"
-          aria-label="Status history"
+          :aria-label="t('order.history')"
         />
         <p
           v-else
           class="text-sm text-muted"
         >
-          No status changes recorded yet.
+          {{ t('order.history_empty') }}
         </p>
       </UCard>
     </template>
