@@ -9,6 +9,7 @@ use App\Exceptions\ProductException;
 use App\Exceptions\ProductNotFoundException;
 use App\Exceptions\ReviewException;
 use App\Http\Middleware\AlwaysAcceptJsonMiddleware;
+use App\Http\Middleware\SetLocaleFromRequest;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -25,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         // Stripe can't send a CSRF token; the webhook checks Stripe's signature instead.
         $middleware->preventRequestForgery(except: ['api/stripe/webhook']);
-        $middleware->api(prepend: [AlwaysAcceptJsonMiddleware::class]);
+        $middleware->api(prepend: [AlwaysAcceptJsonMiddleware::class, SetLocaleFromRequest::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

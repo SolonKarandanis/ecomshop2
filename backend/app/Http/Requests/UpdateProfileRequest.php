@@ -20,6 +20,7 @@ class UpdateProfileRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user())],
+            'locale' => ['sometimes', 'string', Rule::in(config('app.supported_locales'))],
         ];
     }
 

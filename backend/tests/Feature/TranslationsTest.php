@@ -37,3 +37,42 @@ it('finds the literal translation keys used in app/', function () {
 it('resolves every literal translation key used in app/', function (string $key, string $file) {
     expect(__($key))->not->toBe($key, "Translation key [{$key}] used in {$file} has no translation.");
 })->with(literalTranslationKeys());
+
+/**
+ * Every key in lang/en/*.php, flattened with dots, paired with each other language.
+ *
+ * @return array<string, array{string, string}>
+ */
+function translationFilesPerLocale(): array
+{
+    $sets = [];
+
+    foreach (glob(dirname(__DIR__, 2).'/lang/en/*.php') as $path) {
+        foreach (['el', 'tr'] as $locale) {
+            $sets[$locale.'/'.basename($path)] = [basename($path), $locale];
+        }
+    }
+
+    return $sets;
+}
+
+function flattenTranslations(array $lines, string $prefix = ''): array
+{
+    $flat = [];
+
+    foreach ($lines as $key => $line) {
+        is_array($line)
+            ? $flat += flattenTranslations($line, "{$prefix}{$key}.")
+            : $flat["{$prefix}{$key}"] = $line;
+    }
+
+    return $flat;
+}
+
+it('has every English key in the Greek and Turkish files', function (string $file, string $locale) {
+    $english = flattenTranslations(require lang_path("en/{$file}"));
+    $path = lang_path("{$locale}/{$file}");
+
+    expect($path)->toBeFile();
+    expect(array_keys(array_diff_key($english, flattenTranslations(require $path))))->toBe([]);
+})->with(translationFilesPerLocale());

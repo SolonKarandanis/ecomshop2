@@ -5,12 +5,19 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\RolesEnum;
 use App\Enums\UserStatusEnum;
+use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Translation\HasLocalePreference;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -18,13 +25,15 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $id
  * @property string $name
  * @property string $email
- * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string $locale Preferred language, one of app.supported_locales
+ * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
+ *
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
@@ -37,15 +46,17 @@ use Spatie\Permission\Traits\HasRoles;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Order> $orders
+ *
+ * @property-read Collection<int, Order> $orders
  * @property-read int|null $orders_count
- * @property \App\Enums\UserStatusEnum $status User account status
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions
+ * @property UserStatusEnum $status User account status
+ * @property-read Collection<int, Permission> $permissions
  * @property-read int|null $permissions_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Role> $roles
+ * @property-read Collection<int, Role> $roles
  * @property-read int|null $roles_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $teams
+ * @property-read Collection<int, Permission> $teams
  * @property-read int|null $teams_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User permission($permissions, bool $without = false)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User role($roles, ?string $guard = null, bool $without = false)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User team($teams, bool $without = false)
@@ -53,15 +64,17 @@ use Spatie\Permission\Traits\HasRoles;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutPermission($permissions)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutRole($roles, ?string $guard = null)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutTeam($teams)
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Address> $addresses
+ *
+ * @property-read Collection<int, Address> $addresses
  * @property-read int|null $addresses_count
+ *
  * @mixin IdeHelperUser
  * @mixin \Eloquent
  */
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasLocalePreference
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable,HasRoles;
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, HasRoles,Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -71,9 +84,19 @@ class User extends Authenticatable implements FilamentUser
     protected $fillable = [
         'name',
         'email',
+        'locale',
         'password',
         'status',
         'email_verified_at',
+    ];
+
+    /**
+     * Matches the column default, so a User that was just created has it too.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'locale' => 'en',
     ];
 
     /**
@@ -100,15 +123,18 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
-    public function orders(): HasMany{
+    public function orders(): HasMany
+    {
         return $this->hasMany(Order::class);
     }
 
-    public function addresses(): HasMany{
+    public function addresses(): HasMany
+    {
         return $this->hasMany(Address::class);
     }
 
-    public function savedAddresses(): HasMany{
+    public function savedAddresses(): HasMany
+    {
         return $this->hasMany(SavedAddress::class);
     }
 
@@ -118,20 +144,31 @@ class User extends Authenticatable implements FilamentUser
             && $this->status == UserStatusEnum::ACTIVE;
     }
 
-    public function isAdmin(): bool{
+    public function isAdmin(): bool
+    {
         return $this->hasRole(RolesEnum::ROLE_ADMIN->value);
     }
 
-    public function isBuyer(): bool{
+    public function isBuyer(): bool
+    {
         return $this->hasRole(RolesEnum::ROLE_BUYER->value);
     }
 
-    public function isSupplier(): bool{
+    public function isSupplier(): bool
+    {
         return $this->hasRole(RolesEnum::ROLE_SUPPLIER->value);
     }
 
     public static function cleanEmail(string $email): string
     {
-        return preg_replace('/^([^+@]+)\+[^@]*@(.+)$/','$1@$2',$email);
+        return preg_replace('/^([^+@]+)\+[^@]*@(.+)$/', '$1@$2', $email);
+    }
+
+    /**
+     * Laravel sends this user's Mail and Notifications in this language (#80).
+     */
+    public function preferredLocale(): string
+    {
+        return $this->locale;
     }
 }

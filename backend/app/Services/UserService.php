@@ -25,35 +25,44 @@ class UserService
         private readonly UserRepository $userRepository,
         private readonly RoleRepository $roleRepository,
         private readonly NotificationHandlerService $notificationHandlerService,
-    ){}
+    ) {}
 
-    public function createUser(CreateUserDTO $dto, UserStatusEnum $status = UserStatusEnum::ACTIVE):User{
-        $user= $this->userRepository->createUser($dto, $status);
+    public function createUser(CreateUserDTO $dto, UserStatusEnum $status = UserStatusEnum::ACTIVE): User
+    {
+        $user = $this->userRepository->createUser($dto, $status);
         event(new Registered($user));
+
         return $user;
     }
 
-    public function createBuyer(CreateUserDTO $dto):User{
-        $user= $this->createUser($dto);
-        $buyerRole=$this->roleRepository->getBuyerRole();
+    public function createBuyer(CreateUserDTO $dto): User
+    {
+        $user = $this->createUser($dto);
+        $buyerRole = $this->roleRepository->getBuyerRole();
         $user->assignRole($buyerRole);
+
         return $user;
     }
 
     // A Supplier can't log in or sell until an admin approves them.
-    public function createSupplier(CreateUserDTO $dto):User{
-        $user= $this->createUser($dto, UserStatusEnum::PENDING);
-        $supplierRole=$this->roleRepository->getSupplierRole();
+    public function createSupplier(CreateUserDTO $dto): User
+    {
+        $user = $this->createUser($dto, UserStatusEnum::PENDING);
+        $supplierRole = $this->roleRepository->getSupplierRole();
         $user->assignRole($supplierRole);
         $this->notificationHandlerService->supplierAwaitingApproval($user, $this->userRepository->getAdmins());
+
         return $user;
     }
 
     // UpdateProfileRequest has already rejected an email another User has.
     public function updateProfile(User $user, UpdateProfileDto $dto): void
     {
-        $user->name  = $dto->getName();
+        $user->name = $dto->getName();
         $user->email = $dto->getEmail();
+        if ($dto->getLocale() !== null) {
+            $user->locale = $dto->getLocale();
+        }
         $this->userRepository->saveUser($user);
     }
 
@@ -80,11 +89,13 @@ class UserService
         $this->userRepository->saveUser($user);
     }
 
-    public function getUsersWithOrderedItems(): Collection{
+    public function getUsersWithOrderedItems(): Collection
+    {
         return $this->userRepository->getUsersWithOrderedItems();
     }
 
-    public function resetPassword(ResetPasswordDTO $dto):string{
+    public function resetPassword(ResetPasswordDTO $dto): string
+    {
         return Password::reset([
             'email' => $dto->getEmail(),
             'password' => $dto->getPassword(),
