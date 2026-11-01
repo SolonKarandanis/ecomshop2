@@ -20,39 +20,45 @@ use Illuminate\Validation\ValidationException;
 #[Singleton]
 class ProductService
 {
-
     public function __construct(
         private readonly ProductRepository $productRepository,
         private readonly ProductSearchEngineFactory $searchEngineFactory,
-    ){}
+    ) {}
 
-    public function getProductById(int $id): Product{
+    public function getProductById(int $id): Product
+    {
         return $this->productRepository->getProductById($id);
     }
 
-    public function getProductBySlug($slug): Product{
+    public function getProductBySlug($slug): Product
+    {
         return $this->productRepository->getProductBySlug($slug);
     }
 
-    public function searchProducts(ProductSearchFilterDto $dto): LengthAwarePaginator|array{
+    public function searchProducts(ProductSearchFilterDto $dto): LengthAwarePaginator|array
+    {
         return $this->searchEngineFactory
             ->make()
             ->search($dto);
     }
 
-    public function findProductsByIds(array $productIds): Collection{
+    public function findProductsByIds(array $productIds): Collection
+    {
         return $this->productRepository->findProductsByIds($productIds);
     }
 
-    public function findProductsForCart(array $productIds): Collection{
+    public function findProductsForCart(array $productIds): Collection
+    {
         return $this->productRepository->findProductsForCart($productIds);
     }
 
-    public function updateRatingStats(int $productId, ?float $averageRating, int $reviewsCount): bool{
+    public function updateRatingStats(int $productId, ?float $averageRating, int $reviewsCount): bool
+    {
         return $this->productRepository->updateRatingStats($productId, $averageRating, $reviewsCount);
     }
 
-    public function lockForUpdate(int $productId): Product{
+    public function lockForUpdate(int $productId): Product
+    {
         return $this->productRepository->lockForUpdate($productId);
     }
 
@@ -73,7 +79,7 @@ class ProductService
     public function createSupplierProduct(SaveProductDto $dto, User $supplier): Product
     {
         $fields = $dto->getFields();
-        $fields['slug'] = ($fields['slug'] ?? null) ?: $this->uniqueSlugFrom($fields['name']);
+        $fields['slug'] = ($fields['slug'] ?? null) ?: $this->uniqueSlugFrom($this->firstName($fields));
         $fields['supplier_id'] = $supplier->id;
         $fields['is_featured'] = false;
 
@@ -144,6 +150,27 @@ class ProductService
         $media->delete();
 
         return $this->productRepository->getProductForManagement($product->id);
+    }
+
+    /**
+     * The name to build a slug from: the request language's `name`, or else the
+     * first language block's, in fallback order (#81).
+     *
+     * @param  array<string, mixed>  $fields
+     */
+    private function firstName(array $fields): string
+    {
+        if (filled($fields['name'] ?? null)) {
+            return $fields['name'];
+        }
+
+        foreach (config('translatable.locales') as $locale) {
+            if (filled($fields[$locale]['name'] ?? null)) {
+                return $fields[$locale]['name'];
+            }
+        }
+
+        return '';
     }
 
     private function uniqueSlugFrom(string $name): string

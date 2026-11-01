@@ -15,6 +15,7 @@ class UpdateSupplierProductRequest extends StoreSupplierProductRequest
     {
         return [
             ...parent::rules(),
+            // A partial update needs no name, but one that's sent can't be empty.
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'slug' => ['sometimes', 'required', 'string', 'max:255', 'alpha_dash',
                 Rule::unique('products', 'slug')->ignore((int) $this->route('product'))],

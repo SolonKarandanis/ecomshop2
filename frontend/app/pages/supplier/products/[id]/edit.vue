@@ -11,7 +11,8 @@ const id = route.params.id as string
 const toast = useToast()
 
 const { data: product, error } = await useAsyncData(
-  `supplier-product-${id}`,
+  // Per language: the name and description come back in the page's language.
+  useLocaleKey(`supplier-product-${id}`),
   () => useApi()<{ data: SupplierProduct }>(`/supplier-products/${id}`).then(response => response.data),
 )
 useSeoMeta({ title: () => product.value ? t('supplier.products.edit_title', { name: product.value.name }) : t('supplier.products.edit_fallback') })

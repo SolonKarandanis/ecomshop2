@@ -23,8 +23,12 @@ class StoreSupplierProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            // Generated from `name` when omitted (ProductService::createSupplierProduct).
+            // `name` and `description` are the request's language (#81); a block
+            // per language, e.g. {"el": {"name": …}}, sets that language. At
+            // least one name is required.
+            'name' => ['required_without_all:'.$this->localeNameFields(), 'nullable', 'string', 'max:255'],
+            ...$this->localeRules(),
+            // Generated from the name when omitted (ProductService::createSupplierProduct).
             'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('products', 'slug')],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
@@ -37,6 +41,31 @@ class StoreSupplierProductRequest extends FormRequest
             'attributes.*.attribute_id' => ['required', 'integer', 'exists:attributes,id'],
             'attributes.*.attribute_option_id' => ['required', 'integer', 'exists:attribute_options,id'],
         ];
+    }
+
+    /**
+     * Each language's block: optional, but a block that's sent needs a name.
+     *
+     * @return array<string, mixed>
+     */
+    protected function localeRules(): array
+    {
+        $rules = [];
+        foreach (config('translatable.locales') as $locale) {
+            $rules[$locale] = ['sometimes', 'array:name,description'];
+            $rules["{$locale}.name"] = ["required_with:{$locale}", 'string', 'max:255'];
+            $rules["{$locale}.description"] = ['nullable', 'string'];
+        }
+
+        return $rules;
+    }
+
+    protected function localeNameFields(): string
+    {
+        return 'translatable.locales'
+                |> config(...)
+                |> (fn($x) => array_map(fn(string $locale) => "{$locale}.name", $x))
+                |> (fn($x) => implode(',', $x));
     }
 
     /**

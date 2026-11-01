@@ -10,6 +10,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CategoriesTable
 {
@@ -17,8 +18,9 @@ class CategoriesTable
     {
         return $table
             ->columns([
+                // Shown in the admin's locale; searched in every language (#81).
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable(query: fn (Builder $query, string $search) => $query->whereTranslationLike('name', "%{$search}%")),
                 TextColumn::make('slug')
                     ->searchable(),
                 SpatieMediaLibraryImageColumn::make('image')

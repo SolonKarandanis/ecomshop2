@@ -5,13 +5,15 @@ namespace App\Filament\Resources\Products\Schemas;
 use App\Enums\AttributeValueMethodEnum;
 use App\Enums\ProductVariationTypesEnum;
 use App\Enums\RolesEnum;
+use App\Filament\Support\TranslatableFields;
 use App\Models\Attribute;
 use App\Models\AttributeOptions;
+use App\Models\Category;
 use App\Models\Product;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Group;
@@ -29,20 +31,21 @@ class ProductForm
             ->components([
                 Group::make()->schema([
                     Section::make('Product Information')->schema([
-                        TextInput::make('name')
-                            ->required()
-                            ->maxLength(255)
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(fn(Set $set, ?string $state) => $set('slug', Str::slug($state))),
+                        // Name and description per language (#81); the slug,
+                        // shared by every language, follows the first name filled in.
+                        TranslatableFields::tabs(fn (string $locale) => [
+                            TranslatableFields::name($locale)
+                                ->afterStateUpdated(fn (Get $get, Set $set) => $set('slug', Str::slug(TranslatableFields::firstName($get)))),
+                            MarkdownEditor::make("{$locale}.description")
+                                ->label('Description')
+                                ->fileAttachmentsDirectory('products/attachments')
+                                ->fileAttachmentsDisk('media'),
+                        ]),
                         TextInput::make('slug')
                             ->required()
                             ->maxLength(255)
                             ->readOnly()
                             ->unique(Product::class, 'slug', ignoreRecord: true),
-                        MarkdownEditor::make('description')
-                            ->columnSpanFull()
-                            ->fileAttachmentsDirectory('products/attachments')
-                            ->fileAttachmentsDisk('media')
                     ])->columns(2),
                     Section::make('Product Images')->schema([
                         SpatieMediaLibraryFileUpload::make('images')
@@ -50,7 +53,7 @@ class ProductForm
                             ->disk('media')
                             ->multiple()
                             ->maxFiles(5)
-                            ->reorderable()
+                            ->reorderable(),
                     ]),
                     Section::make('Product Variations')
                         ->schema([
@@ -69,9 +72,10 @@ class ProductForm
                                             if ($attribute) {
                                                 return $attribute->attributeOptions()->whereNotNull('option_name')->get()->pluck('option_name', 'id')->map(fn ($name) => __("product-attributes.{$name}"));
                                             }
+
                                             return AttributeOptions::query()->whereNotNull('option_name')->get()->pluck('option_name', 'id')->map(fn ($name) => __("product-attributes.{$name}"));
                                         })
-                                        ->disabled(fn (Get $get) => !$get('attribute_id'))
+                                        ->disabled(fn (Get $get) => ! $get('attribute_id'))
                                         ->required(),
                                     Select::make('attribute_value_method')
                                         ->label('Value Method')
@@ -90,18 +94,19 @@ class ProductForm
                                             ->reorderable()
                                             ->visible(function (Get $get) {
                                                 $attribute = Attribute::find($get('attribute_id'));
+
                                                 return $attribute && $attribute->type === ProductVariationTypesEnum::Image->value;
-                                            })
+                                            }),
                                     ])->columnSpan(4),
-                                ])->columns(4)
-                        ])
+                                ])->columns(4),
+                        ]),
                 ])->columnSpan(2),
                 Group::make()->schema([
                     Section::make('Price')->schema([
                         TextInput::make('price')
                             ->required()
                             ->numeric()
-                            ->prefix('$')
+                            ->prefix('$'),
                     ]),
                     Section::make('Associations')->schema([
                         Select::make('supplier_id')
@@ -114,16 +119,17 @@ class ProductForm
                                 'name',
                                 modifyQueryUsing: fn ($query) => $query->role(RolesEnum::ROLE_SUPPLIER->value),
                             ),
+                        // Names are translated, so there's no `name` column for
+                        // relationship() to query (#81).
                         Select::make('category_id')
                             ->required()
                             ->searchable()
-                            ->preload()
-                            ->relationship('category', 'name'),
+                            ->options(fn () => Category::query()->get()->pluck('name', 'id')),
                         Select::make('brand_id')
                             ->required()
                             ->searchable()
                             ->preload()
-                            ->relationship('brand', 'name')
+                            ->relationship('brand', 'name'),
                     ]),
                     Section::make('Status')->schema([
                         Toggle::make('in_stock')
@@ -135,8 +141,8 @@ class ProductForm
                         Toggle::make('is_featured')
                             ->required()
                             ->default(false),
-                    ])
-                ])->columnSpan(1)
+                    ]),
+                ])->columnSpan(1),
             ])->columns(3);
     }
 }

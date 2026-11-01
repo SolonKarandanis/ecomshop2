@@ -13,7 +13,8 @@ const cart = useCartStore()
 
 // Public lookup list: no session needed, so no credentials (like the catalogue reads).
 const { data: paymentMethods, error: paymentMethodsError } = await useAsyncData(
-  'payment-methods',
+  // Per language: the labels come back translated.
+  useLocaleKey('payment-methods'),
   () => useCatalogApi()<{ data: PaymentMethodOption[] }>('/payment-methods'),
   { transform: response => response.data },
 )

@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\Products\Pages;
 
 use App\Filament\Resources\Products\ProductResource;
+use App\Filament\Support\TranslatableFields;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Database\Eloquent\Model;
 
 class EditProduct extends EditRecord
 {
@@ -26,5 +28,15 @@ class EditProduct extends EditRecord
         }
 
         return $data;
+    }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        return TranslatableFields::fill($this->getRecord(), $data);
+    }
+
+    protected function handleRecordUpdate(Model $record, array $data): Model
+    {
+        return TranslatableFields::update($record, $data);
     }
 }

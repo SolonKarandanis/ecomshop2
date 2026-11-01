@@ -4,8 +4,11 @@ namespace App\Search;
 
 use App\Dtos\ProductSearchFilterDto;
 use App\Models\Product;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\App;
 
 abstract class BaseProductSearchEngine implements ProductSearchEngineInterface
 {
@@ -58,4 +61,25 @@ abstract class BaseProductSearchEngine implements ProductSearchEngineInterface
     }
 
     abstract protected function applySearchTerm(Builder $query, string $term): void;
+
+    /**
+     * Matches the text the storefront shows (#81): a Product's translation in
+     * the active locale, or, for a Product with none, its other translations,
+     * which the page falls back to. A Product that has the active locale isn't
+     * matched on another language's text.
+     *
+     * @param  Closure(QueryBuilder): mixed  $matches  adds the match on `t.name` / `t.description`
+     */
+    protected function whereShownTextMatches(Builder $query, Closure $matches): void
+    {
+        $locale = App::getLocale();
+        $translations = fn (QueryBuilder $subquery) => $subquery->from('product_translations as t')
+            ->whereColumn('t.product_id', 'products.id');
+
+        $query->where(fn (Builder $query) => $query
+            ->whereExists(fn (QueryBuilder $subquery) => $matches($translations($subquery)->where('t.locale', $locale)))
+            ->orWhere(fn (Builder $query) => $query
+                ->whereNotExists(fn (QueryBuilder $subquery) => $translations($subquery)->where('t.locale', $locale))
+                ->whereExists(fn (QueryBuilder $subquery) => $matches($translations($subquery)))));
+    }
 }

@@ -3,7 +3,10 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\Models\Concerns\FallsBackPerAttribute;
 use App\ValueObjects\Money;
+use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
+use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,10 +24,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property int $id
  * @property int $category_id
  * @property int $brand_id
- * @property string $name
+ * @property string $name in the current locale, with fallback (#81)
  * @property string $slug
  * @property string|null $images
- * @property string|null $description
+ * @property string|null $description in the current locale, with fallback
  * @property Money $price
  * @property bool $is_active
  * @property bool $is_featured
@@ -39,13 +42,11 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereBrandId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereCategoryId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereImages($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereInStock($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereIsActive($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereIsFeatured($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereOnSale($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereSlug($value)
@@ -81,9 +82,18 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *
  * @mixin \Eloquent
  */
-class Product extends Model implements HasMedia
+class Product extends Model implements HasMedia, TranslatableContract
 {
-    use HasFactory, InteractsWithMedia, Searchable;
+    use FallsBackPerAttribute, HasFactory, InteractsWithMedia, Searchable, Translatable {
+        FallsBackPerAttribute::getAttributeOrFallback insteadof Translatable;
+    }
+
+    // Stored per language in product_translations (#81).
+    public array $translatedAttributes = ['name', 'description'];
+
+    // Every listing shows the name, so translations always come along in one
+    // query rather than one per Product.
+    protected $with = ['translations'];
 
     // The Spatie Media Library collection Filament's ProductForm uploads to.
     public const IMAGES_COLLECTION = 'product-images';
@@ -96,15 +106,18 @@ class Product extends Model implements HasMedia
     protected $fillable = [
         'category_id',
         'brand_id',
-        'name',
         'slug',
-        'description',
         'price',
         'is_active',
         'is_featured',
         'in_stock',
         'on_sale',
         'supplier_id',
+    ];
+
+    // Matches the column default, so a Product that was just created has it too.
+    protected $attributes = [
+        'is_active' => true,
     ];
 
     protected $casts = [
@@ -129,8 +142,7 @@ class Product extends Model implements HasMedia
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'description' => $this->description,
+            ...$this->searchableTranslations(),
             'category_id' => $this->category_id,
             'brand_id' => $this->brand_id,
             'supplier_id' => $this->supplier_id,
@@ -140,6 +152,24 @@ class Product extends Model implements HasMedia
             'created_at' => $this->created_at?->timestamp,
             'average_rating' => $this->average_rating !== null ? (float) $this->average_rating : null,
         ];
+    }
+
+    /**
+     * name_en, name_el, name_tr and the descriptions, each as the storefront
+     * shows it in that language, fallback included. Meilisearch searches only
+     * the active language's fields (MeilisearchProductSearchEngine).
+     *
+     * @return array<string, string|null>
+     */
+    private function searchableTranslations(): array
+    {
+        $fields = [];
+        foreach (config('translatable.locales') as $locale) {
+            $fields["name_{$locale}"] = $this->getAttributeOrFallback($locale, 'name');
+            $fields["description_{$locale}"] = $this->getAttributeOrFallback($locale, 'description');
+        }
+
+        return $fields;
     }
 
     public function shouldBeSearchable(): bool

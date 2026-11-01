@@ -19,7 +19,26 @@ export function useCatalogApi() {
   })
 }
 
-/** `useFetch` over `useCatalogApi()`: SSR-rendered and hydrated without refetching. */
+/**
+ * `useFetch` over `useCatalogApi()`: SSR-rendered and hydrated without refetching.
+ * The cache key includes the language, so switching language fetches that
+ * language's content rather than reusing another's (#81).
+ */
 export function useCatalogFetch<ResT, DataT = ResT>(url: string | (() => string), options: UseFetchOptions<ResT, DataT> = {}) {
-  return useFetch(url, { ...options, $fetch: useCatalogApi() })
+  // Without an explicit key, Nuxt's own key is built from the URL and query.
+  const baseKey = () => options.key
+    ? toValue(options.key)
+    : JSON.stringify([toValue(url), unwrapParams(options.query), unwrapParams(options.params)])
+
+  return useFetch(url, { ...options, key: useLocaleKey(baseKey), $fetch: useCatalogApi() })
+}
+
+// A query or params object as plain values: it may be a ref, and may hold refs
+// itself, as useFetch allows.
+function unwrapParams(params: unknown): Record<string, unknown> | undefined {
+  const value = toValue(params)
+
+  return value && typeof value === 'object'
+    ? Object.fromEntries(Object.entries(value).map(([name, item]) => [name, toValue(item)]))
+    : undefined
 }

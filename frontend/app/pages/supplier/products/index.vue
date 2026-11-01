@@ -16,7 +16,8 @@ const toast = useToast()
 const page = computed(() => Number(route.query.page) || 1)
 
 const { data: products, error, status: loadStatus, refresh } = await useAsyncData(
-  'supplier-products',
+  // Per language: product and category names come back translated.
+  useLocaleKey('supplier-products'),
   () => useApi()<Paginated<SupplierProduct>>('/supplier-products', {
     query: { page: page.value, perPage: 20 },
   }),

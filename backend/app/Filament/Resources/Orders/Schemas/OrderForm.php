@@ -66,10 +66,11 @@ class OrderForm
                         Repeater::make('items')
                             ->relationship()
                             ->schema([
+                                // Product names are translated, so there's no
+                                // `name` column for relationship() to query (#81).
                                 Select::make('product_id')
-                                    ->relationship('product', 'name')
+                                    ->options(fn () => Product::query()->get()->pluck('name', 'id'))
                                     ->searchable()
-                                    ->preload()
                                     ->required()
                                     ->distinct()
                                     ->disableOptionsWhenSelectedInSiblingRepeaterItems()
