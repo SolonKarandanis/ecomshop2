@@ -3,7 +3,10 @@
 namespace App\Models;
 
 use App\Casts\MoneyCast;
+use App\Observers\OrderObserver;
+use App\Observers\OrderStatusHistoryObserver;
 use App\ValueObjects\Money;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -62,6 +65,7 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
+#[ObservedBy([OrderObserver::class, OrderStatusHistoryObserver::class])]
 class Order extends Model
 {
     use HasFactory;

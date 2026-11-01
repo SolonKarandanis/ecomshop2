@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\PaymentException;
 use App\Models\Order;
+use Illuminate\Container\Attributes\Config;
 use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session;
@@ -17,9 +18,9 @@ use UnexpectedValueException;
 #[Singleton]
 class StripeService
 {
-    public function __construct()
+    public function __construct(#[Config('app.stripe_secret_key')] ?string $secretKey)
     {
-        Stripe::setApiKey(config('app.stripe_secret_key'));
+        Stripe::setApiKey($secretKey);
     }
 
     /**
