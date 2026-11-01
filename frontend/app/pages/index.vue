@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Paginated, Product } from '~/types/catalogue'
 
+const localePath = useLocalePath()
+
 useSeoMeta({ title: 'ecomshop' })
 
 const [{ data: featured }, { data: categories }] = await Promise.all([
@@ -25,7 +27,7 @@ const products = computed(() => (hasFeatured ? featured.value : latest.value)?.d
           {{ hasFeatured ? 'Featured products' : 'New arrivals' }}
         </h1>
         <UButton
-          to="/products"
+          :to="localePath('/products')"
           label="Browse all"
           variant="link"
         />

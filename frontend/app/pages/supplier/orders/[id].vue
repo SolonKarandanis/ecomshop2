@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { OrderDetail } from '~/types/order'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: ['auth', 'supplier'] })
 
 const route = useRoute()
@@ -20,7 +22,7 @@ const unavailable = computed(() => [403, 404].includes(apiStatus(error.value) ??
 <template>
   <div class="space-y-6">
     <ULink
-      to="/supplier/orders"
+      :to="localePath('/supplier/orders')"
       class="text-sm text-muted"
     >
       ← All orders
@@ -38,7 +40,7 @@ const unavailable = computed(() => [403, 404].includes(apiStatus(error.value) ??
           This order doesn't exist, or it isn't one of yours.
         </p>
         <UButton
-          to="/supplier/orders"
+          :to="localePath('/supplier/orders')"
           label="Back to your orders"
         />
       </div>

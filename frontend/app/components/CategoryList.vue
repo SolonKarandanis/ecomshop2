@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Category } from '~/types/catalogue'
 
+const localePath = useLocalePath()
+
 defineProps<{ categories: Category[] }>()
 </script>
 
@@ -9,7 +11,7 @@ defineProps<{ categories: Category[] }>()
     <NuxtLink
       v-for="category in categories"
       :key="category.id"
-      :to="`/categories/${category.slug}`"
+      :to="localePath(`/categories/${category.slug}`)"
       class="group overflow-hidden rounded-lg border border-default"
     >
       <div class="flex h-32 items-center justify-center bg-elevated">

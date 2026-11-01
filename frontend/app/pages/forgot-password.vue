@@ -2,6 +2,8 @@
 import type { FormError } from '@nuxt/ui'
 import type { ForgotPasswordPayload } from '~/types/auth'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: 'guest' })
 useSeoMeta({ title: 'Forgot password' })
 
@@ -75,7 +77,7 @@ async function onSubmit() {
 
     <template #footer>
       <ULink
-        to="/login"
+        :to="localePath('/login')"
         class="text-sm text-primary"
       >
         Back to log in

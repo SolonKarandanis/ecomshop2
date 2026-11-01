@@ -3,6 +3,8 @@ import type { FormError } from '@nuxt/ui'
 import type { CheckoutPayload, CheckoutResponse, PaymentMethodOption } from '~/types/order'
 import type { SavedAddress } from '~/types/profile'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: 'auth' })
 useSeoMeta({ title: 'Checkout' })
 
@@ -123,7 +125,7 @@ async function onSubmit() {
         Your cart is empty, so there's nothing to check out.
       </p>
       <UButton
-        to="/products"
+        :to="localePath('/products')"
         label="Browse products"
       />
     </div>

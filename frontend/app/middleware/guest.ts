@@ -1,5 +1,6 @@
-export default defineNuxtRouteMiddleware(async () => {
+export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()
+  const localePath = useLocalePath()
 
   if (!auth.resolved) {
     // An unreachable API is treated as "not known to be logged in".
@@ -7,6 +8,6 @@ export default defineNuxtRouteMiddleware(async () => {
   }
 
   if (auth.isAuthenticated) {
-    return navigateTo('/')
+    return navigateTo(localePath('/', routeLocale(to)))
   }
 })

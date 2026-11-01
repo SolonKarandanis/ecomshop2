@@ -4,6 +4,8 @@ import type { Paginated } from '~/types/catalogue'
 import type { Order } from '~/types/order'
 import { ORDER_CANCELLED, ORDER_DELIVERED, ORDER_PAID, ORDER_SHIPPED } from '~/types/order'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: ['auth', 'supplier'] })
 useSeoMeta({ title: 'Supplier orders' })
 
@@ -88,7 +90,7 @@ const columns: TableColumn<Order>[] = [
       >
         <template #id-cell="{ row }">
           <ULink
-            :to="`/supplier/orders/${row.original.id}`"
+            :to="localePath(`/supplier/orders/${row.original.id}`)"
             class="font-medium text-primary"
           >
             #{{ row.original.id }}

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Product } from '~/types/catalogue'
 
+const localePath = useLocalePath()
+
 defineProps<{ product: Product }>()
 </script>
 
@@ -10,7 +12,7 @@ defineProps<{ product: Product }>()
     class="overflow-hidden"
   >
     <NuxtLink
-      :to="`/products/${product.slug}`"
+      :to="localePath(`/products/${product.slug}`)"
       class="block"
     >
       <!-- The `thumb` conversion is 100x100 (Product::registerMediaConversions); shown at its own size, not stretched. -->

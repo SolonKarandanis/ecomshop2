@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { SupplierProduct } from '~/types/supplierProduct'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: ['auth', 'supplier'] })
 
 const route = useRoute()
@@ -18,14 +20,14 @@ const unavailable = computed(() => [403, 404].includes(apiStatus(error.value) ??
 
 async function onSaved(saved: SupplierProduct) {
   toast.add({ title: `"${saved.name}" was saved.`, color: 'success' })
-  await navigateTo('/supplier/products')
+  await navigateTo(localePath('/supplier/products'))
 }
 </script>
 
 <template>
   <div class="mx-auto max-w-3xl space-y-6">
     <ULink
-      to="/supplier/products"
+      :to="localePath('/supplier/products')"
       class="text-sm text-muted"
     >
       ← All products
@@ -43,7 +45,7 @@ async function onSaved(saved: SupplierProduct) {
           This product doesn't exist, or it isn't one of yours.
         </p>
         <UButton
-          to="/supplier/products"
+          :to="localePath('/supplier/products')"
           label="Back to your products"
         />
       </div>

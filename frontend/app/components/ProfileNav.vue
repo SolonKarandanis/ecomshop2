@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
+const localePath = useLocalePath()
+
 // `exact`, so "Profile" (/profile) isn't also highlighted on /profile/password.
-const items: NavigationMenuItem[] = [
-  { label: 'Profile', icon: 'i-lucide-user', to: '/profile', exact: true },
-  { label: 'Password', icon: 'i-lucide-lock', to: '/profile/password', exact: true },
-  { label: 'Addresses', icon: 'i-lucide-map-pin', to: '/profile/addresses', exact: true },
-]
+const items = computed<NavigationMenuItem[]>(() => [
+  { label: 'Profile', icon: 'i-lucide-user', to: localePath('/profile'), exact: true },
+  { label: 'Password', icon: 'i-lucide-lock', to: localePath('/profile/password'), exact: true },
+  { label: 'Addresses', icon: 'i-lucide-map-pin', to: localePath('/profile/addresses'), exact: true },
+])
 </script>
 
 <template>

@@ -1,10 +1,12 @@
 <script setup lang="ts">
+const localePath = useLocalePath()
+
 const cart = useCartStore()
 </script>
 
 <template>
   <UButton
-    to="/cart"
+    :to="localePath('/cart')"
     icon="i-lucide-shopping-cart"
     color="neutral"
     variant="ghost"

@@ -1,7 +1,8 @@
-export function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString('en-IE', { dateStyle: 'medium', timeZone: 'UTC' }) : ''
+// Dates are shown in UTC, in the page's language.
+export function formatDate(value: string | null, language: string = currentLanguage()): string {
+  return value ? new Date(value).toLocaleDateString(language, { dateStyle: 'medium', timeZone: 'UTC' }) : ''
 }
 
-export function formatDateTime(value: string | null): string {
-  return value ? new Date(value).toLocaleString('en-IE', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }) : ''
+export function formatDateTime(value: string | null, language: string = currentLanguage()): string {
+  return value ? new Date(value).toLocaleString(language, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }) : ''
 }

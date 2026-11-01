@@ -2,11 +2,14 @@
 import type { FormError } from '@nuxt/ui'
 import type { LoginPayload } from '~/types/auth'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: 'guest' })
 useSeoMeta({ title: 'Log in' })
 
 const route = useRoute()
 const auth = useAuthStore()
+const { pathForUser } = useLocaleSwitch()
 
 const state = reactive<LoginPayload>({ email: '', password: '', remember: false })
 const { error, submit } = useApiForm(() => Object.keys(state))
@@ -21,7 +24,8 @@ function validate(data: Partial<LoginPayload>): FormError[] {
 async function onSubmit() {
   await submit(async () => {
     await auth.login({ ...state })
-    await navigateTo(redirectTarget(route.query.redirect))
+    // Lands in the user's saved language, which may differ from this page's.
+    await navigateTo(pathForUser(redirectTarget(route.query.redirect, localePath('/'))))
   })
 }
 </script>
@@ -85,7 +89,7 @@ async function onSubmit() {
           label="Remember me"
         />
         <ULink
-          to="/forgot-password"
+          :to="localePath('/forgot-password')"
           class="text-sm"
         >
           Forgot password?
@@ -104,7 +108,7 @@ async function onSubmit() {
       <p class="text-sm text-muted">
         No account yet?
         <ULink
-          to="/register"
+          :to="localePath('/register')"
           class="text-primary"
         >
           Register

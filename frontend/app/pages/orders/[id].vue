@@ -2,6 +2,8 @@
 import type { TimelineItem } from '@nuxt/ui'
 import type { OrderDetail } from '~/types/order'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: 'auth' })
 
 const route = useRoute()
@@ -29,7 +31,7 @@ const history = computed<TimelineItem[]>(() => (order.value?.status_history ?? [
 <template>
   <div class="space-y-6">
     <ULink
-      to="/orders"
+      :to="localePath('/orders')"
       class="text-sm text-muted"
     >
       ← My orders
@@ -49,7 +51,7 @@ const history = computed<TimelineItem[]>(() => (order.value?.status_history ?? [
           You can only view orders placed from your own account.
         </p>
         <UButton
-          to="/orders"
+          :to="localePath('/orders')"
           label="My orders"
         />
       </div>

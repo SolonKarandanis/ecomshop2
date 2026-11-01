@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import type { FormError } from '@nuxt/ui'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: 'guest' })
 useSeoMeta({ title: 'Register' })
 
 const route = useRoute()
 const auth = useAuthStore()
+const { locale } = useI18n()
 const { data: config } = await usePublicConfig()
 
 const state = reactive({ name: '', email: '', password: '', password_confirmation: '', role: ROLE_BUYER })
@@ -43,7 +46,9 @@ async function onSubmit() {
       awaitingApproval.value = true
       return
     }
-    await navigateTo(redirectTarget(route.query.redirect))
+    // A new account takes the language it signed up in; it's not essential to the sign-up.
+    await auth.saveLocale(locale.value).catch(() => null)
+    await navigateTo(redirectTarget(route.query.redirect, localePath('/')))
   })
 }
 </script>
@@ -66,7 +71,7 @@ async function onSubmit() {
 
     <template #footer>
       <UButton
-        to="/"
+        :to="localePath('/')"
         label="Back to the shop"
         color="neutral"
         variant="ghost"
@@ -168,7 +173,7 @@ async function onSubmit() {
       <p class="text-sm text-muted">
         Already have an account?
         <ULink
-          to="/login"
+          :to="localePath('/login')"
           class="text-primary"
         >
           Log in

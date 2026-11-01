@@ -2,6 +2,8 @@
 import type { Order, OrderPaymentResult } from '~/types/order'
 import { PAYMENT_FAILED, PAYMENT_PAID } from '~/types/order'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: 'auth' })
 useSeoMeta({ title: 'Order placed' })
 
@@ -98,11 +100,11 @@ const orderId = computed(() => result.value?.kind === 'stripe' ? result.value.pa
 
       <div class="flex justify-center gap-2">
         <UButton
-          :to="`/orders/${orderId}`"
+          :to="localePath(`/orders/${orderId}`)"
           label="View order"
         />
         <UButton
-          to="/products"
+          :to="localePath('/products')"
           label="Keep shopping"
           color="neutral"
           variant="outline"

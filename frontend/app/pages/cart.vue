@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { CartItem } from '~/types/cart'
 
+const localePath = useLocalePath()
+
 useSeoMeta({ title: 'Cart' })
 
 const cart = useCartStore()
@@ -85,7 +87,7 @@ function remove(item: CartItem) {
         Your cart is empty.
       </p>
       <UButton
-        to="/products"
+        :to="localePath('/products')"
         label="Browse products"
       />
     </div>
@@ -100,7 +102,7 @@ function remove(item: CartItem) {
           <div class="min-w-0 flex-1">
             <NuxtLink
               v-if="item.product_slug"
-              :to="`/products/${item.product_slug}`"
+              :to="localePath(`/products/${item.product_slug}`)"
               class="font-medium hover:text-primary"
             >
               {{ item.product_name }}
@@ -143,7 +145,7 @@ function remove(item: CartItem) {
 
       <div class="flex justify-end">
         <UButton
-          to="/checkout"
+          :to="localePath('/checkout')"
           label="Checkout"
           size="lg"
         />
