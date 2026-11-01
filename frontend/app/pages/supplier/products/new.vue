@@ -2,14 +2,15 @@
 import type { SupplierProduct } from '~/types/supplierProduct'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: ['auth', 'supplier'] })
-useSeoMeta({ title: 'New product' })
+useSeoMeta({ title: () => t('supplier.products.new') })
 
 const toast = useToast()
 
 async function onSaved(product: SupplierProduct) {
-  toast.add({ title: `"${product.name}" was created.`, color: 'success' })
+  toast.add({ title: t('supplier.products.created', { name: product.name }), color: 'success' })
   await navigateTo(localePath('/supplier/products'))
 }
 </script>
@@ -20,10 +21,10 @@ async function onSaved(product: SupplierProduct) {
       :to="localePath('/supplier/products')"
       class="text-sm text-muted"
     >
-      ← All products
+      {{ t('supplier.products.back') }}
     </ULink>
     <h1 class="text-3xl font-bold">
-      New product
+      {{ t('supplier.products.new') }}
     </h1>
     <SupplierProductForm @saved="onSaved" />
   </div>

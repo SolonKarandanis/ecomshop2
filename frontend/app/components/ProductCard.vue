@@ -2,6 +2,7 @@
 import type { Product } from '~/types/catalogue'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 defineProps<{ product: Product }>()
 </script>
@@ -30,13 +31,13 @@ defineProps<{ product: Product }>()
         <div class="flex flex-wrap gap-1">
           <UBadge
             v-if="product.on_sale"
-            label="On sale"
+            :label="t('product.badge.on_sale')"
             color="error"
             variant="subtle"
           />
           <UBadge
             v-if="!product.in_stock"
-            label="Out of stock"
+            :label="t('product.badge.out_of_stock')"
             color="neutral"
             variant="subtle"
           />

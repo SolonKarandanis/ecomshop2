@@ -1,10 +1,11 @@
 import type { LocationQuery } from 'vue-router'
 
+// Labels are message keys; ProductFilters translates them.
 export const SORT_OPTIONS = [
-  { label: 'Newest', value: 'latest' },
-  { label: 'Price: low to high', value: 'price_asc' },
-  { label: 'Price: high to low', value: 'price_desc' },
-  { label: 'Top rated', value: 'rating' },
+  { labelKey: 'sort.latest', value: 'latest' },
+  { labelKey: 'sort.price_asc', value: 'price_asc' },
+  { labelKey: 'sort.price_desc', value: 'price_desc' },
+  { labelKey: 'sort.rating', value: 'rating' },
 ] as const
 
 export type ProductSort = typeof SORT_OPTIONS[number]['value']

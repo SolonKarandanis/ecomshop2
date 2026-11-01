@@ -5,6 +5,7 @@ import type { SavedAddress, SavedAddressPayload } from '~/types/profile'
 // Adds a saved address, or edits `address` when it's given.
 const props = defineProps<{ address?: SavedAddress | null }>()
 const emit = defineEmits<{ saved: [address: SavedAddress], cancel: [] }>()
+const { t } = useI18n()
 
 const state = reactive<SavedAddressPayload>({
   first_name: props.address?.first_name ?? '',
@@ -21,7 +22,7 @@ const submitting = ref(false)
 function validate(data: Partial<SavedAddressPayload>): FormError[] {
   return savedAddressFields
     .filter(field => !data[field.name]?.trim())
-    .map(field => ({ name: field.name, message: `Enter the ${field.label.toLowerCase()}.` }))
+    .map(field => ({ name: field.name, message: t('common.validation.required', { field: t(field.labelKey) }) }))
 }
 
 async function onSubmit() {
@@ -55,7 +56,7 @@ async function onSubmit() {
       <UFormField
         v-for="field in savedAddressFields"
         :key="field.name"
-        :label="field.label"
+        :label="t(field.labelKey)"
         :name="field.name"
         required
         :class="field.name === 'street_address' ? 'sm:col-span-2' : undefined"
@@ -70,7 +71,7 @@ async function onSubmit() {
 
     <div class="flex justify-end gap-2">
       <UButton
-        label="Cancel"
+        :label="t('common.cancel')"
         color="neutral"
         variant="ghost"
         class="cursor-pointer"
@@ -78,7 +79,7 @@ async function onSubmit() {
       />
       <UButton
         type="submit"
-        :label="address ? 'Save address' : 'Add address'"
+        :label="address ? t('address.save') : t('address.add')"
         :loading="submitting"
         class="cursor-pointer"
       />

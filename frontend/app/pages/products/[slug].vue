@@ -2,13 +2,14 @@
 import type { ProductDetailResponse } from '~/types/catalogue'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 const route = useRoute()
 
 const { data, error } = await useCatalogFetch<ProductDetailResponse>(() => `/products/${route.params.slug}`)
 
 if (error.value || !data.value) {
-  throw createError({ statusCode: error.value?.statusCode ?? 404, statusMessage: 'Product not found', fatal: true })
+  throw createError({ statusCode: error.value?.statusCode ?? 404, statusMessage: t('product.not_found'), fatal: true })
 }
 
 const product = computed(() => data.value!.data)
@@ -49,12 +50,12 @@ useSeoMeta({
           <span class="text-2xl font-semibold">{{ formatPrice(product.price) }}</span>
           <UBadge
             v-if="product.on_sale"
-            label="On sale"
+            :label="t('product.badge.on_sale')"
             color="error"
             variant="subtle"
           />
           <UBadge
-            :label="product.in_stock ? 'In stock' : 'Out of stock'"
+            :label="product.in_stock ? t('product.in_stock') : t('product.badge.out_of_stock')"
             :color="product.in_stock ? 'success' : 'neutral'"
             variant="subtle"
           />
@@ -70,7 +71,7 @@ useSeoMeta({
           v-if="product.average_rating !== null"
           class="text-sm text-muted"
         >
-          ★ {{ product.average_rating.toFixed(1) }} from {{ product.reviews_count }} reviews
+          {{ t('product.rating', { rating: product.average_rating.toFixed(1), count: product.reviews_count }, product.reviews_count) }}
         </p>
 
         <!-- Stored as Markdown (Filament MarkdownEditor); shown as plain text for now. -->

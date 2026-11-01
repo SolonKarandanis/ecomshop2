@@ -61,8 +61,8 @@ describe('checkout page', () => {
     await flushPromises()
 
     expect(checkoutBodies).toHaveLength(0)
-    expect(page.text()).toContain('Enter your first name.')
-    expect(page.text()).toContain('Enter your postal code.')
+    expect(page.text()).toContain('First name is required.')
+    expect(page.text()).toContain('Postal code is required.')
   })
 
   it('sends the form with the chosen method key and shows a 422 next to its field', async () => {

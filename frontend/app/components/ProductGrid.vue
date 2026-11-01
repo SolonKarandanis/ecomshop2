@@ -2,6 +2,7 @@
 import type { Product } from '~/types/catalogue'
 
 defineProps<{ products: Product[] }>()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -19,6 +20,6 @@ defineProps<{ products: Product[] }>()
     v-else
     class="py-10 text-center text-muted"
   >
-    No products match these filters.
+    {{ t('catalogue.empty') }}
   </p>
 </template>

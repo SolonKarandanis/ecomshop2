@@ -6,6 +6,7 @@ const props = withDefaults(defineProps<{
   inStock?: boolean
 }>(), { withQuantity: false, inStock: true })
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const cart = useCartStore()
 const toast = useToast()
@@ -21,11 +22,11 @@ async function add() {
   adding.value = true
   try {
     await cart.addItem(props.productId, quantity.value)
-    toast.add({ title: 'Added to cart', color: 'success' })
+    toast.add({ title: t('cart.add.added'), color: 'success' })
   }
   catch (error) {
     // e.g. the 400 for a product from a second Supplier.
-    toast.add({ title: apiErrorMessage(error, 'Could not add this product to your cart.'), color: 'error' })
+    toast.add({ title: apiErrorMessage(error, t('cart.add.error')), color: 'error' })
   }
   finally {
     adding.value = false
@@ -44,11 +45,11 @@ async function add() {
         v-if="withQuantity"
         v-model="quantity"
         :min="1"
-        aria-label="Quantity"
+        :aria-label="t('common.quantity')"
         class="w-28"
       />
       <UButton class="cursor-pointer"
-        label="Add to cart"
+        :label="t('cart.add.button')"
         icon="i-lucide-shopping-cart"
         :loading="adding"
         :disabled="!inStock"

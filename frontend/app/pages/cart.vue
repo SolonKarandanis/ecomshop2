@@ -2,8 +2,9 @@
 import type { CartItem } from '~/types/cart'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
-useSeoMeta({ title: 'Cart' })
+useSeoMeta({ title: () => t('cart.title') })
 
 const cart = useCartStore()
 const error = ref<string | null>(null)
@@ -38,7 +39,7 @@ function remove(item: CartItem) {
 <template>
   <div class="mx-auto max-w-3xl space-y-6">
     <h1 class="text-3xl font-bold">
-      Your cart
+      {{ t('cart.title') }}
     </h1>
 
     <UAlert
@@ -54,7 +55,7 @@ function remove(item: CartItem) {
       aria-busy="true"
       class="space-y-6"
     >
-      <span class="sr-only">Loading your cart…</span>
+      <span class="sr-only">{{ t('cart.loading') }}</span>
       <ul class="divide-y divide-default border-y">
         <li
           v-for="n in 3"
@@ -84,11 +85,11 @@ function remove(item: CartItem) {
       class="space-y-4 py-10 text-center"
     >
       <p class="text-muted">
-        Your cart is empty.
+        {{ t('cart.empty') }}
       </p>
       <UButton
         :to="localePath('/products')"
-        label="Browse products"
+        :label="t('cart.browse')"
       />
     </div>
 
@@ -110,9 +111,9 @@ function remove(item: CartItem) {
             <span
               v-else
               class="font-medium"
-            >{{ item.product_name ?? 'Unavailable product' }}</span>
+            >{{ item.product_name ?? t('cart.unavailable') }}</span>
             <p class="text-sm text-muted">
-              {{ formatPrice(item.unit_price) }} each
+              {{ t('cart.each', { price: formatPrice(item.unit_price) }) }}
             </p>
           </div>
 
@@ -120,7 +121,7 @@ function remove(item: CartItem) {
             :model-value="item.quantity"
             :min="1"
             :disabled="busyItemId === item.id"
-            aria-label="Quantity"
+            :aria-label="t('common.quantity')"
             class="w-28"
             @update:model-value="updateQuantity(item, $event)"
           />
@@ -131,7 +132,7 @@ function remove(item: CartItem) {
             icon="i-lucide-trash-2"
             color="neutral"
             variant="ghost"
-            :aria-label="`Remove ${item.product_name ?? 'item'}`"
+            :aria-label="t('cart.remove', { name: item.product_name ?? t('cart.remove_item') })"
             :disabled="busyItemId === item.id"
             @click="remove(item)"
           />
@@ -139,14 +140,14 @@ function remove(item: CartItem) {
       </ul>
 
       <div class="flex items-center justify-between">
-        <span class="text-lg">Subtotal</span>
+        <span class="text-lg">{{ t('cart.subtotal') }}</span>
         <span class="text-2xl font-semibold">{{ formatPrice(cart.subtotal) }}</span>
       </div>
 
       <div class="flex justify-end">
         <UButton
           :to="localePath('/checkout')"
-          label="Checkout"
+          :label="t('cart.checkout')"
           size="lg"
         />
       </div>

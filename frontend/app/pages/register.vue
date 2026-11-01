@@ -2,13 +2,13 @@
 import type { FormError } from '@nuxt/ui'
 
 const localePath = useLocalePath()
+const { locale, t } = useI18n()
 
 definePageMeta({ middleware: 'guest' })
-useSeoMeta({ title: 'Register' })
+useSeoMeta({ title: () => t('register.title') })
 
 const route = useRoute()
 const auth = useAuthStore()
-const { locale } = useI18n()
 const { data: config } = await usePublicConfig()
 
 const state = reactive({ name: '', email: '', password: '', password_confirmation: '', role: ROLE_BUYER })
@@ -16,18 +16,18 @@ const { error, submit } = useApiForm(() => Object.keys(state))
 // Set once a Supplier registers: they start PENDING and aren't logged in.
 const awaitingApproval = ref(false)
 
-const roleItems = [
-  { label: 'I want to buy', value: ROLE_BUYER },
-  { label: 'I want to sell (Supplier)', value: ROLE_SUPPLIER },
-]
+const roleItems = computed(() => [
+  { label: t('register.role.buy'), value: ROLE_BUYER },
+  { label: t('register.role.sell'), value: ROLE_SUPPLIER },
+])
 
 function validate(data: Partial<typeof state>): FormError[] {
   const errors: FormError[] = []
-  if (!data.name) errors.push({ name: 'name', message: 'Enter your name.' })
-  if (!data.email) errors.push({ name: 'email', message: 'Enter your email.' })
-  if (!data.password) errors.push({ name: 'password', message: 'Choose a password.' })
+  if (!data.name) errors.push({ name: 'name', message: t('auth.validation.name') })
+  if (!data.email) errors.push({ name: 'email', message: t('auth.validation.email') })
+  if (!data.password) errors.push({ name: 'password', message: t('auth.validation.choose_password') })
   if (data.password_confirmation !== data.password) {
-    errors.push({ name: 'password_confirmation', message: 'The passwords don\'t match.' })
+    errors.push({ name: 'password_confirmation', message: t('auth.validation.passwords_match') })
   }
   return errors
 }
@@ -60,19 +60,18 @@ async function onSubmit() {
   >
     <template #header>
       <h1 class="text-xl font-semibold">
-        Thanks for registering
+        {{ t('register.thanks') }}
       </h1>
     </template>
 
     <p class="text-sm">
-      Your Supplier account is awaiting approval. We'll email you once an admin
-      has approved it, and you'll be able to log in then.
+      {{ t('register.awaiting_approval') }}
     </p>
 
     <template #footer>
       <UButton
         :to="localePath('/')"
-        label="Back to the shop"
+        :label="t('register.back_to_shop')"
         color="neutral"
         variant="ghost"
       />
@@ -85,7 +84,7 @@ async function onSubmit() {
   >
     <template #header>
       <h1 class="text-xl font-semibold">
-        Create an account
+        {{ t('register.heading') }}
       </h1>
     </template>
 
@@ -105,7 +104,7 @@ async function onSubmit() {
 
       <UFormField
         v-if="config?.suppliers_enabled"
-        label="Account type"
+        :label="t('register.account_type')"
         name="role"
       >
         <URadioGroup
@@ -115,7 +114,7 @@ async function onSubmit() {
       </UFormField>
 
       <UFormField
-        label="Name"
+        :label="t('auth.field.name')"
         name="name"
       >
         <UInput
@@ -126,7 +125,7 @@ async function onSubmit() {
       </UFormField>
 
       <UFormField
-        label="Email"
+        :label="t('auth.field.email')"
         name="email"
       >
         <UInput
@@ -138,7 +137,7 @@ async function onSubmit() {
       </UFormField>
 
       <UFormField
-        label="Password"
+        :label="t('auth.field.password')"
         name="password"
       >
         <UInput
@@ -150,7 +149,7 @@ async function onSubmit() {
       </UFormField>
 
       <UFormField
-        label="Confirm password"
+        :label="t('auth.field.password_confirmation')"
         name="password_confirmation"
       >
         <UInput
@@ -163,7 +162,7 @@ async function onSubmit() {
 
       <UButton
         type="submit"
-        label="Register"
+        :label="t('register.submit')"
         class="cursor-pointer"
         block
       />
@@ -171,12 +170,12 @@ async function onSubmit() {
 
     <template #footer>
       <p class="text-sm text-muted">
-        Already have an account?
+        {{ t('register.have_account') }}
         <ULink
           :to="localePath('/login')"
           class="text-primary"
         >
-          Log in
+          {{ t('register.log_in') }}
         </ULink>
       </p>
     </template>

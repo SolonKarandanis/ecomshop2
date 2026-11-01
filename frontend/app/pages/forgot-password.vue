@@ -3,16 +3,17 @@ import type { FormError } from '@nuxt/ui'
 import type { ForgotPasswordPayload } from '~/types/auth'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: 'guest' })
-useSeoMeta({ title: 'Forgot password' })
+useSeoMeta({ title: () => t('forgot.title') })
 
 const state = reactive<ForgotPasswordPayload>({ email: '' })
 const sent = ref<string | null>(null)
 const { error, submit } = useApiForm(() => Object.keys(state))
 
 function validate(data: Partial<ForgotPasswordPayload>): FormError[] {
-  return data.email ? [] : [{ name: 'email', message: 'Enter your email.' }]
+  return data.email ? [] : [{ name: 'email', message: t('auth.validation.email') }]
 }
 
 async function onSubmit() {
@@ -28,10 +29,10 @@ async function onSubmit() {
   <UCard class="mx-auto max-w-md">
     <template #header>
       <h1 class="text-xl font-semibold">
-        Forgot your password?
+        {{ t('forgot.heading') }}
       </h1>
       <p class="mt-1 text-sm text-muted">
-        We'll email you a link to choose a new one.
+        {{ t('forgot.intro') }}
       </p>
     </template>
 
@@ -57,7 +58,7 @@ async function onSubmit() {
       />
 
       <UFormField
-        label="Email"
+        :label="t('auth.field.email')"
         name="email"
       >
         <UInput
@@ -70,7 +71,7 @@ async function onSubmit() {
 
       <UButton
         type="submit"
-        label="Send reset link"
+        :label="t('forgot.submit')"
         block
       />
     </UForm>
@@ -80,7 +81,7 @@ async function onSubmit() {
         :to="localePath('/login')"
         class="text-sm text-primary"
       >
-        Back to log in
+        {{ t('forgot.back') }}
       </ULink>
     </template>
   </UCard>

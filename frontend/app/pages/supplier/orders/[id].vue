@@ -2,12 +2,13 @@
 import type { OrderDetail } from '~/types/order'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: ['auth', 'supplier'] })
 
 const route = useRoute()
 const id = route.params.id as string
-useSeoMeta({ title: `Order #${id}` })
+useSeoMeta({ title: () => t('order.title', { id }) })
 
 const { data: order, error } = await useAsyncData(
   `supplier-order-${id}`,
@@ -25,7 +26,7 @@ const unavailable = computed(() => [403, 404].includes(apiStatus(error.value) ??
       :to="localePath('/supplier/orders')"
       class="text-sm text-muted"
     >
-      ← All orders
+      {{ t('supplier.order.back') }}
     </ULink>
 
     <UCard
@@ -34,14 +35,14 @@ const unavailable = computed(() => [403, 404].includes(apiStatus(error.value) ??
     >
       <div class="space-y-4">
         <h1 class="text-xl font-semibold">
-          Order unavailable
+          {{ t('supplier.order.unavailable') }}
         </h1>
         <p class="text-muted">
-          This order doesn't exist, or it isn't one of yours.
+          {{ t('supplier.order.unavailable_text') }}
         </p>
         <UButton
           :to="localePath('/supplier/orders')"
-          label="Back to your orders"
+          :label="t('supplier.order.back_to_orders')"
         />
       </div>
     </UCard>
@@ -57,7 +58,7 @@ const unavailable = computed(() => [403, 404].includes(apiStatus(error.value) ??
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-3">
           <h1 class="text-3xl font-bold">
-            Order #{{ order.id }}
+            {{ t('order.title', { id: order.id }) }}
           </h1>
           <UBadge
             :label="orderStatusLabel(order.order_status)"
@@ -69,7 +70,7 @@ const unavailable = computed(() => [403, 404].includes(apiStatus(error.value) ??
         <SupplierOrderActions :order="order" />
       </div>
       <p class="text-sm text-muted">
-        Placed {{ formatDate(order.created_at) }}
+        {{ t('order.placed', { date: formatDate(order.created_at) }) }}
       </p>
 
       <OrderDetails :order="order" />

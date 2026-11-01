@@ -3,9 +3,10 @@ import type { FormError } from '@nuxt/ui'
 import type { ResetPasswordPayload } from '~/types/auth'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: 'guest' })
-useSeoMeta({ title: 'Reset password' })
+useSeoMeta({ title: () => t('reset.title') })
 
 // The backend's reset email links here with `?token=...&email=...`.
 const route = useRoute()
@@ -20,10 +21,10 @@ const { error, submit } = useApiForm(() => Object.keys(state))
 
 function validate(data: Partial<typeof state>): FormError[] {
   const errors: FormError[] = []
-  if (!data.email) errors.push({ name: 'email', message: 'Enter your email.' })
-  if (!data.password) errors.push({ name: 'password', message: 'Choose a new password.' })
+  if (!data.email) errors.push({ name: 'email', message: t('auth.validation.email') })
+  if (!data.password) errors.push({ name: 'password', message: t('reset.validation.password') })
   if (data.password_confirmation !== data.password) {
-    errors.push({ name: 'password_confirmation', message: 'The passwords don\'t match.' })
+    errors.push({ name: 'password_confirmation', message: t('auth.validation.passwords_match') })
   }
   return errors
 }
@@ -42,7 +43,7 @@ async function onSubmit() {
   <UCard class="mx-auto max-w-md">
     <template #header>
       <h1 class="text-xl font-semibold">
-        Choose a new password
+        {{ t('reset.heading') }}
       </h1>
     </template>
 
@@ -50,12 +51,12 @@ async function onSubmit() {
       v-if="!token"
       color="error"
       variant="subtle"
-      title="This reset link is incomplete. Request a new one."
+      :title="t('reset.incomplete')"
     >
       <template #actions>
         <UButton
           :to="localePath('/forgot-password')"
-          label="Request a new link"
+          :label="t('reset.request_new')"
           size="xs"
         />
       </template>
@@ -77,7 +78,7 @@ async function onSubmit() {
       />
 
       <UFormField
-        label="Email"
+        :label="t('auth.field.email')"
         name="email"
       >
         <UInput
@@ -89,7 +90,7 @@ async function onSubmit() {
       </UFormField>
 
       <UFormField
-        label="New password"
+        :label="t('reset.new_password')"
         name="password"
       >
         <UInput
@@ -101,7 +102,7 @@ async function onSubmit() {
       </UFormField>
 
       <UFormField
-        label="Confirm new password"
+        :label="t('reset.confirm')"
         name="password_confirmation"
       >
         <UInput
@@ -114,7 +115,7 @@ async function onSubmit() {
 
       <UButton
         type="submit"
-        label="Reset password"
+        :label="t('reset.submit')"
         block
       />
     </UForm>

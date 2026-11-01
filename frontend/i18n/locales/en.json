@@ -1,1 +1,407 @@
-{}
+{
+  "address": {
+    "add": "Add address",
+    "field": {
+      "city": "City",
+      "country": "Country",
+      "first_name": "First name",
+      "last_name": "Last name",
+      "phone": "Phone",
+      "postal_code": "Postal code",
+      "street_address": "Street address"
+    },
+    "save": "Save address"
+  },
+  "addresses": {
+    "added": "Address added.",
+    "confirm_delete": "Delete address",
+    "default": "Default",
+    "default_error": "The default address couldn't be changed. Please try again.",
+    "default_updated": "Default address updated.",
+    "delete": "Delete",
+    "delete_error": "The address couldn't be deleted. Please try again.",
+    "delete_title": "Delete this address?",
+    "deleted": "Address deleted.",
+    "edit": "Edit",
+    "edit_title": "Edit address",
+    "empty": "You haven't saved any addresses yet. Add one here, or tick \"Save this address\" at checkout.",
+    "heading": "Saved addresses",
+    "keep": "Keep address",
+    "load_error": "We couldn't load your addresses. Reload the page to try again.",
+    "saved": "Address saved.",
+    "set_default": "Set as default",
+    "title": "Your addresses"
+  },
+  "auth": {
+    "field": {
+      "email": "Email",
+      "name": "Name",
+      "password": "Password",
+      "password_confirmation": "Confirm password"
+    },
+    "validation": {
+      "choose_password": "Choose a password.",
+      "email": "Enter your email.",
+      "name": "Enter your name.",
+      "password": "Enter your password.",
+      "passwords_match": "The passwords don't match."
+    }
+  },
+  "cancel": {
+    "closed": "The payment window for order #{id} has closed, so it can't be paid any more.",
+    "retry": "Try payment again",
+    "title": "Payment not completed",
+    "waiting": "Order #{id} is waiting for payment. You can go back to Stripe and pay for it now."
+  },
+  "cart": {
+    "add": {
+      "added": "Added to cart",
+      "button": "Add to cart",
+      "error": "Could not add this product to your cart."
+    },
+    "browse": "Browse products",
+    "checkout": "Checkout",
+    "each": "{price} each",
+    "empty": "Your cart is empty.",
+    "icon_label": "Cart, {count} product | Cart, {count} products",
+    "loading": "Loading your cart…",
+    "remove": "Remove {name}",
+    "remove_item": "item",
+    "subtotal": "Subtotal",
+    "title": "Your cart",
+    "unavailable": "Unavailable product"
+  },
+  "catalogue": {
+    "empty": "No products match these filters."
+  },
+  "categories": {
+    "not_found": "Category not found",
+    "title": "Categories"
+  },
+  "checkout": {
+    "choose_payment": "Choose a payment method.",
+    "choose_saved_address": "Choose a saved address",
+    "default_address": "{address} (default)",
+    "empty": "Your cart is empty, so there's nothing to check out.",
+    "payment": "Payment",
+    "payment_methods_error": "We couldn't load the payment methods. Reload the page to try again.",
+    "place_order": "Place order",
+    "save_address": "Save this address to my address book",
+    "saved_addresses": "Saved addresses",
+    "shipping_address": "Shipping address",
+    "summary": "Order summary",
+    "title": "Checkout",
+    "total": "Total"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "error": "Something went wrong. Please try again.",
+    "keep_shopping": "Keep shopping",
+    "quantity": "Quantity",
+    "validation": {
+      "required": "{field} is required."
+    }
+  },
+  "filters": {
+    "all_categories": "All categories",
+    "categories": "Categories",
+    "search": "Search",
+    "search_placeholder": "Search products",
+    "sort_by": "Sort by"
+  },
+  "forgot": {
+    "back": "Back to log in",
+    "heading": "Forgot your password?",
+    "intro": "We'll email you a link to choose a new one.",
+    "submit": "Send reset link",
+    "title": "Forgot password"
+  },
+  "home": {
+    "browse_all": "Browse all",
+    "featured": "Featured products",
+    "new_arrivals": "New arrivals",
+    "shop_by_category": "Shop by category"
+  },
+  "login": {
+    "forgot": "Forgot password?",
+    "no_account": "No account yet?",
+    "register": "Register",
+    "remember": "Remember me",
+    "reset_done": "Your password has been reset. Log in with your new password.",
+    "submit": "Log in",
+    "title": "Log in"
+  },
+  "nav": {
+    "categories": "Categories",
+    "language": "Language",
+    "log_in": "Log in",
+    "log_out": "Log out",
+    "my_orders": "My orders",
+    "my_products": "My products",
+    "products": "Products",
+    "register": "Register",
+    "supplier_orders": "Supplier orders"
+  },
+  "order": {
+    "back": "← My orders",
+    "forbidden": {
+      "text": "You can only view orders placed from your own account.",
+      "title": "This isn't your order"
+    },
+    "history": "Status history",
+    "history_empty": "No status changes recorded yet.",
+    "history_payment": "Payment: {status}",
+    "load_error": "We couldn't load this order. Reload the page to try again.",
+    "payment": {
+      "status": {
+        "failed": "Failed",
+        "paid": "Paid",
+        "pending": "Pending"
+      }
+    },
+    "placed": "Placed {date}",
+    "status": {
+      "cancelled": "Cancelled",
+      "delivered": "Delivered",
+      "draft": "Draft",
+      "paid": "Paid",
+      "shipped": "Shipped"
+    },
+    "title": "Order #{id}"
+  },
+  "order_details": {
+    "items": "Items",
+    "method": "Method",
+    "no_address": "No shipping address on this order.",
+    "notes": "Notes:",
+    "payment": "Payment",
+    "phone": "Phone: {phone}",
+    "product_fallback": "Product #{id}",
+    "ship_to": "Ship to",
+    "shipping": "Shipping",
+    "status": "Status",
+    "subtotal": "Subtotal",
+    "total": "Total"
+  },
+  "orders": {
+    "column": {
+      "order": "Order",
+      "payment": "Payment",
+      "placed": "Placed",
+      "status": "Status",
+      "total": "Total"
+    },
+    "empty": "You haven't placed any orders yet.",
+    "export": "Export",
+    "export_error": "Your orders couldn't be exported. Please try again.",
+    "load_error": "We couldn't load your orders. Reload the page to try again.",
+    "not_found": {
+      "text": "We couldn't find that order. Your orders are listed on your account.",
+      "title": "Order not found"
+    },
+    "title": "My orders",
+    "view": "View order"
+  },
+  "password": {
+    "changed": "Your password was changed.",
+    "current": "Current password",
+    "help": "At least 8 characters.",
+    "intro": "You'll stay logged in here. Anywhere else you're logged in will be logged out.",
+    "submit": "Change password",
+    "title": "Change password",
+    "validation": {
+      "current": "Enter your current password.",
+      "length": "Use at least 8 characters."
+    }
+  },
+  "payment": {
+    "method": {
+      "cod": "Cash on Delivery",
+      "paypal": "PayPal",
+      "stripe": "Stripe"
+    }
+  },
+  "product": {
+    "badge": {
+      "on_sale": "On sale",
+      "out_of_stock": "Out of stock"
+    },
+    "in_stock": "In stock",
+    "not_found": "Product not found",
+    "rating": "★ {rating} from {count} review | ★ {rating} from {count} reviews"
+  },
+  "product_form": {
+    "active": "Active",
+    "active_help": "Shown in the catalogue.",
+    "add_attribute": "Add attribute",
+    "attribute": "Attribute",
+    "attributes": "Attributes",
+    "brand": "Brand",
+    "category": "Category",
+    "choose_brand": "Choose a brand",
+    "choose_category": "Choose a category",
+    "create": "Create product",
+    "description": "Description",
+    "details": "Details",
+    "drop_images": "Drop images here, or click to choose",
+    "image": {
+      "save_error": "The images couldn't be saved. Please try again.",
+      "too_big": "Each image must be {size} MB or smaller.",
+      "too_many": "A product can have at most {max} images.",
+      "wrong_type": "Images must be JPG, PNG or WebP files."
+    },
+    "image_hint": "JPG, PNG or WebP, up to {size} MB each. {left} of {max} left.",
+    "image_hint_basic": "JPG, PNG or WebP.",
+    "images": "Images",
+    "images_not_saved": "The product was saved, but its images weren't.",
+    "images_not_saved_hint": "Fix the images below and save again.",
+    "in_stock": "In stock",
+    "name": "Name",
+    "no_attributes": "No attributes yet. Add one for each option Buyers can choose, such as each colour.",
+    "on_sale": "On sale",
+    "price": "Price (€)",
+    "remove_attribute": "Remove attribute",
+    "remove_image": "Remove image",
+    "save": "Save changes",
+    "slug": "Slug",
+    "slug_help_existing": "Changing it changes the product's web address.",
+    "slug_help_new": "Filled in from the name. Leave it empty to let us pick one.",
+    "status": "Status",
+    "validation": {
+      "attribute": "Choose an attribute.",
+      "brand": "Choose a brand.",
+      "category": "Choose a category.",
+      "name": "Enter a product name.",
+      "price": "Enter a price of 0 or more.",
+      "slug": "Enter a slug.",
+      "value": "Choose a value."
+    },
+    "value": "Value"
+  },
+  "products": {
+    "title": "Products"
+  },
+  "profile": {
+    "heading": "Your account",
+    "load_error": "We couldn't load your profile. Reload the page to try again.",
+    "nav": {
+      "addresses": "Addresses",
+      "label": "Account",
+      "password": "Password",
+      "profile": "Profile"
+    },
+    "save": "Save profile",
+    "saved": "Your profile was saved.",
+    "title": "Your profile"
+  },
+  "register": {
+    "account_type": "Account type",
+    "awaiting_approval": "Your Supplier account is awaiting approval. We'll email you once an admin has approved it, and you'll be able to log in then.",
+    "back_to_shop": "Back to the shop",
+    "have_account": "Already have an account?",
+    "heading": "Create an account",
+    "log_in": "Log in",
+    "role": {
+      "buy": "I want to buy",
+      "sell": "I want to sell (Supplier)"
+    },
+    "submit": "Register",
+    "thanks": "Thanks for registering",
+    "title": "Register"
+  },
+  "reset": {
+    "confirm": "Confirm new password",
+    "heading": "Choose a new password",
+    "incomplete": "This reset link is incomplete. Request a new one.",
+    "new_password": "New password",
+    "request_new": "Request a new link",
+    "submit": "Reset password",
+    "title": "Reset password",
+    "validation": {
+      "password": "Choose a new password."
+    }
+  },
+  "reviews": {
+    "empty": "No reviews yet.",
+    "load_error": "Couldn't load more reviews. Try again.",
+    "load_more": "Load more reviews",
+    "stars": "{rating} out of 5 stars",
+    "title": "Reviews ({count})"
+  },
+  "sort": {
+    "latest": "Newest",
+    "price_asc": "Price: low to high",
+    "price_desc": "Price: high to low",
+    "rating": "Top rated"
+  },
+  "success": {
+    "cod": "Order #{id} is placed. You'll pay on delivery.",
+    "cod_with_total": "Order #{id} is placed. You'll pay {total} on delivery.",
+    "confirming": "Stripe is still confirming the payment for order #{id}. We'll notify you as soon as it's through.",
+    "failed": "Stripe couldn't take the payment for order #{id}, so it hasn't been placed.",
+    "heading": {
+      "confirming": "Confirming your payment",
+      "failed": "Payment failed",
+      "paid": "Payment received",
+      "thanks": "Thank you for your order"
+    },
+    "paid": "Order #{id} is paid. We'll let you know when it ships.",
+    "title": "Order placed"
+  },
+  "supplier": {
+    "actions": {
+      "cancel": "Cancel",
+      "cancel_description": "The Buyer will be notified. This can't be undone.",
+      "cancel_title": "Cancel order #{id}?",
+      "confirm_cancel": "Cancel order",
+      "deliver": "Mark delivered",
+      "keep": "Keep order",
+      "ship": "Ship"
+    },
+    "order": {
+      "back": "← All orders",
+      "back_to_orders": "Back to your orders",
+      "unavailable": "Order unavailable",
+      "unavailable_text": "This order doesn't exist, or it isn't one of yours."
+    },
+    "orders": {
+      "all_statuses": "All statuses",
+      "empty": "No orders to show.",
+      "filter": "Filter by status",
+      "forbidden": "Your Supplier account can't manage orders right now.",
+      "forbidden_hint": "If your account was deactivated, contact an admin.",
+      "title": "Supplier orders",
+      "update_error": "The order couldn't be updated. Please try again."
+    },
+    "products": {
+      "active": "Active",
+      "back": "← All products",
+      "back_to_products": "Back to your products",
+      "column": {
+        "price": "Price",
+        "product": "Product",
+        "status": "Status"
+      },
+      "confirm_delete": "Delete product",
+      "created": "\"{name}\" was created.",
+      "delete": "Delete",
+      "delete_description": "It will be removed from the catalogue and from Buyers' carts. This can't be undone.",
+      "delete_error": "The product couldn't be deleted. Please try again.",
+      "delete_title": "Delete {name}?",
+      "deleted": "\"{name}\" was deleted.",
+      "edit": "Edit",
+      "edit_fallback": "Edit product",
+      "edit_title": "Edit {name}",
+      "empty": "You haven't added any products yet.",
+      "forbidden": "Your Supplier account can't manage products right now.",
+      "inactive": "Inactive",
+      "keep": "Keep product",
+      "new": "New product",
+      "saved": "\"{name}\" was saved.",
+      "this_product": "this product",
+      "title": "My products",
+      "unavailable": "Product unavailable",
+      "unavailable_text": "This product doesn't exist, or it isn't one of yours."
+    }
+  }
+}

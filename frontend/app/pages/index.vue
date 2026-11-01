@@ -2,6 +2,7 @@
 import type { Paginated, Product } from '~/types/catalogue'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 useSeoMeta({ title: 'ecomshop' })
 
@@ -24,11 +25,11 @@ const products = computed(() => (hasFeatured ? featured.value : latest.value)?.d
     <section>
       <div class="flex items-end justify-between">
         <h1 class="text-3xl font-bold">
-          {{ hasFeatured ? 'Featured products' : 'New arrivals' }}
+          {{ hasFeatured ? t('home.featured') : t('home.new_arrivals') }}
         </h1>
         <UButton
           :to="localePath('/products')"
-          label="Browse all"
+          :label="t('home.browse_all')"
           variant="link"
         />
       </div>
@@ -40,7 +41,7 @@ const products = computed(() => (hasFeatured ? featured.value : latest.value)?.d
 
     <section v-if="categories?.length">
       <h2 class="text-2xl font-bold">
-        Shop by category
+        {{ t('home.shop_by_category') }}
       </h2>
       <CategoryList
         :categories="categories"

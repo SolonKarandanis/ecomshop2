@@ -3,14 +3,15 @@ import type { SavedAddress, SavedAddressPayload } from '~/types/profile'
 
 type CheckoutAddressFields = Pick<CheckoutPayload, 'firstName' | 'lastName' | 'phone' | 'address' | 'city' | 'country' | 'zipCode'>
 
-export const savedAddressFields: { name: keyof SavedAddressPayload, label: string, autocomplete: string }[] = [
-  { name: 'first_name', label: 'First name', autocomplete: 'given-name' },
-  { name: 'last_name', label: 'Last name', autocomplete: 'family-name' },
-  { name: 'phone', label: 'Phone', autocomplete: 'tel' },
-  { name: 'street_address', label: 'Street address', autocomplete: 'street-address' },
-  { name: 'city', label: 'City', autocomplete: 'address-level2' },
-  { name: 'postal_code', label: 'Postal code', autocomplete: 'postal-code' },
-  { name: 'country', label: 'Country', autocomplete: 'country-name' },
+// `labelKey` is a message key, translated where the fields are shown.
+export const savedAddressFields: { name: keyof SavedAddressPayload, labelKey: string, autocomplete: string }[] = [
+  { name: 'first_name', labelKey: 'address.field.first_name', autocomplete: 'given-name' },
+  { name: 'last_name', labelKey: 'address.field.last_name', autocomplete: 'family-name' },
+  { name: 'phone', labelKey: 'address.field.phone', autocomplete: 'tel' },
+  { name: 'street_address', labelKey: 'address.field.street_address', autocomplete: 'street-address' },
+  { name: 'city', labelKey: 'address.field.city', autocomplete: 'address-level2' },
+  { name: 'postal_code', labelKey: 'address.field.postal_code', autocomplete: 'postal-code' },
+  { name: 'country', labelKey: 'address.field.country', autocomplete: 'country-name' },
 ]
 
 /** The checkout form uses its own field names (CheckoutRequest's). */

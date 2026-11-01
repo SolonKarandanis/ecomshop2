@@ -7,6 +7,7 @@ import type { SupplierAction } from '~/utils/orderStatus'
  */
   export function useSupplierOrderActions() {
   const toast = useToast()
+  const { $i18n } = useNuxtApp()
   const pending = ref(false)
 
   async function run(order: Pick<Order, 'id' | 'order_status' | 'payment_status' | 'supplier_actions'>, action: SupplierAction): Promise<boolean> {
@@ -28,7 +29,7 @@ import type { SupplierAction } from '~/utils/orderStatus'
     catch (error) {
       order.order_status = previous
       order.supplier_actions = previousActions
-      toast.add({ title: apiErrorMessage(error, 'The order couldn\'t be updated. Please try again.'), color: 'error' })
+      toast.add({ title: apiErrorMessage(error, $i18n.t('supplier.orders.update_error')), color: 'error' })
       return false
     }
     finally {

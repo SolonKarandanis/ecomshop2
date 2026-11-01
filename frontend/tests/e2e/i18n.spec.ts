@@ -6,11 +6,13 @@ test('the language switcher keeps the page and moves to its prefixed URL', async
   // The page is server-rendered: wait for hydration before using the switcher.
   await page.waitForLoadState('networkidle')
 
-  await page.getByRole('combobox', { name: 'Language' }).click()
+  // The switcher's own label is translated too: "Language" in Greek.
+  await page.getByRole('combobox', { name: 'Γλώσσα' }).click()
   await page.getByRole('option', { name: 'Türkçe' }).click()
 
   await expect(page).toHaveURL(/\/tr\/products$/)
   await expect(page.locator('html')).toHaveAttribute('lang', 'tr-TR')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ürünler')
 
   // Links on the Turkish page stay in Turkish.
   await page.getByRole('link', { name: 'ecomshop' }).click()

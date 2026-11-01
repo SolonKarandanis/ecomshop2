@@ -29,3 +29,19 @@ export function routeLocale(route: { name?: unknown }, fallback: Locale = DEFAUL
 
   return isLocale(locale) ? locale : fallback
 }
+
+// Translates a message key in the active locale, for plain utilities that
+// can't call useI18n(). Outside a Nuxt app it returns the key itself.
+export function translate(key: string, params: Record<string, unknown> = {}): string {
+  const i18n = tryUseNuxtApp()?.$i18n
+
+  return i18n ? i18n.t(key, params) : key
+}
+
+// Like translate(), but `fallback` for a key with no message, such as a
+// status value the frontend doesn't know yet.
+export function translateOr(key: string, fallback: string): string {
+  const i18n = tryUseNuxtApp()?.$i18n
+
+  return i18n?.te(key) ? i18n.t(key) : fallback
+}

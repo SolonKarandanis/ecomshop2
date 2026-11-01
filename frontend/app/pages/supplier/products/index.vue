@@ -4,9 +4,10 @@ import type { Paginated } from '~/types/catalogue'
 import type { SupplierProduct } from '~/types/supplierProduct'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 definePageMeta({ middleware: ['auth', 'supplier'] })
-useSeoMeta({ title: 'My products' })
+useSeoMeta({ title: () => t('supplier.products.title') })
 
 const route = useRoute()
 const toast = useToast()
@@ -36,13 +37,13 @@ async function confirmDelete() {
   deletePending.value = true
   try {
     await useApi()(`/supplier-products/${product.id}`, { method: 'DELETE' })
-    toast.add({ title: `"${product.name}" was deleted.`, color: 'success' })
+    toast.add({ title: t('supplier.products.deleted', { name: product.name }), color: 'success' })
     deleting.value = null
     await refresh()
   }
   catch (e) {
     // e.g. 409: the Product is in existing Orders, so it can only be deactivated.
-    toast.add({ title: apiErrorMessage(e, 'The product couldn\'t be deleted. Please try again.'), color: 'error' })
+    toast.add({ title: apiErrorMessage(e, t('supplier.products.delete_error')), color: 'error' })
     deleting.value = null
   }
   finally {
@@ -50,23 +51,23 @@ async function confirmDelete() {
   }
 }
 
-const columns: TableColumn<SupplierProduct>[] = [
-  { accessorKey: 'name', header: 'Product' },
-  { accessorKey: 'price', header: 'Price' },
-  { id: 'status', header: 'Status' },
+const columns = computed<TableColumn<SupplierProduct>[]>(() => [
+  { accessorKey: 'name', header: t('supplier.products.column.product') },
+  { accessorKey: 'price', header: t('supplier.products.column.price') },
+  { id: 'status', header: t('supplier.products.column.status') },
   { id: 'actions', header: '' },
-]
+])
 </script>
 
 <template>
   <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <h1 class="text-3xl font-bold">
-        My products
+        {{ t('supplier.products.title') }}
       </h1>
       <UButton
         :to="localePath('/supplier/products/new')"
-        label="New product"
+        :label="t('supplier.products.new')"
         icon="i-lucide-plus"
       />
     </div>
@@ -75,8 +76,8 @@ const columns: TableColumn<SupplierProduct>[] = [
       v-if="forbidden"
       color="warning"
       variant="subtle"
-      title="Your Supplier account can't manage products right now."
-      description="If your account was deactivated, contact an admin."
+      :title="t('supplier.products.forbidden')"
+      :description="t('supplier.orders.forbidden_hint')"
     />
 
     <UAlert
@@ -91,7 +92,7 @@ const columns: TableColumn<SupplierProduct>[] = [
         :data="products?.data ?? []"
         :columns="columns"
         :loading="loadStatus === 'pending'"
-        empty="You haven't added any products yet."
+        :empty="t('supplier.products.empty')"
       >
         <template #name-cell="{ row }">
           <div class="flex items-center gap-3">
@@ -119,18 +120,18 @@ const columns: TableColumn<SupplierProduct>[] = [
         <template #status-cell="{ row }">
           <div class="flex flex-wrap gap-1">
             <UBadge
-              :label="row.original.is_active ? 'Active' : 'Inactive'"
+              :label="row.original.is_active ? t('supplier.products.active') : t('supplier.products.inactive')"
               :color="row.original.is_active ? 'success' : 'neutral'"
               variant="subtle"
             />
             <UBadge
-              :label="row.original.in_stock ? 'In stock' : 'Out of stock'"
+              :label="row.original.in_stock ? t('product.in_stock') : t('product.badge.out_of_stock')"
               :color="row.original.in_stock ? 'info' : 'warning'"
               variant="outline"
             />
             <UBadge
               v-if="row.original.on_sale"
-              label="On sale"
+              :label="t('product.badge.on_sale')"
               color="primary"
               variant="outline"
             />
@@ -140,13 +141,13 @@ const columns: TableColumn<SupplierProduct>[] = [
           <div class="flex justify-end gap-2">
             <UButton
               :to="localePath(`/supplier/products/${row.original.id}/edit`)"
-              label="Edit"
+              :label="t('supplier.products.edit')"
               size="sm"
               color="neutral"
               variant="outline"
             />
             <UButton
-              label="Delete"
+              :label="t('supplier.products.delete')"
               size="sm"
               color="error"
               variant="outline"
@@ -169,21 +170,21 @@ const columns: TableColumn<SupplierProduct>[] = [
 
     <UModal
       :open="deleting !== null"
-      :title="`Delete ${deleting?.name ?? 'this product'}?`"
-      description="It will be removed from the catalogue and from Buyers' carts. This can't be undone."
+      :title="t('supplier.products.delete_title', { name: deleting?.name ?? t('supplier.products.this_product') })"
+      :description="t('supplier.products.delete_description')"
       @update:open="(open: boolean) => { if (!open) deleting = null }"
     >
       <template #footer>
         <div class="flex w-full justify-end gap-2">
           <UButton
-            label="Keep product"
+            :label="t('supplier.products.keep')"
             color="neutral"
             variant="ghost"
             class="cursor-pointer"
             @click="deleting = null"
           />
           <UButton
-            label="Delete product"
+            :label="t('supplier.products.confirm_delete')"
             color="error"
             class="cursor-pointer"
             :loading="deletePending"
