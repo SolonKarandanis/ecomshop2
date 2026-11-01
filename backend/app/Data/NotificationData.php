@@ -28,9 +28,24 @@ class NotificationData extends BaseData
             order_id: $notification->data['order_id'] ?? null,
             order_url: $notification->data['order_url'] ?? null,
             url: $notification->data['url'] ?? $notification->data['order_url'] ?? null,
-            message: $notification->data['message'] ?? null,
+            message: self::message($notification->data),
             read_at: $notification->read_at,
             created_at: $notification->created_at,
         );
+    }
+
+    /**
+     * Translated now, in the request's locale (#80). Notifications stored
+     * before that kept their rendered `message`, which is shown as it is.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private static function message(array $data): ?string
+    {
+        if (isset($data['message_key'])) {
+            return __($data['message_key'], $data['message_params'] ?? []);
+        }
+
+        return $data['message'] ?? null;
     }
 }

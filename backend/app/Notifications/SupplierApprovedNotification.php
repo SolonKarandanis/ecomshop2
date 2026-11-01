@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Enums\NotificationEventTypeEnum;
+use App\Models\User;
+use App\Support\FrontendUrl;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -21,27 +23,36 @@ class SupplierApprovedNotification extends Notification implements ShouldQueue
         return ['database', 'mail'];
     }
 
+    /**
+     * @param  User  $notifiable
+     */
     public function toDatabase(object $notifiable): array
     {
         return [
             'event_type' => NotificationEventTypeEnum::SUPPLIER_APPROVED->value,
             'user_id' => $notifiable->id,
-            'url' => $this->loginUrl(),
-            'message' => 'Your Supplier account has been approved.',
+            'url' => $this->loginUrl($notifiable),
+            'message_key' => NotificationEventTypeEnum::SUPPLIER_APPROVED->value,
+            'message_params' => [],
         ];
     }
 
+    /**
+     * Sent in the Supplier's preferred locale (HasLocalePreference).
+     *
+     * @param  User  $notifiable
+     */
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Your Supplier account is approved - EcomShop')
-            ->greeting("Hello {$notifiable->name},")
-            ->line('An admin has approved your Supplier account. You can now log in and start selling.')
-            ->action('Log in', $this->loginUrl());
+            ->subject(__('mail.supplier_approved.subject'))
+            ->greeting(__('mail.greeting', ['name' => $notifiable->name]))
+            ->line(__('mail.supplier_approved.line'))
+            ->action(__('mail.supplier_approved.action'), $this->loginUrl($notifiable));
     }
 
-    private function loginUrl(): string
+    private function loginUrl(User $notifiable): string
     {
-        return config('app.frontend_url').'/login';
+        return FrontendUrl::forUser($notifiable, '/login');
     }
 }

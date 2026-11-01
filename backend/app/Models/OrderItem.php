@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Lang;
 
 /**
  * @property int $id
@@ -76,6 +77,12 @@ class OrderItem extends Model
         'attributes' => 'array',
     ];
 
+    /**
+     * The chosen attributes as `name => option`, in the current locale: the
+     * request's for the API, the recipient's for the order email (#80).
+     *
+     * @return array<string, string>
+     */
     public function getAttributeNamesAndOptions(): array
     {
         // getAttribute(), not $this->attributes: that's Eloquent's array of every column.
@@ -90,11 +97,18 @@ class OrderItem extends Model
         $result = [];
         foreach ($chosen as $attributeId => $optionId) {
             if (isset($attributeNames[$attributeId], $optionNames[$optionId])) {
-                $result[$attributeNames[$attributeId]] = $optionNames[$optionId];
+                $result[self::attributeLabel($attributeNames[$attributeId])] = self::attributeLabel($optionNames[$optionId]);
             }
         }
 
         return $result;
+    }
+
+    // Stored names are product-attributes keys (attribute.color); one without a
+    // translation is shown as it is.
+    private static function attributeLabel(string $name): string
+    {
+        return Lang::has("product-attributes.{$name}") ? __("product-attributes.{$name}") : $name;
     }
 
     public function order(): BelongsTo

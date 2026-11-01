@@ -12,6 +12,10 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ * Queued, and rendered in the Buyer's preferred locale: Mail::to() picks it up
+ * from HasLocalePreference (#80).
+ */
 class OrderPlaced extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
@@ -32,7 +36,7 @@ class OrderPlaced extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Order Placed - EcomShop',
+            subject: __('mail.order_placed.subject'),
         );
     }
 
@@ -44,7 +48,7 @@ class OrderPlaced extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'mail.orders.placed',
             with: [
-                'url' => OrderLinks::buyer($this->order->id),
+                'url' => OrderLinks::buyer($this->order->id, $this->order->user->preferredLocale()),
             ]
         );
     }

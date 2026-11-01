@@ -31,7 +31,8 @@ class SupplierAwaitingApprovalNotification extends Notification implements Shoul
             'user_id' => $this->supplierId,
             // Admins approve Suppliers in Filament.
             'url' => route('filament.admin.resources.users.view', $this->supplierId),
-            'message' => "Supplier {$this->supplierName} has registered and is awaiting approval.",
+            'message_key' => NotificationEventTypeEnum::SUPPLIER_AWAITING_APPROVAL->value,
+            'message_params' => ['name' => $this->supplierName],
         ];
     }
 }
