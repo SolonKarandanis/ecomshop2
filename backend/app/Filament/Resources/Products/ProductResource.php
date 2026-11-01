@@ -24,6 +24,12 @@ class ProductResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    // The name is translated (#81): global search looks in every language.
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['translations.name', 'slug'];
+    }
+
     public static function form(Schema $schema): Schema
     {
         return ProductForm::configure($schema);

@@ -22,6 +22,9 @@ class SupplierProductData extends BaseData
         public bool $is_featured,
         public bool $in_stock,
         public bool $on_sale,
+        // Every language's name and description, keyed by locale, for the edit
+        // form; `name` and `description` above are the request's language (#81).
+        public array $translations,
         public Lazy|CategoryData|null $category,
         public Lazy|BrandData|null $brand,
         public Lazy|DataCollection|null $attributes,
@@ -42,6 +45,7 @@ class SupplierProductData extends BaseData
             is_featured: $product->is_featured,
             in_stock: $product->in_stock,
             on_sale: $product->on_sale,
+            translations: $product->getTranslationsArray(),
             category: Lazy::whenLoaded('category', $product, fn () => CategoryData::fromModel($product->category)),
             brand: Lazy::whenLoaded('brand', $product, fn () => BrandData::fromModel($product->brand)),
             attributes: Lazy::whenLoaded('productAttributeValues', $product, fn () => ProductAttributeValueData::collect($product->productAttributeValues, DataCollection::class)),

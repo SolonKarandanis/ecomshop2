@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Products\Pages;
 
 use App\Filament\Resources\Products\ProductResource;
+use App\Filament\Support\TranslatableFields;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
 
 class CreateProduct extends CreateRecord
 {
@@ -16,5 +18,12 @@ class CreateProduct extends CreateRecord
         }
 
         return $data;
+    }
+
+    protected function handleRecordCreation(array $data): Model
+    {
+        [$data] = TranslatableFields::withoutBlankLocales($data);
+
+        return parent::handleRecordCreation($data);
     }
 }

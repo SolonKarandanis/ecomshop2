@@ -12,7 +12,8 @@ const id = route.params.id as string
 useSeoMeta({ title: () => t('order.title', { id }) })
 
 const { data: order, error } = await useAsyncData(
-  `order-${id}`,
+  // Per language: the items' product names come back translated.
+  useLocaleKey(`order-${id}`),
   () => useApi()<{ data: OrderDetail }>(`/orders/${id}`).then(response => response.data),
 )
 
