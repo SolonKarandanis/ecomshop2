@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { ProductDetailResponse } from '~/types/catalogue'
 
+const localePath = useLocalePath()
+
 const route = useRoute()
 
 const { data, error } = await useCatalogFetch<ProductDetailResponse>(() => `/products/${route.params.slug}`)
@@ -31,7 +33,7 @@ useSeoMeta({
         <div class="flex flex-wrap gap-2 text-sm text-muted">
           <NuxtLink
             v-if="product.category"
-            :to="`/categories/${product.category.slug}`"
+            :to="localePath(`/categories/${product.category.slug}`)"
             class="hover:text-primary"
           >
             {{ product.category.name }}

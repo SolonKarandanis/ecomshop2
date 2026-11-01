@@ -10,7 +10,8 @@ export type SuccessArrival
     | { kind: 'cod', orderId: number }
     | { kind: 'none' }
 
-function single(value: LocationQuery[string]): string | null {
+// A missing key is undefined, as for any index into the query.
+function single(value: LocationQuery[string] | undefined): string | null {
   const first = Array.isArray(value) ? value[0] : value
   return first || null
 }

@@ -3,6 +3,8 @@ import type { TableColumn } from '@nuxt/ui'
 import type { Paginated } from '~/types/catalogue'
 import type { Order } from '~/types/order'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: 'auth' })
 useSeoMeta({ title: 'My orders' })
 
@@ -87,7 +89,7 @@ const columns: TableColumn<Order>[] = [
       >
         <template #id-cell="{ row }">
           <ULink
-            :to="`/orders/${row.original.id}`"
+            :to="localePath(`/orders/${row.original.id}`)"
             class="font-medium text-primary"
           >
             #{{ row.original.id }}

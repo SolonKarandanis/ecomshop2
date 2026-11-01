@@ -2,6 +2,8 @@
 import type { FormError } from '@nuxt/ui'
 import type { ProductImage, SupplierProduct, SupplierProductPayload } from '~/types/supplierProduct'
 
+const localePath = useLocalePath()
+
 const props = defineProps<{
   // Omitted on the "new product" page.
   product?: SupplierProduct
@@ -477,7 +479,7 @@ async function onSubmit() {
 
     <div class="flex justify-end gap-2">
       <UButton
-        to="/supplier/products"
+        :to="localePath('/supplier/products')"
         label="Cancel"
         color="neutral"
         variant="ghost"

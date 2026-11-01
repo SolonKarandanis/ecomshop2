@@ -2,6 +2,8 @@
 import type { FormError } from '@nuxt/ui'
 import type { ResetPasswordPayload } from '~/types/auth'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: 'guest' })
 useSeoMeta({ title: 'Reset password' })
 
@@ -31,7 +33,7 @@ async function onSubmit() {
     const payload: ResetPasswordPayload = { token, ...state }
     await useApi()('/reset-password', { method: 'POST', body: payload })
     // Resetting doesn't start a session, so send the user to log in.
-    await navigateTo({ path: '/login', query: { reset: '1' } })
+    await navigateTo(localePath({ path: '/login', query: { reset: '1' } }))
   })
 }
 </script>
@@ -52,7 +54,7 @@ async function onSubmit() {
     >
       <template #actions>
         <UButton
-          to="/forgot-password"
+          :to="localePath('/forgot-password')"
           label="Request a new link"
           size="xs"
         />

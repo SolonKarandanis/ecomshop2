@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const localePath = useLocalePath()
+
 const auth = useAuthStore()
 const loggingOut = ref(false)
 
@@ -6,7 +8,7 @@ async function logout() {
   loggingOut.value = true
   try {
     await auth.logout()
-    await navigateTo('/')
+    await navigateTo(localePath('/'))
   }
   finally {
     loggingOut.value = false
@@ -23,7 +25,7 @@ async function logout() {
       -->
       <UContainer class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3 sm:h-16 sm:flex-nowrap sm:py-0">
         <NuxtLink
-          to="/"
+          :to="localePath('/')"
           class="text-lg font-bold"
         >
           ecomshop
@@ -31,14 +33,14 @@ async function logout() {
 
         <nav class="order-last flex w-full items-center gap-6 sm:order-none sm:w-auto sm:flex-1">
           <NuxtLink
-            to="/products"
+            :to="localePath('/products')"
             class="text-sm hover:text-primary"
             active-class="text-primary"
           >
             Products
           </NuxtLink>
           <NuxtLink
-            to="/categories"
+            :to="localePath('/categories')"
             class="text-sm hover:text-primary"
             active-class="text-primary"
           >
@@ -48,7 +50,7 @@ async function logout() {
           <ClientOnly>
             <NuxtLink
               v-if="auth.isBuyer"
-              to="/orders"
+              :to="localePath('/orders')"
               class="text-sm hover:text-primary"
               active-class="text-primary"
             >
@@ -56,14 +58,14 @@ async function logout() {
             </NuxtLink>
             <template v-if="auth.isSupplier">
               <NuxtLink
-                to="/supplier/orders"
+                :to="localePath('/supplier/orders')"
                 class="text-sm hover:text-primary"
                 active-class="text-primary"
               >
                 Supplier orders
               </NuxtLink>
               <NuxtLink
-                to="/supplier/products"
+                :to="localePath('/supplier/products')"
                 class="text-sm hover:text-primary"
                 active-class="text-primary"
               >
@@ -72,6 +74,8 @@ async function logout() {
             </template>
           </ClientOnly>
         </nav>
+
+        <LocaleSwitcher />
 
         <!--
           Client-only: the server never sees the session (ADR-0002), and the
@@ -87,7 +91,7 @@ async function logout() {
             <CartIcon v-if="!auth.user || auth.isBuyer" />
             <template v-if="auth.user">
               <NuxtLink
-                to="/profile"
+                :to="localePath('/profile')"
                 class="text-sm text-muted hover:text-primary"
                 active-class="text-primary"
               >
@@ -103,13 +107,13 @@ async function logout() {
             </template>
             <template v-else>
               <UButton
-                to="/login"
+                :to="localePath('/login')"
                 label="Log in"
                 color="neutral"
                 variant="ghost"
               />
               <UButton
-                to="/register"
+                :to="localePath('/register')"
                 label="Register"
               />
             </template>

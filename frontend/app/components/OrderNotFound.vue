@@ -1,3 +1,7 @@
+<script setup lang="ts">
+const localePath = useLocalePath()
+</script>
+
 <template>
   <UCard class="mx-auto max-w-md text-center">
     <div class="space-y-4">
@@ -9,11 +13,11 @@
       </p>
       <div class="flex justify-center gap-2">
         <UButton
-          to="/orders"
+          :to="localePath('/orders')"
           label="My orders"
         />
         <UButton
-          to="/products"
+          :to="localePath('/products')"
           label="Keep shopping"
           color="neutral"
           variant="outline"

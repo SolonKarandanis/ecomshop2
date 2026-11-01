@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { StripeCancelResult } from '~/types/order'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: 'auth' })
 useSeoMeta({ title: 'Payment not completed' })
 
@@ -57,7 +59,7 @@ async function retry(url: string) {
             @click="retry(result.retry_url)"
           />
           <UButton
-            :to="`/orders/${result.order_id}`"
+            :to="localePath(`/orders/${result.order_id}`)"
             label="View order"
             color="neutral"
             variant="outline"
@@ -71,11 +73,11 @@ async function retry(url: string) {
         </p>
         <div class="flex justify-center gap-2">
           <UButton
-            :to="`/orders/${result.order_id}`"
+            :to="localePath(`/orders/${result.order_id}`)"
             label="View order"
           />
           <UButton
-            to="/products"
+            :to="localePath('/products')"
             label="Keep shopping"
             color="neutral"
             variant="outline"

@@ -3,6 +3,8 @@ import type { TableColumn } from '@nuxt/ui'
 import type { Paginated } from '~/types/catalogue'
 import type { SupplierProduct } from '~/types/supplierProduct'
 
+const localePath = useLocalePath()
+
 definePageMeta({ middleware: ['auth', 'supplier'] })
 useSeoMeta({ title: 'My products' })
 
@@ -63,7 +65,7 @@ const columns: TableColumn<SupplierProduct>[] = [
         My products
       </h1>
       <UButton
-        to="/supplier/products/new"
+        :to="localePath('/supplier/products/new')"
         label="New product"
         icon="i-lucide-plus"
       />
@@ -137,7 +139,7 @@ const columns: TableColumn<SupplierProduct>[] = [
         <template #actions-cell="{ row }">
           <div class="flex justify-end gap-2">
             <UButton
-              :to="`/supplier/products/${row.original.id}/edit`"
+              :to="localePath(`/supplier/products/${row.original.id}/edit`)"
               label="Edit"
               size="sm"
               color="neutral"

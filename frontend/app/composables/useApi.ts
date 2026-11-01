@@ -17,16 +17,21 @@ function readCookie(name: string): string | null {
  * `$fetch` bound to the Laravel API (`${apiBase}/api`, ADR-0003) with the
  * Sanctum SPA cookie flow built in: credentials are always sent, and before a
  * state-changing request the CSRF cookie is primed (if the browser doesn't
- * already hold one) and echoed back as `X-XSRF-TOKEN`.
+ * already hold one) and echoed back as `X-XSRF-TOKEN`. Every request asks for
+ * the page's language, so API messages come back translated (#78).
  */
 export function useApi() {
   const origin = useRuntimeConfig().public.apiBase
+  // Captured now: on the server the Nuxt context isn't available inside $fetch hooks.
+  const nuxtApp = tryUseNuxtApp()
 
   return $fetch.create({
     baseURL: `${origin}/api`,
     credentials: 'include',
     headers: { Accept: 'application/json' },
     async onRequest({ options }) {
+      options.headers.set('Accept-Language', currentLocale(nuxtApp))
+
       const method = (options.method ?? 'GET').toUpperCase()
 
       if (SAFE_METHODS.includes(method)) {

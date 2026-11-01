@@ -13,4 +13,9 @@ describe('redirectTarget', () => {
       expect(redirectTarget(value)).toBe('/')
     },
   )
+
+  it("falls back to the given home page, such as the current language's", () => {
+    expect(redirectTarget(undefined, '/el')).toBe('/el')
+    expect(redirectTarget('/el/orders', '/el')).toBe('/el/orders')
+  })
 })

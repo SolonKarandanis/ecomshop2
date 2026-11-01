@@ -7,6 +7,7 @@ import { useApi } from '~/composables/useApi'
 const XSRF = 'abc/123=='
 let csrfPrimed = 0
 let seenToken: string | null | undefined
+let seenLanguage: string | null | undefined
 
 function clearXsrfCookie() {
   document.cookie = 'XSRF-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
@@ -26,15 +27,28 @@ beforeEach(() => {
 
   const echoToken = (event: { headers: Headers }) => {
     seenToken = event.headers.get('x-xsrf-token')
+    seenLanguage = event.headers.get('accept-language')
     return { ok: true }
   }
   registerEndpoint('/api/thing', { method: 'GET', handler: echoToken })
   registerEndpoint('/api/thing', { method: 'POST', handler: echoToken })
 })
 
-afterEach(clearXsrfCookie)
+afterEach(async () => {
+  clearXsrfCookie()
+  await useNuxtApp().$i18n.setLocale('en')
+})
 
 describe('useApi', () => {
+  it("asks for the page's language, so API messages come back translated", async () => {
+    await useApi()('/thing')
+    expect(seenLanguage).toBe('en')
+
+    await useNuxtApp().$i18n.setLocale('el')
+    await useApi()('/thing', { method: 'POST', body: {} })
+    expect(seenLanguage).toBe('el')
+  })
+
   it('sends GET requests to /api without priming the CSRF cookie', async () => {
     await expect(useApi()('/thing')).resolves.toEqual({ ok: true })
 

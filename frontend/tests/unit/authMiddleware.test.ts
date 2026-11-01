@@ -10,7 +10,9 @@ import supplierMiddleware from '~/middleware/supplier'
 const { navigateToMock } = vi.hoisted(() => ({ navigateToMock: vi.fn((to: unknown) => to) }))
 mockNuxtImport('navigateTo', () => navigateToMock)
 
-const to = { fullPath: '/orders/5?tab=items' } as RouteLocationNormalized
+const to = { name: 'orders-id___en', fullPath: '/orders/5?tab=items' } as RouteLocationNormalized
+// The same page in Greek: redirects stay in the language of the page being visited.
+const toGreek = { name: 'orders-id___el', fullPath: '/el/orders/5' } as RouteLocationNormalized
 let loggedIn: boolean
 let roles: string[]
 
@@ -30,7 +32,11 @@ describe('auth middleware', () => {
   it('sends a logged-out visitor to /login, remembering where they were going', async () => {
     const result = await authMiddleware(to, to)
 
-    expect(result).toEqual({ path: '/login', query: { redirect: '/orders/5?tab=items' } })
+    expect(result).toBe('/login?redirect=/orders/5?tab=items')
+  })
+
+  it('sends a logged-out visitor on a Greek page to the Greek login page', async () => {
+    expect(await authMiddleware(toGreek, toGreek)).toBe('/el/login?redirect=/el/orders/5')
   })
 
   it('lets a logged-in user through', async () => {
@@ -46,6 +52,12 @@ describe('guest middleware', () => {
     loggedIn = true
 
     expect(await guestMiddleware(to, to)).toBe('/')
+  })
+
+  it('sends a logged-in user on a Greek page to the Greek home page', async () => {
+    loggedIn = true
+
+    expect(await guestMiddleware(toGreek, toGreek)).toBe('/el')
   })
 
   it('lets a logged-out visitor through', async () => {

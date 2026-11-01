@@ -4,6 +4,8 @@ export interface User {
   id: number
   name: string
   email: string
+  // Preferred language (en, el, tr); the API sends their Mail and Notifications in it.
+  locale: string
   status: string
   roles?: string[]
   email_verified_at: string | null

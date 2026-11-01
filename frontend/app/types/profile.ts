@@ -2,6 +2,7 @@
 export interface Profile {
   name: string
   email: string
+  locale: string
   // Only sent for an Admin's own profile.
   status?: string
 }

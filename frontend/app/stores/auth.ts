@@ -80,5 +80,17 @@ export const useAuthStore = defineStore('auth', () => {
     await refreshCart()
   }
 
-  return { user, resolved, isAuthenticated, isBuyer, isSupplier, fetchUser, login, register, logout }
+  /** Saves the language the user picked, so the API sends their Mail and Notifications in it. */
+  async function saveLocale(locale: string) {
+    if (!user.value || user.value.locale === locale) {
+      return
+    }
+
+    // PATCH /profile replaces name and email too, so it gets their current values.
+    const { name, email } = user.value
+    await useApi()('/profile', { method: 'PATCH', body: { name, email, locale } })
+    user.value = { ...user.value, locale }
+  }
+
+  return { user, resolved, isAuthenticated, isBuyer, isSupplier, fetchUser, login, register, logout, saveLocale }
 })
