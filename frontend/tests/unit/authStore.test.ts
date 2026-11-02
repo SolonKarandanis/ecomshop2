@@ -4,6 +4,7 @@ import { createError, readBody } from 'h3'
 import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import { useCartStore } from '~/stores/cart'
+import { useNotificationsStore } from '~/stores/notifications'
 
 const buyer = {
   id: 7,
@@ -187,5 +188,16 @@ describe('auth store', () => {
     await auth.logout()
 
     expect(useCartStore().productCount).toBe(0)
+  })
+
+  it('forgets the Notifications on logout, so the next user never sees them', async () => {
+    const auth = useAuthStore()
+    await auth.login({ email: buyer.email, password: 'secret' })
+    const notifications = useNotificationsStore()
+    notifications.unreadCount = 3
+
+    await auth.logout()
+
+    expect(notifications.unreadCount).toBe(0)
   })
 })

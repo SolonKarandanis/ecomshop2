@@ -67,6 +67,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread', [NotificationController::class, 'unread']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/mark-read', [NotificationController::class, 'markRead']);
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
 
     Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
     Route::patch('/products/{product}/reviews/{review}/hide', [ReviewController::class, 'hide']);
