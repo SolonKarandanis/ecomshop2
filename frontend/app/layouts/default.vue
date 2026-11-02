@@ -3,6 +3,7 @@ const localePath = useLocalePath()
 const { t } = useI18n()
 
 const auth = useAuthStore()
+const adminUrl = `${useRuntimeConfig().public.apiBase}/admin`
 const loggingOut = ref(false)
 
 async function logout() {
@@ -73,6 +74,14 @@ async function logout() {
                 {{ t('nav.my_products') }}
               </NuxtLink>
             </template>
+            <!-- The Filament panel lives on the backend origin, not in the storefront. -->
+            <a
+              v-if="auth.isAdmin"
+              :href="adminUrl"
+              class="text-sm hover:text-primary"
+            >
+              {{ t('nav.admin') }}
+            </a>
           </ClientOnly>
         </nav>
 

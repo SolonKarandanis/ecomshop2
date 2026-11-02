@@ -132,6 +132,7 @@
     "title": "Log in"
   },
   "nav": {
+    "admin": "Admin",
     "categories": "Categories",
     "language": "Language",
     "log_in": "Log in",
