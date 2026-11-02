@@ -1,6 +1,11 @@
 const XSRF_COOKIE = 'XSRF-TOKEN'
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']
 
+// ofetch retries a failed GET once, straight away. That's kept for a dropped
+// connection or a 5xx, but not for a 429: the API has just said to wait (the
+// Retry-After header), and an instant retry only adds to the load it shed.
+export const RETRY_STATUS_CODES = [408, 409, 425, 500, 502, 503, 504]
+
 function readCookie(name: string): string | null {
   if (import.meta.server) {
     return null
@@ -29,6 +34,7 @@ export function useApi() {
     baseURL: `${origin}/api`,
     credentials: 'include',
     headers: { Accept: 'application/json' },
+    retryStatusCodes: RETRY_STATUS_CODES,
     async onRequest({ options }) {
       options.headers.set('Accept-Language', currentLocale(nuxtApp))
 

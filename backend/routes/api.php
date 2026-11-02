@@ -22,10 +22,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/config', [ConfigController::class, 'show']);
 
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:account');
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:account');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:account');
 
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);
@@ -46,11 +46,11 @@ Route::delete('/cart/items/{cartItemId}', [CartController::class, 'destroy']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
-    Route::post('/checkout', [CheckoutController::class, 'store']);
+    Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:checkout');
     Route::get('/success', [StripeRedirectController::class, 'success'])->name('success');
     Route::get('/cancel', [StripeRedirectController::class, 'cancel'])->name('cancel');
     Route::get('/orders', [OrderController::class, 'index']);
-    Route::get('/orders/export', [OrderController::class, 'export']);
+    Route::get('/orders/export', [OrderController::class, 'export'])->middleware('throttle:orders-export');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::get('/supplier-orders', [SupplierOrderController::class, 'index']);
     Route::post('/supplier-orders/{order}/ship', [SupplierOrderController::class, 'ship']);

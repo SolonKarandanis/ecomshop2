@@ -3,6 +3,8 @@
 return [
     // An unexpected failure (a bug or an outage): the API's generic 500 message.
     'server_error' => 'Something went wrong on our side. Please try again in a moment.',
+    // Rate-limited endpoints (429); the Retry-After header says how long.
+    'too_many_requests' => 'Too many attempts. Please wait a moment and try again.',
     'export_orders' => [
         'limit_error' => 'You cannot export more than 10,000 orders at once. Current results: :count',
     ],

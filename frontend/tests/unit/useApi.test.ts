@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { registerEndpoint } from '@nuxt/test-utils/runtime'
+import { setResponseStatus } from 'h3'
 import { useApi } from '~/composables/useApi'
 
 // vitest.config.ts sets apiBase to '', so these relative paths reach registerEndpoint.
@@ -70,5 +71,32 @@ describe('useApi', () => {
 
     expect(csrfPrimed).toBe(0)
     expect(seenToken).toBe(XSRF)
+  })
+
+  it('does not retry a GET the API turned away with a 429', async () => {
+    let calls = 0
+    registerEndpoint('/api/limited', (event) => {
+      calls++
+      setResponseStatus(event, 429)
+      return { message: 'Too many attempts.' }
+    })
+
+    await expect(useApi()('/limited')).rejects.toMatchObject({ statusCode: 429 })
+    expect(calls).toBe(1)
+  })
+
+  it('still retries a GET once after a server error', async () => {
+    let calls = 0
+    registerEndpoint('/api/flaky', (event) => {
+      calls++
+      if (calls === 1) {
+        setResponseStatus(event, 503)
+        return { message: 'Service Unavailable' }
+      }
+      return { ok: true }
+    })
+
+    await expect(useApi()('/flaky')).resolves.toEqual({ ok: true })
+    expect(calls).toBe(2)
   })
 })

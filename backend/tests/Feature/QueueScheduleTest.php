@@ -25,6 +25,10 @@ it('runs the worker until the queue is empty, within the minute, with retries', 
         ->toContain('--tries=3');
 });
 
+it('backs off before retrying a failed job, instead of retrying it straight away', function () {
+    expect(queueWorkerEvent()->command)->toContain('--backoff=60,300');
+});
+
 it('never starts a second worker while one is still running', function () {
     expect(queueWorkerEvent()->withoutOverlapping)->toBeTrue();
 });
