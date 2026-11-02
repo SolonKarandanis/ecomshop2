@@ -29,6 +29,7 @@ use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
@@ -208,6 +209,7 @@ class OrderService
             $supplierId = $this->cartService->getCartSupplierId($cart);
             Log::debug('OrderService creating order');
             $order = $this->createNewOrder($cart->total_price, $paymentMethodId, $order_items, $supplierId);
+            Context::add('order_id', $order->id);
             Log::debug('OrderService created order ', [$order->id]);
             $redirect_url = $this->paymentHandlerFactory->make($paymentMethod)->process($order, $line_items);
             Log::debug('OrderService creating address');
@@ -354,6 +356,8 @@ class OrderService
         if ($order === null) {
             return;
         }
+
+        Context::add('order_id', $order->id);
 
         match ($event->type) {
             Event::CHECKOUT_SESSION_COMPLETED,

@@ -20,6 +20,7 @@ use App\Models\User;
 use App\Notifications\OrderNotification;
 use App\Repositories\CartRepository;
 use App\ValueObjects\Money;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -153,6 +154,18 @@ it('sends a Cash on Delivery Buyer to the frontend success page for the new Orde
 
     $order = Order::where('user_id', $buyer->id)->sole();
     expect($checkout->json('redirect_url'))->toBe("https://shop.test/success?order_id={$order->id}");
+});
+
+it('tags the rest of the checkout with the new Order and the Buyer', function () {
+    Notification::fake();
+    Mail::fake();
+    Context::flush();
+
+    [$buyer] = checkoutWithCartItem(PaymentMethodEnum::CASH_ON_DELIVERY->value);
+
+    $order = Order::where('user_id', $buyer->id)->sole();
+    expect(Context::get('order_id'))->toBe($order->id)
+        ->and(Context::get('user_id'))->toBe($buyer->id);
 });
 
 it('creates the Stripe session with success and cancel URLs on the frontend, and stores its session id', function () {
