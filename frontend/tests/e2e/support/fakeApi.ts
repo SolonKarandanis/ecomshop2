@@ -4,11 +4,18 @@ const API = 'http://localhost:8000'
 const FRONTEND = 'http://localhost:3000'
 const XSRF = 'fake-xsrf-token'
 
+// The values GET /api/user really sends (RolesEnum, UserStatusEnum), so
+// role-based UI is tested against what production renders it from.
+const ROLE_ADMIN = 'role.admin'
+const ROLE_BUYER = 'role.buyer'
+const STATUS_ACTIVE = 'user.status.active'
+
 interface FakeUser {
   id: number
   name: string
   email: string
   password: string
+  roles: string[]
 }
 
 /**
@@ -17,7 +24,10 @@ interface FakeUser {
  * and responses carry the CORS headers a credentialed request needs.
  */
 export async function fakeApi(page: Page, context: BrowserContext) {
-  const users: FakeUser[] = [{ id: 1, name: 'Ada Buyer', email: 'ada@example.com', password: 'secret123' }]
+  const users: FakeUser[] = [
+    { id: 1, name: 'Ada Buyer', email: 'ada@example.com', password: 'secret123', roles: [ROLE_BUYER] },
+    { id: 2, name: 'Grace Admin', email: 'grace@example.com', password: 'secret123', roles: [ROLE_ADMIN] },
+  ]
   const state = {
     session: null as FakeUser | null,
     csrfPrimed: 0,
@@ -25,7 +35,14 @@ export async function fakeApi(page: Page, context: BrowserContext) {
     resetRequests: [] as Record<string, string>[],
   }
 
-  const publicUser = ({ password: _password, ...user }: FakeUser) => ({ ...user, status: 'active', roles: ['ROLE_BUYER'] })
+  // UserData's shape: everything but the password, plus what the model adds.
+  const publicUser = ({ password: _password, ...user }: FakeUser) => ({
+    ...user,
+    locale: 'en',
+    status: STATUS_ACTIVE,
+    email_verified_at: null,
+    created_at: '2026-10-01T00:00:00.000000Z',
+  })
 
   async function reply(route: Route, status: number, body?: unknown) {
     await route.fulfill({
@@ -77,7 +94,7 @@ export async function fakeApi(page: Page, context: BrowserContext) {
 
       case 'POST /api/register': {
         if (users.some(u => u.email === body.email)) return reply(route, 422, invalid('email', 'The email has already been taken.'))
-        const user = { id: users.length + 1, name: body.name, email: body.email, password: body.password }
+        const user = { id: users.length + 1, name: body.name, email: body.email, password: body.password, roles: [ROLE_BUYER] }
         users.push(user)
         state.session = user
         return reply(route, 201, { data: publicUser(user) })

@@ -66,6 +66,19 @@ test('logs out from the header', async ({ page, context }) => {
   expect(api.state.session).toBeNull()
 })
 
+test('links an admin to the Filament panel on the API, and nobody else', async ({ page, context }) => {
+  const api = await fakeApi(page, context)
+
+  api.logIn('ada@example.com')
+  await page.goto('/')
+  await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Admin', exact: true })).toHaveCount(0)
+
+  api.logIn('grace@example.com')
+  await page.reload()
+  await expect(page.getByRole('link', { name: 'Admin', exact: true })).toHaveAttribute('href', 'http://localhost:8000/admin')
+})
+
 test('keeps a logged-in user away from the login page', async ({ page, context }) => {
   const api = await fakeApi(page, context)
   api.logIn()
