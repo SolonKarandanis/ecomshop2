@@ -82,14 +82,14 @@ it('returns 401 from the who-am-i endpoint when unauthenticated', function () {
 
 it('maps a domain exception to its declared status code and a consistent JSON shape', function () {
     Route::middleware('api')->get('/api/__test/order-exception', function () {
-        throw OrderException::checkout();
+        throw OrderException::transitionNotAllowed();
     });
 
     $this->getJson('/api/__test/order-exception')
         ->assertBadRequest()
         ->assertExactJson([
             'status' => false,
-            'message' => 'Something went wrong during checkout!',
+            'message' => 'This order cannot be updated from its current status.',
             'data' => null,
             'error' => 'OrderException',
         ]);

@@ -4,7 +4,7 @@ namespace App\Exceptions;
 
 use App\Enums\HttpStatusCodeEnum;
 
-class EmptyCartException extends \Exception
+class EmptyCartException extends ApiException
 {
     public static function emptyCart(): EmptyCartException
     {

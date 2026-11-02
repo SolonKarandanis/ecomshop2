@@ -8,10 +8,13 @@ use App\Models\Order;
 use App\Models\StripeOrderDetail;
 use App\Models\User;
 use App\Notifications\OrderNotification;
+use App\Services\OrderService;
 use App\Services\StripeService;
+use App\StateMachines\OrderStateMachine;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
 use Spatie\Permission\Models\Role;
@@ -267,4 +270,22 @@ it('tags the event\'s log lines and the notifications it queues with the Stripe 
             'route' => 'stripe.webhook',
         ])->toHaveKey('trace_id');
     }
+});
+
+it('answers 500 when applying the event fails, so Stripe retries it, and reports the cause', function () {
+    Exceptions::fake();
+    config(['app.debug' => false]);
+    $order = webhookOrder();
+    $statusBefore = $order->order_status;
+
+    $this->partialMock(OrderStateMachine::class)
+        ->shouldReceive('applyIfAllowed')
+        ->andThrow(new RuntimeException('lock wait timeout'));
+    app()->forgetInstance(OrderService::class);
+
+    postStripeWebhook(stripeEventPayload('checkout.session.completed', ['payment_status' => 'paid']))
+        ->assertStatus(500);
+
+    expect($order->fresh()->order_status)->toBe($statusBefore);
+    Exceptions::assertReported(fn (RuntimeException $e) => $e->getMessage() === 'lock wait timeout');
 });

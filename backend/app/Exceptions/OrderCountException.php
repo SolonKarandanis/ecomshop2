@@ -3,9 +3,8 @@
 namespace App\Exceptions;
 
 use App\Enums\HttpStatusCodeEnum;
-use Exception;
 
-class OrderCountException extends Exception
+class OrderCountException extends ApiException
 {
     public static function limitExceeded(int $count): OrderCountException
     {

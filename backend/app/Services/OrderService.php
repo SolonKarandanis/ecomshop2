@@ -37,7 +37,6 @@ use PhpOffice\PhpSpreadsheet\Exception;
 use Stripe\Checkout\Session;
 use Stripe\Event;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Throwable;
 
 #[Singleton]
 class OrderService
@@ -188,13 +187,12 @@ class OrderService
 
     /**
      * @throws OrderException
-     * @throws EmptyCartException|PaymentException|Throwable
+     * @throws CartException|EmptyCartException|PaymentException
      */
     public function checkout(CheckoutDTO $dto): string
     {
         $paymentMethod = $dto->getPaymentMethod();
-        try {
-            DB::beginTransaction();
+        $redirect_url = DB::transaction(function () use ($dto, $paymentMethod) {
             // Two checkouts of the same cart at once (two tabs, a client retry)
             // would otherwise both read the full cart and create two Orders. The
             // second now waits here and then finds the cart already emptied.
@@ -220,19 +218,14 @@ class OrderService
             }
             Log::debug('OrderService clearing cart');
             $this->cartService->clearCart();
-            DB::commit();
-            $order = $this->getUsersLatestOrder(auth()->user()->id);
-            $this->notificationService->orderCreated($order);
 
             return $redirect_url;
-        } catch (CartException|EmptyCartException|PaymentException $exception) {
-            DB::rollBack();
-            throw $exception;
-        } catch (Throwable $exception) {
-            Log::error($exception);
-            DB::rollBack();
-            throw OrderException::checkout();
-        }
+        });
+
+        $order = $this->getUsersLatestOrder(auth()->user()->id);
+        $this->notificationService->orderCreated($order);
+
+        return $redirect_url;
     }
 
     /**
@@ -275,15 +268,11 @@ class OrderService
      */
     protected function createNewOrder(Money $totalPrice, int $paymentMethodId, array $orderItems, int $supplierId): Order
     {
-        try {
-            /** @var User $user */
-            $user = Auth::user();
-            $createOrderDto = new CreateOrderDTO($user->id, $supplierId, $totalPrice, $paymentMethodId, $orderItems, $user->name);
+        /** @var User $user */
+        $user = Auth::user();
+        $createOrderDto = new CreateOrderDTO($user->id, $supplierId, $totalPrice, $paymentMethodId, $orderItems, $user->name);
 
-            return $this->orderRepository->createOrder($createOrderDto);
-        } catch (Throwable $e) {
-            throw OrderException::createOrder();
-        }
+        return $this->orderRepository->createOrder($createOrderDto);
     }
 
     /**
@@ -330,7 +319,11 @@ class OrderService
 
         try {
             $session = $this->stripeService->retrieveSession($sessionId);
-        } catch (PaymentException) {
+        } catch (PaymentException $exception) {
+            // No retry link is a fine answer for the Order page, but a Stripe
+            // outage still belongs in the log.
+            report($exception);
+
             return null;
         }
 
@@ -420,12 +413,8 @@ class OrderService
      */
     private function applyStripeEvent(Order $order, OrderEventEnum $event, ?callable $afterTransition = null): Order
     {
-        try {
-            $transitioned = $this->stateMachine->applyIfAllowed($order, $event, null);
-        } catch (Throwable $exception) {
-            Log::error($exception);
-            throw OrderException::stripeProcessing();
-        }
+        // A failure here reaches the webhook as a 500, so Stripe retries the event.
+        $transitioned = $this->stateMachine->applyIfAllowed($order, $event, null);
 
         if ($transitioned === null) {
             return $order->fresh();

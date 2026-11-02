@@ -1,13 +1,6 @@
 <?php
 
-use App\Exceptions\CartException;
-use App\Exceptions\EmptyCartException;
-use App\Exceptions\OrderCountException;
-use App\Exceptions\OrderException;
-use App\Exceptions\PaymentException;
-use App\Exceptions\ProductException;
-use App\Exceptions\ProductNotFoundException;
-use App\Exceptions\ReviewException;
+use App\Exceptions\ApiException;
 use App\Http\Middleware\AddRequestContext;
 use App\Http\Middleware\AlwaysAcceptJsonMiddleware;
 use App\Http\Middleware\SetLocaleFromRequest;
@@ -15,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -46,27 +40,26 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->apiError(null, 'Resource not found', 404, 'NotFound');
         });
 
-        $exceptions->render(function (Throwable $e, Request $request) {
+        // A 4xx ApiException is an expected answer to the client, not a failure.
+        $exceptions->dontReportWhen(fn (Throwable $e) => $e instanceof ApiException && ! $e->isServerError());
+
+        $exceptions->render(function (ApiException $e, Request $request) {
             if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 
-            $status = match (get_class($e)) {
-                OrderException::class,
-                OrderCountException::class,
-                CartException::class,
-                EmptyCartException::class,
-                PaymentException::class,
-                ProductException::class,
-                ProductNotFoundException::class,
-                ReviewException::class => $e->getCode(),
-                default => null,
-            };
+            return response()->apiError(null, $e->getMessage(), $e->status(), class_basename($e));
+        });
 
-            if ($status === null) {
-                return null;
+        // Anything else that fails is a bug or an outage: it's reported with its
+        // stack trace, and the client gets a translated generic message in the
+        // API's usual shape. With APP_DEBUG on, Laravel's own debug output stays.
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
+            if ($response->getStatusCode() !== 500 || config('app.debug')
+                || (! $request->is('api/*') && ! $request->expectsJson())) {
+                return $response;
             }
 
-            return response()->apiError(null, $e->getMessage(), $status, class_basename($e));
+            return response()->apiError(null, __('messages.server_error'), 500, 'ServerError');
         });
     })->create();

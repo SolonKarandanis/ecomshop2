@@ -10,7 +10,6 @@ use App\Notifications\OrderNotification;
 use App\Notifications\SupplierApprovedNotification;
 use App\Notifications\SupplierAwaitingApprovalNotification;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 
@@ -25,10 +24,12 @@ class NotificationHandlerService
             $user->id,
             $order->user_id,
         ));
+        // The Order is already placed: a mail that can't be queued is reported,
+        // with its stack trace, but doesn't fail the checkout.
         try {
             Mail::to($user)->send(new OrderPlaced($order));
         } catch (\Exception $e) {
-            Log::error('NotificationHandlerService mail sending failed: '.$e->getMessage());
+            report($e);
         }
     }
 
