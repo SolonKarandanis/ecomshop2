@@ -132,6 +132,7 @@
     "title": "Giriş yap"
   },
   "nav": {
+    "admin": "Yönetim",
     "categories": "Kategoriler",
     "language": "Dil",
     "log_in": "Giriş yap",

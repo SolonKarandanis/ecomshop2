@@ -150,6 +150,17 @@ describe('auth store', () => {
     expect(auth.isBuyer).toBe(false)
   })
 
+  it('knows whether the user is an Admin', async () => {
+    const auth = useAuthStore()
+    expect(auth.isAdmin).toBe(false)
+
+    await auth.login({ email: buyer.email, password: 'secret' })
+    expect(auth.isAdmin).toBe(false)
+
+    auth.user = { ...buyer, roles: ['role.admin'] }
+    expect(auth.isAdmin).toBe(true)
+  })
+
   it('knows whether the user is a Supplier', async () => {
     const auth = useAuthStore()
     expect(auth.isSupplier).toBe(false)

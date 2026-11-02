@@ -1,6 +1,7 @@
 import type { LoginPayload, RegisterPayload, User } from '~/types/auth'
 
 // The backend's RolesEnum and UserStatusEnum values.
+export const ROLE_ADMIN = 'role.admin'
 export const ROLE_BUYER = 'role.buyer'
 export const ROLE_SUPPLIER = 'role.supplier'
 export const USER_STATUS_PENDING = 'user.status.pending'
@@ -13,6 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
   let pendingFetch: Promise<User | null> | null = null
 
   const isAuthenticated = computed(() => user.value !== null)
+  const isAdmin = computed(() => user.value?.roles?.includes(ROLE_ADMIN) ?? false)
   const isBuyer = computed(() => user.value?.roles?.includes(ROLE_BUYER) ?? false)
   const isSupplier = computed(() => user.value?.roles?.includes(ROLE_SUPPLIER) ?? false)
 
@@ -92,5 +94,5 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = { ...user.value, locale }
   }
 
-  return { user, resolved, isAuthenticated, isBuyer, isSupplier, fetchUser, login, register, logout, saveLocale }
+  return { user, resolved, isAuthenticated, isAdmin, isBuyer, isSupplier, fetchUser, login, register, logout, saveLocale }
 })
