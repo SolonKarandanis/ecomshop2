@@ -143,6 +143,17 @@
     "register": "Register",
     "supplier_orders": "Supplier orders"
   },
+  "notifications": {
+    "title": "Notifications",
+    "bell_label": "Notifications, {count} unread | Notifications, {count} unread",
+    "mark_all_read": "Mark all as read",
+    "view_all": "See all notifications",
+    "no_unread": "You're all caught up.",
+    "empty": "You don't have any notifications yet.",
+    "loading": "Loading notifications…",
+    "load_error": "We couldn't load your notifications. Reload the page to try again.",
+    "unread": "Unread"
+  },
   "order": {
     "back": "← My orders",
     "forbidden": {

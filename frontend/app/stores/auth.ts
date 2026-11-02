@@ -79,6 +79,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
     setUser(null)
     useCartStore().reset()
+    useNotificationsStore().reset()
     await refreshCart()
   }
 

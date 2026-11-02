@@ -143,6 +143,17 @@
     "register": "Kayıt ol",
     "supplier_orders": "Tedarikçi siparişleri"
   },
+  "notifications": {
+    "title": "Bildirimler",
+    "bell_label": "Bildirimler, {count} okunmamış | Bildirimler, {count} okunmamış",
+    "mark_all_read": "Tümünü okundu olarak işaretle",
+    "view_all": "Tüm bildirimleri gör",
+    "no_unread": "Yeni bildiriminiz yok.",
+    "empty": "Henüz bildiriminiz yok.",
+    "loading": "Bildirimler yükleniyor…",
+    "load_error": "Bildirimleriniz yüklenemedi. Tekrar denemek için sayfayı yenileyin.",
+    "unread": "Okunmamış"
+  },
   "order": {
     "back": "← Siparişlerim",
     "forbidden": {

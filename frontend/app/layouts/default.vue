@@ -100,6 +100,7 @@ async function logout() {
             <!-- Suppliers and admins can't add to a cart (`buyer-action` gate), so they get no cart. -->
             <CartIcon v-if="!auth.user || auth.isBuyer" />
             <template v-if="auth.user">
+              <NotificationBell />
               <NuxtLink
                 :to="localePath('/profile')"
                 class="text-sm text-muted hover:text-primary"

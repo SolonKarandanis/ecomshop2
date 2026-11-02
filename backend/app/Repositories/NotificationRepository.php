@@ -9,19 +9,21 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class NotificationRepository
 {
-
-    public function modelQuery(): Builder| Notification{
+    public function modelQuery(): Builder|Notification
+    {
         return Notification::query();
     }
 
-    public function getUsersNotifications(int $userId, int $perPage = 20):LengthAwarePaginator|array{
+    public function getUsersNotifications(int $userId, int $perPage = 20): LengthAwarePaginator|array
+    {
         return $this->modelQuery()
             ->forUser($userId)
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
 
-    public function getUsersUnreadNotifications(int $userId): DatabaseNotificationCollection{
+    public function getUsersUnreadNotifications(int $userId): DatabaseNotificationCollection
+    {
         return $this->modelQuery()
             ->forUser($userId)
             ->where('read_at', null)
@@ -30,14 +32,16 @@ class NotificationRepository
             ->get();
     }
 
-    public function getUsersUnreadNotificationsCount(int $userId):int{
+    public function getUsersUnreadNotificationsCount(int $userId): int
+    {
         return $this->modelQuery()
             ->forUser($userId)
             ->where('read_at', null)
             ->count();
     }
 
-    public function markNotificationAsRead(int $userId,int $notificationId){
+    public function markNotificationAsRead(int $userId, int $notificationId)
+    {
         $notification = $this->modelQuery()->forUser($userId)->find($notificationId);
         $notification->read_at = now();
         $notification->save();
@@ -48,6 +52,14 @@ class NotificationRepository
         $this->modelQuery()
             ->forUser($userId)
             ->whereIn('id', $notificationIds)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+    }
+
+    public function markAllNotificationsAsRead(int $userId): void
+    {
+        $this->modelQuery()
+            ->forUser($userId)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
     }

@@ -10,6 +10,17 @@ const ROLE_ADMIN = 'role.admin'
 const ROLE_BUYER = 'role.buyer'
 const STATUS_ACTIVE = 'user.status.active'
 
+export interface FakeNotification {
+  id: string
+  event_type: string
+  order_id: number | null
+  url: string | null
+  order_url: string | null
+  message: string
+  read_at: string | null
+  created_at: string
+}
+
 interface FakeUser {
   id: number
   name: string
@@ -33,7 +44,11 @@ export async function fakeApi(page: Page, context: BrowserContext) {
     csrfPrimed: 0,
     tokensSeen: [] as (string | null)[],
     resetRequests: [] as Record<string, string>[],
+    // The logged-in user's Notifications, newest first (NotificationData).
+    notifications: [] as FakeNotification[],
   }
+  const unreadCount = () => state.notifications.filter(n => !n.read_at).length
+  const readNow = (n: FakeNotification) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })
 
   // UserData's shape: everything but the password, plus what the model adds.
   const publicUser = ({ password: _password, ...user }: FakeUser) => ({
@@ -107,6 +122,23 @@ export async function fakeApi(page: Page, context: BrowserContext) {
       // Loaded on every page for the header badge (plugins/cart.client.ts).
       case 'GET /api/cart':
         return reply(route, 200, { data: { total_price: 0, items: [], notice: null } })
+
+      case 'GET /api/notifications':
+        return reply(route, 200, { data: state.notifications, meta: { current_page: 1, last_page: 1, per_page: 20, total: state.notifications.length } })
+
+      case 'GET /api/notifications/unread':
+        return reply(route, 200, { data: state.notifications.filter(n => !n.read_at).slice(0, 5) })
+
+      case 'GET /api/notifications/unread-count':
+        return reply(route, 200, { count: unreadCount() })
+
+      case 'POST /api/notifications/mark-read':
+        state.notifications = state.notifications.map(n => body.ids.includes(n.id) ? readNow(n) : n)
+        return reply(route, 200, { count: unreadCount() })
+
+      case 'POST /api/notifications/mark-all-read':
+        state.notifications = state.notifications.map(readNow)
+        return reply(route, 200, { count: 0 })
 
       case 'POST /api/logout':
         state.session = null

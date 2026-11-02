@@ -10,25 +10,32 @@ use Illuminate\Pagination\LengthAwarePaginator;
 #[Singleton]
 class NotificationService
 {
-
     public function __construct(
         private readonly NotificationRepository $notificationRepository
-    ){}
+    ) {}
 
-    public function getUsersNotifications(int $userId, int $perPage = 20):LengthAwarePaginator|array{
+    public function getUsersNotifications(int $userId, int $perPage = 20): LengthAwarePaginator|array
+    {
         return $this->notificationRepository->getUsersNotifications($userId, $perPage);
     }
 
-    public function getUsersUnreadNotifications(int $userId):DatabaseNotificationCollection{
+    public function getUsersUnreadNotifications(int $userId): DatabaseNotificationCollection
+    {
         return $this->notificationRepository->getUsersUnreadNotifications($userId);
     }
 
-    public function getUsersUnreadNotificationsCount(int $userId):int{
+    public function getUsersUnreadNotificationsCount(int $userId): int
+    {
         return $this->notificationRepository->getUsersUnreadNotificationsCount($userId);
     }
 
     public function markNotificationsAsRead(int $userId, array $notificationIds): void
     {
         $this->notificationRepository->markNotificationsAsRead($userId, $notificationIds);
+    }
+
+    public function markAllNotificationsAsRead(int $userId): void
+    {
+        $this->notificationRepository->markAllNotificationsAsRead($userId);
     }
 }
