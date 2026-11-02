@@ -7,6 +7,7 @@ use App\Services\OrderService;
 use App\Services\StripeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Context;
 use Stripe\Exception\SignatureVerificationException;
 use UnexpectedValueException;
 
@@ -37,6 +38,13 @@ class StripeWebhookController extends Controller
         } catch (SignatureVerificationException|UnexpectedValueException) {
             return response()->apiError(null, 'Invalid Stripe webhook signature or payload', 400, 'InvalidStripeWebhook');
         }
+
+        // Stripe retries a failed event with the same ID, so this ties each
+        // attempt's log lines and notifications back to the event.
+        Context::add([
+            'stripe_event_id' => $event->id,
+            'stripe_event_type' => $event->type,
+        ]);
 
         $this->orderService->handleStripeEvent($event);
 

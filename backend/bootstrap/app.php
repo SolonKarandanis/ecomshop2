@@ -8,6 +8,7 @@ use App\Exceptions\PaymentException;
 use App\Exceptions\ProductException;
 use App\Exceptions\ProductNotFoundException;
 use App\Exceptions\ReviewException;
+use App\Http\Middleware\AddRequestContext;
 use App\Http\Middleware\AlwaysAcceptJsonMiddleware;
 use App\Http\Middleware\SetLocaleFromRequest;
 use Illuminate\Foundation\Application;
@@ -27,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Stripe can't send a CSRF token; the webhook checks Stripe's signature instead.
         $middleware->preventRequestForgery(except: ['api/stripe/webhook']);
         $middleware->api(prepend: [AlwaysAcceptJsonMiddleware::class, SetLocaleFromRequest::class]);
+        // Appended, so the route is matched by the time it runs. `web` covers
+        // Livewire's requests; the Filament panel adds it to its own stack.
+        $middleware->appendToGroup('api', AddRequestContext::class);
+        $middleware->appendToGroup('web', AddRequestContext::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

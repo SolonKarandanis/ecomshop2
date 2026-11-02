@@ -5,11 +5,13 @@ namespace App\Providers;
 use App\Enums\UserStatusEnum;
 use App\Models\User;
 use App\Support\FrontendUrl;
+use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -38,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerGates();
         $this->registerPasswordResetUrl();
         $this->registerQueryLogging();
+        $this->registerUserContext();
 
         Schema::defaultStringLength(191);
     }
@@ -94,6 +97,16 @@ class AppServiceProvider extends ServiceProvider
             if ($logging) {
                 Log::debug(sprintf('[%s, %.2f ms] %s', $query->connectionName, $query->time, $query->toRawSql()));
             }
+        });
+    }
+
+    // Tags the log, and the jobs dispatched afterwards, with whoever the request
+    // turned out to be: fired when the session resolves a user and at login.
+    // AddRequestContext can't do it, since it runs before Sanctum resolves them.
+    private function registerUserContext(): void
+    {
+        Event::listen(Authenticated::class, function (Authenticated $event) {
+            Context::add('user_id', $event->user->getAuthIdentifier());
         });
     }
 

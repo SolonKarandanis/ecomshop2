@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\Orders\Widgets\OrderStatsWidget;
+use App\Http\Middleware\AddRequestContext;
 use App\Http\Middleware\SetLocaleFromUser;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -50,6 +51,8 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                // Not persistent: Livewire's own requests already get it from the `web` group.
+                AddRequestContext::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

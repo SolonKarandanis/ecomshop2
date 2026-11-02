@@ -9,6 +9,9 @@ use App\Models\StripeOrderDetail;
 use App\Models\User;
 use App\Notifications\OrderNotification;
 use App\Services\StripeService;
+use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
 use Spatie\Permission\Models\Role;
@@ -236,4 +239,32 @@ it('sends each Notification once when the webhook arrives after the success redi
 it('exempts the webhook from CSRF, which statefulApi() applies to requests from the Nuxt origin', function () {
     // The CSRF middleware Sanctum runs for stateful requests.
     expect(app(config('sanctum.middleware.validate_csrf_token'))->getExcludedPaths())->toContain('api/stripe/webhook');
+});
+
+it('tags the event\'s log lines and the notifications it queues with the Stripe event and the Order', function () {
+    Context::flush();
+    $order = webhookOrder();
+
+    // The sync queue still builds each job's payload, so this reads the context
+    // a real worker would restore for the queued notifications.
+    $carried = [];
+    Event::listen(JobProcessing::class, function (JobProcessing $event) use (&$carried) {
+        $carried[] = array_map(unserialize(...), $event->job->payload()['illuminate:log:context']['data'] ?? []);
+    });
+
+    postStripeWebhook(stripeEventPayload('checkout.session.completed', ['payment_status' => 'paid']))->assertOk();
+
+    expect(Context::only(['stripe_event_id', 'stripe_event_type', 'order_id']))->toBe([
+        'stripe_event_id' => 'evt_test_123',
+        'stripe_event_type' => 'checkout.session.completed',
+        'order_id' => $order->id,
+    ])->and($carried)->not->toBeEmpty();
+
+    foreach ($carried as $context) {
+        expect($context)->toMatchArray([
+            'stripe_event_id' => 'evt_test_123',
+            'order_id' => $order->id,
+            'route' => 'stripe.webhook',
+        ])->toHaveKey('trace_id');
+    }
 });
