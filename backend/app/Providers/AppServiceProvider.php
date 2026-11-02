@@ -8,6 +8,7 @@ use App\Support\FrontendUrl;
 use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobFailed;
@@ -40,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerConfig();
+        $this->registerModelStrictness();
         $this->registerGates();
         $this->registerPasswordResetUrl();
         $this->registerQueryLogging();
@@ -127,6 +129,15 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('checkout', fn (Request $request) => Limit::perMinute(10)->by($request->user()?->id ?: $request->ip()));
 
         RateLimiter::for('orders-export', fn (Request $request) => Limit::perMinute(5)->by($request->user()?->id ?: $request->ip()));
+    }
+
+    // Accessing a relation that wasn't eager loaded throws in local and in
+    // tests, so an N+1 is caught by the suite instead of slowing a page down.
+    // Production keeps lazy loading on: a missed eager load there should cost
+    // a few queries, not an error page for the customer.
+    private function registerModelStrictness(): void
+    {
+        Model::preventLazyLoading(! $this->app->isProduction());
     }
 
     private function registerConfig(): void

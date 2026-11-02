@@ -50,6 +50,10 @@ class OrderInfolist
                     ->placeholder('-'),
                 RepeatableEntry::make('statusHistory')
                     ->label('Status history')
+                    // One query for every entry's admin, on first render and after
+                    // an action refreshes the record (refresh() reloads statusHistory
+                    // but not the nested changedBy).
+                    ->state(fn (Order $record) => $record->loadMissing('statusHistory.changedBy')->statusHistory)
                     ->schema([
                         TextEntry::make('order_status')
                             ->formatStateUsing(fn ($state) => OrderStatusEnum::labels()[$state] ?? $state),
