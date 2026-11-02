@@ -12,6 +12,7 @@ use Stripe\Checkout\Session;
 use Stripe\Event;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\SignatureVerificationException;
+use Stripe\HttpClient\CurlClient;
 use Stripe\Stripe;
 use Stripe\Webhook;
 use UnexpectedValueException;
@@ -19,9 +20,24 @@ use UnexpectedValueException;
 #[Singleton]
 class StripeService
 {
+    /**
+     * stripe-php waits up to 80s for a response (30s to connect) by default.
+     * Checkout calls Stripe while it holds a PHP worker and the cart's row lock,
+     * so a slow Stripe would tie both up for that long, and a few checkouts
+     * would leave Hostinger with no workers for anyone else. Fail fast instead:
+     * the Buyer gets a 502 and can try again.
+     */
+    public const int TIMEOUT_SECONDS = 10;
+
+    public const int CONNECT_TIMEOUT_SECONDS = 3;
+
     public function __construct(#[Config('app.stripe_secret_key')] ?string $secretKey)
     {
         Stripe::setApiKey($secretKey);
+        // The client Stripe uses unless one is injected (tests inject a fake).
+        CurlClient::instance()
+            ->setTimeout(self::TIMEOUT_SECONDS)
+            ->setConnectTimeout(self::CONNECT_TIMEOUT_SECONDS);
     }
 
     /**

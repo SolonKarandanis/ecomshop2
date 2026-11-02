@@ -3,6 +3,8 @@
 return [
     // An unexpected failure (a bug or an outage): the API's generic 500 message.
     'server_error' => 'Bizim tarafımızda bir sorun oluştu. Lütfen biraz sonra tekrar deneyin.',
+    // Rate-limited endpoints (429); the Retry-After header says how long.
+    'too_many_requests' => 'Çok fazla deneme yapıldı. Lütfen biraz bekleyip tekrar deneyin.',
     'export_orders' => [
         'limit_error' => 'Tek seferde 10.000\'den fazla sipariş dışa aktaramazsınız. Mevcut sonuç sayısı: :count',
     ],

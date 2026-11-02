@@ -7,6 +7,7 @@ use App\Http\Middleware\SetLocaleFromRequest;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -42,6 +43,16 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // A 4xx ApiException is an expected answer to the client, not a failure.
         $exceptions->dontReportWhen(fn (Throwable $e) => $e instanceof ApiException && ! $e->isServerError());
+
+        // Keeps Retry-After and the X-RateLimit headers, so the client knows when to come back.
+        $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
+                return null;
+            }
+
+            return response()->apiError(null, __('messages.too_many_requests'), 429, 'TooManyRequests')
+                ->withHeaders($e->getHeaders());
+        });
 
         $exceptions->render(function (ApiException $e, Request $request) {
             if (! $request->is('api/*') && ! $request->expectsJson()) {

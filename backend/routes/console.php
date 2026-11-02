@@ -11,7 +11,9 @@ Artisan::command('inspire', function () {
 // Hostinger keeps no long-running processes alive, so instead of a permanent
 // `queue:work`, an hPanel cron runs `schedule:run` every minute and this starts
 // a worker that drains the queue (queued mail and Notifications) and exits (#16).
-Schedule::command('queue:work --stop-when-empty --tries=3 --max-time=55')
+// A failed job waits 1 minute, then 5, before its next try, so a mail server
+// that's down isn't hit three times in a row while other jobs wait behind it.
+Schedule::command('queue:work --stop-when-empty --tries=3 --backoff=60,300 --max-time=55')
     ->everyMinute()
     ->withoutOverlapping();
 

@@ -7,7 +7,9 @@ use App\Models\User;
 use App\Support\FrontendUrl;
 use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -41,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerPasswordResetUrl();
         $this->registerQueryLogging();
         $this->registerUserContext();
+        $this->registerRateLimiters();
 
         Schema::defaultStringLength(191);
     }
@@ -108,6 +112,21 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(Authenticated::class, function (Authenticated $event) {
             Context::add('user_id', $event->user->getAuthIdentifier());
         });
+    }
+
+    // Only for endpoints the browser calls itself (ADR-0002): server-rendered
+    // catalogue pages reach the API from the Nuxt server's one IP, so a per-IP
+    // limit there would throttle every visitor at once. Each of these sends
+    // mail, calls Stripe or builds a large file, so a burst is turned away
+    // cheaply instead of queueing up for Hostinger's few PHP workers.
+    private function registerRateLimiters(): void
+    {
+        // Register, forgot and reset password: per IP, since there's no user yet.
+        RateLimiter::for('account', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+
+        RateLimiter::for('checkout', fn (Request $request) => Limit::perMinute(10)->by($request->user()?->id ?: $request->ip()));
+
+        RateLimiter::for('orders-export', fn (Request $request) => Limit::perMinute(5)->by($request->user()?->id ?: $request->ip()));
     }
 
     private function registerConfig(): void

@@ -3,6 +3,8 @@
 return [
     // An unexpected failure (a bug or an outage): the API's generic 500 message.
     'server_error' => 'Κάτι πήγε στραβά από τη δική μας πλευρά. Δοκιμάστε ξανά σε λίγο.',
+    // Rate-limited endpoints (429); the Retry-After header says how long.
+    'too_many_requests' => 'Πάρα πολλές προσπάθειες. Περιμένετε λίγο και δοκιμάστε ξανά.',
     'export_orders' => [
         'limit_error' => 'Δεν μπορείτε να εξαγάγετε περισσότερες από 10.000 παραγγελίες ταυτόχρονα. Τρέχοντα αποτελέσματα: :count',
     ],
