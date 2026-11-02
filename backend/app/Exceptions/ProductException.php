@@ -4,7 +4,7 @@ namespace App\Exceptions;
 
 use App\Enums\HttpStatusCodeEnum;
 
-class ProductException extends \Exception
+class ProductException extends ApiException
 {
     public static function orderedProductCannotBeDeleted(): ProductException
     {

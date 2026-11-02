@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Throwable;
 
 #[Singleton]
 class CartService
@@ -179,8 +178,7 @@ class CartService
      */
     public function saveCartToDatabase(array $addToCartRequests): bool
     {
-        DB::beginTransaction();
-        try {
+        return DB::transaction(function () use ($addToCartRequests) {
             $cartId = $this->cartRepository->getCartId(Auth::id());
             Log::debug('Cart id ', [$cartId]);
             $productsToBeAdded = $this->fetchProductsToBeAdded($addToCartRequests);
@@ -217,17 +215,9 @@ class CartService
                 $this->cartRepository->createCartItems($cartId, $newCartItems);
             }
             $this->recalculateCartTotalPrice();
-            DB::commit();
 
             return true;
-        } catch (ProductNotFoundException|CartException $e) {
-            DB::rollBack();
-            throw $e;
-        } catch (Throwable $exception) {
-            Log::error($exception);
-            DB::rollBack();
-            throw CartException::saveCart();
-        }
+        });
     }
 
     public function checkIfItemIsAlreadyInNewItems(array $newCartItems, AddToCartDto $request, array $attributes): bool
@@ -348,8 +338,6 @@ class CartService
 
     /**
      * @param  UpdateCartItemsDTO[]  $updateCartItemRequests
-     *
-     * @throws CartException
      */
     public function updateItemsQuantity(Cart $cart, array $updateCartItemRequests): bool
     {
@@ -362,14 +350,12 @@ class CartService
 
     /**
      * @param  UpdateCartItemsDTO[]  $updateCartItemRequests
-     *
-     * @throws CartException
      */
     protected function updateCartItemsInDatabase(Cart $cart, array $updateCartItemRequests): bool
     {
         Log::debug('Attempting to update cart items in the database.');
-        DB::beginTransaction();
-        try {
+
+        return DB::transaction(function () use ($cart, $updateCartItemRequests) {
             $cartItems = $cart->cartItems;
             $updates = [];
             $idsToUpdate = [];
@@ -395,20 +381,13 @@ class CartService
                 }
             }
             if (empty($updates)) {
-                DB::rollBack();
-
                 return true;
             }
             $this->cartRepository->batchUpdateCartItems($updates, $idsToUpdate);
             $this->recalculateCartTotalPrice($cart);
-            DB::commit();
 
             return true;
-        } catch (Throwable $exception) {
-            Log::error($exception);
-            DB::rollBack();
-            throw CartException::updateItems();
-        }
+        });
     }
 
     /**
@@ -472,9 +451,6 @@ class CartService
         return true;
     }
 
-    /**
-     * @throws CartException
-     */
     public function removeItemsFromCart(array $cartItemIds): bool
     {
         if (Auth::check()) {
@@ -484,24 +460,15 @@ class CartService
         }
     }
 
-    /**
-     * @throws CartException
-     */
     protected function deleteItemsFromDatabase(array $cartItemIds): bool
     {
-        DB::beginTransaction();
-        try {
+        return DB::transaction(function () use ($cartItemIds) {
             $cartId = $this->cartRepository->getCartId(Auth::id());
             $this->cartRepository->deleteCartItems($cartId, $cartItemIds);
             $this->recalculateCartTotalPrice();
-            DB::commit();
 
             return true;
-        } catch (Throwable $exception) {
-            Log::error($exception);
-            DB::rollBack();
-            throw CartException::deleteItems();
-        }
+        });
     }
 
     protected function deleteItemsFromCookies(array $cartItemIds): bool
@@ -525,9 +492,6 @@ class CartService
         return true;
     }
 
-    /**
-     * @throws CartException
-     */
     public function clearCart(): bool
     {
         $result = false;
@@ -548,25 +512,15 @@ class CartService
         return $result;
     }
 
-    /**
-     * @throws CartException
-     */
     protected function clearCartFromDatabase(): bool
     {
-        DB::beginTransaction();
-        try {
+        return DB::transaction(function () {
             $cartId = $this->cartRepository->getCartId(Auth::id());
             $this->cartRepository->clearCart($cartId);
             $this->recalculateCartTotalPrice();
-            DB::commit();
 
             return true;
-        } catch (Throwable $exception) {
-            Log::error($exception);
-            DB::rollBack();
-            throw CartException::clearCart();
-        }
-
+        });
     }
 
     protected function clearCartFromCookies(): bool

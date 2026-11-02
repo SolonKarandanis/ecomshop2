@@ -3,17 +3,18 @@
 namespace App\Exceptions;
 
 use App\Enums\HttpStatusCodeEnum;
+use Throwable;
 
-class PaymentException extends \Exception
+class PaymentException extends ApiException
 {
-    public static function createStipeSession(): PaymentException
+    public static function createStipeSession(Throwable $previous): PaymentException
     {
-        return new self(__('messages.payment_exceptions.create_stripe_session'), HttpStatusCodeEnum::BAD_GATEWAY->value);
+        return new self(__('messages.payment_exceptions.create_stripe_session'), HttpStatusCodeEnum::BAD_GATEWAY->value, $previous);
     }
 
-    public static function retrieveStipeSession(): PaymentException
+    public static function retrieveStipeSession(Throwable $previous): PaymentException
     {
-        return new self(__('messages.payment_exceptions.retrieve_stripe_session'), HttpStatusCodeEnum::BAD_GATEWAY->value);
+        return new self(__('messages.payment_exceptions.retrieve_stripe_session'), HttpStatusCodeEnum::BAD_GATEWAY->value, $previous);
     }
 
     public static function unsupportedPaymentMethod(string $paymentMethod): PaymentException

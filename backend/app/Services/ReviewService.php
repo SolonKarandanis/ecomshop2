@@ -13,8 +13,6 @@ use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 #[Singleton]
 class ReviewService
@@ -53,27 +51,22 @@ class ReviewService
     }
 
     /**
-     * @throws ReviewException|Throwable
+     * @throws ReviewException
      */
     public function submitReview(SubmitReviewDto $dto): Review
     {
         if (! $this->canReview($dto->getUserId(), $dto->getProductId())) {
             throw ReviewException::notEligible();
         }
-        try {
-            DB::beginTransaction();
+
+        return DB::transaction(function () use ($dto) {
             $this->productService->lockForUpdate($dto->getProductId());
             $review = $this->reviewRepository->createReview($dto);
             $stats = $this->reviewRepository->getRatingStatsForProduct($dto->getProductId());
             $this->productService->updateRatingStats($dto->getProductId(), $stats->getAverageRating(), $stats->getReviewsCount());
-            DB::commit();
 
             return $review;
-        } catch (Throwable $exception) {
-            Log::error($exception);
-            DB::rollBack();
-            throw ReviewException::createReview();
-        }
+        });
     }
 
     /**
@@ -84,23 +77,16 @@ class ReviewService
         if (! $this->canEdit($dto->getUserId(), $dto->getReviewId())) {
             throw ReviewException::notEligible();
         }
-        try {
-            DB::beginTransaction();
+
+        return DB::transaction(function () use ($dto) {
             $this->productService->lockForUpdate($dto->getProductId());
             $review = $this->reviewRepository->getReviewById($dto->getReviewId());
             $this->reviewRepository->updateReview($review, $dto);
             $stats = $this->reviewRepository->getRatingStatsForProduct($dto->getProductId());
             $this->productService->updateRatingStats($dto->getProductId(), $stats->getAverageRating(), $stats->getReviewsCount());
-            $review = $this->reviewRepository->getReviewById($dto->getReviewId());
-            DB::commit();
 
-            return $review;
-        } catch (Throwable $exception) {
-            Log::error($exception);
-            DB::rollBack();
-            throw ReviewException::updateReview();
-        }
-
+            return $this->reviewRepository->getReviewById($dto->getReviewId());
+        });
     }
 
     public function getPublishedReviewsForProduct(int $productId, int $perPage = 5): LengthAwarePaginator|Collection
@@ -108,39 +94,22 @@ class ReviewService
         return $this->reviewRepository->getPublishedReviewsForProduct($productId, $perPage);
     }
 
-    /**
-     * @throws ReviewException
-     */
     public function updateReviewStatus(Review $review, ReviewStatusEnum $status): Review
     {
-        try {
-            DB::beginTransaction();
+        return DB::transaction(function () use ($review, $status) {
             $this->productService->lockForUpdate($review->product_id);
             $this->reviewRepository->updateStatus($review, $status->value);
             $stats = $this->reviewRepository->getRatingStatsForProduct($review->product_id);
             $this->productService->updateRatingStats($review->product_id, $stats->getAverageRating(), $stats->getReviewsCount());
-            DB::commit();
 
             return $review->refresh();
-        } catch (Throwable $exception) {
-            Log::error($exception);
-            DB::rollBack();
-            throw ReviewException::updateStatus();
-        }
+        });
     }
 
-    /**
-     * @throws ReviewException
-     */
     public function updateAdminReply(Review $review, ?string $adminReply): Review
     {
-        try {
-            $this->reviewRepository->updateAdminReply($review, $adminReply);
+        $this->reviewRepository->updateAdminReply($review, $adminReply);
 
-            return $review->refresh();
-        } catch (Throwable $exception) {
-            Log::error($exception);
-            throw ReviewException::updateAdminReply();
-        }
+        return $review->refresh();
     }
 }

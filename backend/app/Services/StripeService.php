@@ -8,7 +8,6 @@ use App\Support\FrontendUrl;
 use Illuminate\Container\Attributes\Config;
 use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session;
 use Stripe\Event;
 use Stripe\Exception\ApiErrorException;
@@ -51,8 +50,7 @@ class StripeService
                 'cancel_url' => FrontendUrl::to('/cancel?'.http_build_query(['order_id' => $order->id]), $locale),
             ]);
         } catch (ApiErrorException $e) {
-            Log::error($e);
-            throw PaymentException::createStipeSession();
+            throw PaymentException::createStipeSession($e);
         }
     }
 
@@ -64,8 +62,7 @@ class StripeService
         try {
             return Session::retrieve($sessionId);
         } catch (ApiErrorException $e) {
-            Log::error($e);
-            throw PaymentException::retrieveStipeSession();
+            throw PaymentException::retrieveStipeSession($e);
         }
     }
 

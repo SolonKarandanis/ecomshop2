@@ -19,9 +19,12 @@ use App\Models\StripeOrderDetail;
 use App\Models\User;
 use App\Notifications\OrderNotification;
 use App\Repositories\CartRepository;
+use App\Repositories\OrderRepository;
+use App\Services\OrderService;
 use App\ValueObjects\Money;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -154,6 +157,34 @@ it('sends a Cash on Delivery Buyer to the frontend success page for the new Orde
 
     $order = Order::where('user_id', $buyer->id)->sole();
     expect($checkout->json('redirect_url'))->toBe("https://shop.test/success?order_id={$order->id}");
+});
+
+it('answers a bug during checkout with a 500, rolls the Order back, keeps the cart and reports the real cause', function () {
+    Notification::fake();
+    Mail::fake();
+    Exceptions::fake();
+    config(['app.debug' => false]);
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::CASH_ON_DELIVERY->value]);
+    [$buyer, $login] = loggedInBuyer();
+    $product = Product::factory()->create(['price' => 25]);
+    $add = simulateNextCheckoutRequest($login)
+        ->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 1])
+        ->assertOk();
+
+    $this->partialMock(OrderRepository::class)
+        ->shouldReceive('createOrder')
+        ->andThrow(new RuntimeException('orders table is gone'));
+    app()->forgetInstance(OrderService::class);
+
+    simulateNextCheckoutRequest($add)
+        ->postJson('/api/checkout', validCheckoutPayload(PaymentMethodEnum::CASH_ON_DELIVERY->value))
+        ->assertStatus(500)
+        ->assertJsonPath('error', 'ServerError');
+
+    expect(Order::where('user_id', $buyer->id)->exists())->toBeFalse()
+        ->and(CartItem::whereRelation('cart', 'user_id', $buyer->id)->count())->toBe(1);
+    Exceptions::assertReported(fn (RuntimeException $e) => $e->getMessage() === 'orders table is gone');
+    Notification::assertNothingSent();
 });
 
 it('tags the rest of the checkout with the new Order and the Buyer', function () {
