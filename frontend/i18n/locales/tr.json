@@ -335,8 +335,27 @@
   },
   "reviews": {
     "empty": "Henüz değerlendirme yok.",
+    "form": {
+      "comment": "Değerlendirmeniz (isteğe bağlı)",
+      "comment_too_long": "En fazla {max} karakter.",
+      "rating": "Puanınız",
+      "rating_required": "1 ile 5 yıldız arasında bir puan seçin.",
+      "session_expired": "Oturumunuzun süresi doldu. Değerlendirmenizi kaydetmek için tekrar giriş yapın.",
+      "submit": "Değerlendirmeyi gönder",
+      "update": "Değerlendirmeyi güncelle"
+    },
+    "hide": "Gizle",
+    "hide_error": "Değerlendirme gizlenemedi. Lütfen tekrar deneyin.",
     "load_error": "Daha fazla değerlendirme yüklenemedi. Tekrar deneyin.",
     "load_more": "Daha fazla değerlendirme yükle",
+    "mine": {
+      "hidden": "Bir moderatör bu değerlendirmeyi gizledi, bu yüzden üründe gösterilmiyor. Yine de düzenleyebilirsiniz, ancak gizli kalacak.",
+      "load_error": "Bu ürünü değerlendirip değerlendiremeyeceğinizi kontrol edemedik. Tekrar denemek için sayfayı yenileyin.",
+      "not_eligible": "Bu ürünü içeren bir sipariş teslim edildiğinde ürünü değerlendirebilirsiniz.",
+      "saved": "Teşekkürler, değerlendirmeniz kaydedildi.",
+      "title": "Değerlendirmeniz",
+      "write": "Değerlendirme yazın"
+    },
     "stars": "5 üzerinden {rating} yıldız",
     "title": "Değerlendirmeler ({count})"
   },

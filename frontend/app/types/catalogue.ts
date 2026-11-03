@@ -41,6 +41,17 @@ export interface Review {
   created_at: string | null
 }
 
+// The backend's ReviewStatusEnum values.
+export const REVIEW_HIDDEN = 'review.status.hidden'
+
+// GET /api/products/{product}/reviews/mine, for the logged-in user.
+export interface MyReview {
+  // A delivered Order containing the product, and no review of it yet.
+  can_review: boolean
+  // Their own review, whatever its status.
+  review: Review | null
+}
+
 // Spatie's PaginatedDataCollection shape (`links` omitted: we page by number).
 export interface Paginated<T> {
   data: T[]

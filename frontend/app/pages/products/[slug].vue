@@ -6,13 +6,21 @@ const { t } = useI18n()
 
 const route = useRoute()
 
-const { data, error } = await useCatalogFetch<ProductDetailResponse>(() => `/products/${route.params.slug}`)
+const { data, error, refresh } = await useCatalogFetch<ProductDetailResponse>(() => `/products/${route.params.slug}`)
 
 if (error.value || !data.value) {
   throw createError({ statusCode: error.value?.statusCode ?? 404, statusMessage: t('product.not_found'), fatal: true })
 }
 
 const product = computed(() => data.value!.data)
+
+// A review written, edited or hidden changes the rating summary and the first
+// page of reviews: both are reloaded, and the list starts over from them.
+const reviewsVersion = ref(0)
+async function reloadReviews() {
+  await refresh()
+  reviewsVersion.value++
+}
 
 useSeoMeta({
   title: () => product.value.name,
@@ -84,10 +92,20 @@ useSeoMeta({
       </div>
     </div>
 
-    <ReviewList
-      :key="product.id"
-      :product-id="product.id"
-      :initial="data!.reviews"
-    />
+    <div class="space-y-6">
+      <ClientOnly>
+        <MyReview
+          :key="product.id"
+          :product-id="product.id"
+          @saved="reloadReviews"
+        />
+      </ClientOnly>
+      <ReviewList
+        :key="`${product.id}-${reviewsVersion}`"
+        :product-id="product.id"
+        :initial="data!.reviews"
+        @hidden="reloadReviews"
+      />
+    </div>
   </div>
 </template>
