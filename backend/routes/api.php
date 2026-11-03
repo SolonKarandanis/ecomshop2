@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/mark-read', [NotificationController::class, 'markRead']);
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
 
+    Route::get('/products/{product}/reviews/mine', [ReviewController::class, 'mine']);
     Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
     Route::patch('/products/{product}/reviews/{review}/hide', [ReviewController::class, 'hide']);
 

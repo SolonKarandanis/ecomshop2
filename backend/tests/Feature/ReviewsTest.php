@@ -205,3 +205,56 @@ it("returns 404 when hiding a Review through a Product it doesn't belong to", fu
     $review->refresh();
     expect($review->status)->toBe(ReviewStatusEnum::PUBLISHED->value);
 });
+
+it('tells a Buyer without a delivered Order that they can\'t review yet', function () {
+    $buyer = reviewsBuyer();
+    $product = Product::factory()->create();
+    Order::factory()->create(['user_id' => $buyer->id, 'order_status' => OrderStatusEnum::Shipped->value])
+        ->items()->create(['product_id' => $product->id, 'quantity' => 1, 'unit_amount' => $product->price, 'total_amount' => $product->price]);
+
+    $this->actingAs($buyer)->getJson("/api/products/{$product->id}/reviews/mine")
+        ->assertOk()
+        ->assertExactJson(['data' => ['can_review' => false, 'review' => null]]);
+});
+
+it('tells a Buyer with a delivered Order that they can review', function () {
+    $buyer = reviewsBuyer();
+    $product = Product::factory()->create();
+    giveDeliveredOrder($buyer, $product);
+
+    $this->actingAs($buyer)->getJson("/api/products/{$product->id}/reviews/mine")
+        ->assertOk()
+        ->assertExactJson(['data' => ['can_review' => true, 'review' => null]]);
+});
+
+it('gives a Buyer who already reviewed their own review to edit, even a hidden one', function (ReviewStatusEnum $status) {
+    $buyer = reviewsBuyer();
+    $product = Product::factory()->create();
+    giveDeliveredOrder($buyer, $product);
+    $review = Review::factory()->create(['user_id' => $buyer->id, 'product_id' => $product->id, 'rating' => 3, 'status' => $status->value]);
+
+    $this->actingAs($buyer)->getJson("/api/products/{$product->id}/reviews/mine")
+        ->assertOk()
+        ->assertJsonPath('data.can_review', false)
+        ->assertJsonPath('data.review.id', $review->id)
+        ->assertJsonPath('data.review.rating', 3)
+        ->assertJsonPath('data.review.status', $status->value);
+})->with([ReviewStatusEnum::PUBLISHED, ReviewStatusEnum::HIDDEN]);
+
+it('tells an Admin or Supplier they can\'t review, without a 403', function (User $user) {
+    $product = Product::factory()->create();
+
+    $this->actingAs($user)->getJson("/api/products/{$product->id}/reviews/mine")
+        ->assertOk()
+        ->assertExactJson(['data' => ['can_review' => false, 'review' => null]]);
+})->with([
+    'admin' => fn () => reviewsAdmin(),
+    'supplier' => fn () => reviewsSupplier(),
+]);
+
+it('asks a guest to log in, and 404s for a nonexistent Product', function () {
+    $product = Product::factory()->create();
+    $this->getJson("/api/products/{$product->id}/reviews/mine")->assertUnauthorized();
+
+    $this->actingAs(reviewsBuyer())->getJson('/api/products/999999/reviews/mine')->assertNotFound();
+});

@@ -335,8 +335,27 @@
   },
   "reviews": {
     "empty": "No reviews yet.",
+    "form": {
+      "comment": "Your review (optional)",
+      "comment_too_long": "Keep it to {max} characters.",
+      "rating": "Your rating",
+      "rating_required": "Choose a rating from 1 to 5 stars.",
+      "session_expired": "Your session has expired. Log in again to save your review.",
+      "submit": "Submit review",
+      "update": "Update review"
+    },
+    "hide": "Hide",
+    "hide_error": "The review couldn't be hidden. Please try again.",
     "load_error": "Couldn't load more reviews. Try again.",
     "load_more": "Load more reviews",
+    "mine": {
+      "hidden": "A moderator has hidden this review, so it isn't shown on the product. You can still edit it, but it will stay hidden.",
+      "load_error": "We couldn't check whether you can review this product. Reload the page to try again.",
+      "not_eligible": "You can review this product once an order containing it has been delivered.",
+      "saved": "Thanks, your review has been saved.",
+      "title": "Your review",
+      "write": "Write a review"
+    },
     "stars": "{rating} out of 5 stars",
     "title": "Reviews ({count})"
   },
