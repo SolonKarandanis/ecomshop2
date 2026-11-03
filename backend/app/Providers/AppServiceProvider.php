@@ -53,17 +53,21 @@ class AppServiceProvider extends ServiceProvider
 
     private function registerGates(): void
     {
+        // Guests shop too (the guest cart, #10), so this gate alone takes a
+        // nullable user and lets them through.
         Gate::define('buyer-action', function (?User $user) {
             return $user === null || $user->isBuyer();
         });
 
-        Gate::define('supplier-action', function (?User $user) {
+        // A non-nullable user: Laravel denies guests before calling these.
+        Gate::define('supplier-action', function (User $user) {
             return config('features.suppliers_enabled')
-                && ($user === null || ($user->isSupplier() && $user->status === UserStatusEnum::ACTIVE));
+                && $user->isSupplier()
+                && $user->status === UserStatusEnum::ACTIVE;
         });
 
-        Gate::define('admin-action', function (?User $user) {
-            return $user === null || $user->isAdmin();
+        Gate::define('admin-action', function (User $user) {
+            return $user->isAdmin();
         });
     }
 
