@@ -40,13 +40,6 @@ class NotificationRepository
             ->count();
     }
 
-    public function markNotificationAsRead(int $userId, int $notificationId)
-    {
-        $notification = $this->modelQuery()->forUser($userId)->find($notificationId);
-        $notification->read_at = now();
-        $notification->save();
-    }
-
     public function markNotificationsAsRead(int $userId, array $notificationIds): void
     {
         $this->modelQuery()
