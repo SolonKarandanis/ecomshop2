@@ -49,8 +49,6 @@ export function paymentMethodLabel(method: string | null): string {
   return method ? translateOr(method, method) : '—'
 }
 
-export type { SupplierAction } from '~/types/order'
-
 // The status each action moves the Order to (POST /supplier-orders/{order}/{action}).
 export const SUPPLIER_ACTION_TARGET: Record<SupplierAction, string> = {
   ship: ORDER_SHIPPED,

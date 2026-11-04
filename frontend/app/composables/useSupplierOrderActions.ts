@@ -1,5 +1,4 @@
-import type { Order } from '~/types/order'
-import type { SupplierAction } from '~/utils/orderStatus'
+import type { Order, SupplierAction } from '~/types/order'
 
 /**
  * Runs a Supplier's ship / deliver / cancel action on an Order. The status
