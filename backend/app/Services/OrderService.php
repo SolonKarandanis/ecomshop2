@@ -37,6 +37,7 @@ use PhpOffice\PhpSpreadsheet\Exception;
 use Stripe\Checkout\Session;
 use Stripe\Event;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Throwable;
 
 #[Singleton]
 class OrderService
@@ -191,8 +192,9 @@ class OrderService
      */
     public function checkout(CheckoutDTO $dto): string
     {
-        $paymentMethod = $dto->getPaymentMethod();
-        $redirect_url = DB::transaction(function () use ($dto, $paymentMethod) {
+        $paymentHandler = $this->paymentHandlerFactory->make($dto->getPaymentMethod());
+
+        [$order, $lineItems, $cartItems] = DB::transaction(function () use ($dto) {
             // Two checkouts of the same cart at once (two tabs, a client retry)
             // would otherwise both read the full cart and create two Orders. The
             // second now waits here and then finds the cart already emptied.
@@ -200,32 +202,57 @@ class OrderService
             $cart = $this->cartService->getCart();
             Log::debug('OrderService checkout cartItems count: ', [$cart->cartItems->count()]);
             $this->handleEmptyCart($cart->cartItems);
-            $line_items = $this->createLineItems($cart->cartItems);
-            $order_items = $this->createOrderItems($cart->cartItems);
+            $lineItems = $this->createLineItems($cart->cartItems);
+            $orderItems = $this->createOrderItems($cart->cartItems);
             $paymentMethods = $this->paymentMethodRepository->findAll()->pluck('id', 'resource_key');
-            $paymentMethodId = $paymentMethods->get($paymentMethod);
+            $paymentMethodId = $paymentMethods->get($dto->getPaymentMethod());
             $supplierId = $this->cartService->getCartSupplierId($cart);
             Log::debug('OrderService creating order');
-            $order = $this->createNewOrder($cart->total_price, $paymentMethodId, $order_items, $supplierId);
+            $order = $this->createNewOrder($cart->total_price, $paymentMethodId, $orderItems, $supplierId);
             Context::add('order_id', $order->id);
             Log::debug('OrderService created order ', [$order->id]);
-            $redirect_url = $this->paymentHandlerFactory->make($paymentMethod)->process($order, $line_items);
-            Log::debug('OrderService creating address');
             $this->addressRepository->create($order->id, $dto);
-            Log::debug('OrderService created address');
             if ($dto->shouldSaveAddress()) {
                 $this->savedAddressService->saveFromCheckout(auth()->user()->id, SaveAddressDto::fromCheckout($dto));
             }
             Log::debug('OrderService clearing cart');
             $this->cartService->clearCart();
 
-            return $redirect_url;
+            return [$order, $lineItems, $cart->cartItems];
         });
 
-        $order = $this->getUsersLatestOrder(auth()->user()->id);
+        // After the commit: a slow Stripe would otherwise keep the cart locked
+        // and the transaction open, stalling other checkouts behind it.
+        try {
+            $redirectUrl = $paymentHandler->process($order, $lineItems);
+        } catch (Throwable $exception) {
+            $this->abandonCheckout($order, $cartItems);
+
+            throw $exception;
+        }
+
         $this->notificationService->orderCreated($order);
 
-        return $redirect_url;
+        return $redirectUrl;
+    }
+
+    /**
+     * The Order was placed but its payment couldn't be started (Stripe is down,
+     * say). Marks the payment failed and gives the Buyer their cart back, so a
+     * retry places a new Order. No Notification: the Buyer was never told the
+     * Order existed.
+     *
+     * @param  Collection<int, CartItem>  $cartItems
+     */
+    private function abandonCheckout(Order $order, Collection $cartItems): void
+    {
+        try {
+            $this->stateMachine->applyIfAllowed($order, OrderEventEnum::FailPayment, null);
+            $this->cartService->restoreCartItems($cartItems);
+        } catch (Throwable $exception) {
+            // Don't hide the payment error the Buyer is about to see.
+            report($exception);
+        }
     }
 
     /**

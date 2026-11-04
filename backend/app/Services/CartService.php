@@ -512,6 +512,22 @@ class CartService
         return $result;
     }
 
+    /**
+     * Puts cart lines that a failed checkout already cleared back into the
+     * logged-in Buyer's cart, as they were.
+     *
+     * @param  Collection<int, CartItem>  $cartItems
+     */
+    public function restoreCartItems(Collection $cartItems): void
+    {
+        DB::transaction(function () use ($cartItems) {
+            $this->lockCart();
+            $cartItems->each(fn (CartItem $cartItem) => $cartItem->replicate()->save());
+            $this->cachedCart = null;
+            $this->recalculateCartTotalPrice();
+        });
+    }
+
     protected function clearCartFromDatabase(): bool
     {
         return DB::transaction(function () {

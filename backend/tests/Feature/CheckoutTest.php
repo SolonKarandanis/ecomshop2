@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\AttributeValueMethodEnum;
+use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\PaymentMethodEnum;
 use App\Enums\RolesEnum;
 use App\Exceptions\CartException;
@@ -118,9 +119,26 @@ final class FakeStripeHttpClient implements ClientInterface
     /** @var array<int, array{method: string, url: string, params: array}> */
     public array $requests = [];
 
+    /**
+     * @param  (Closure(): void)|null  $onRequest  runs as each request is sent
+     * @param  bool  $fail  answer with a Stripe API error instead of a session
+     */
+    public function __construct(
+        private readonly ?Closure $onRequest = null,
+        private readonly bool $fail = false,
+    ) {}
+
     public function request($method, $absUrl, $headers, $params, $hasFile, $apiMode = 'v1', $maxNetworkRetries = null)
     {
         $this->requests[] = ['method' => $method, 'url' => $absUrl, 'params' => $params];
+
+        if ($this->onRequest !== null) {
+            ($this->onRequest)();
+        }
+
+        if ($this->fail) {
+            return [json_encode(['error' => ['type' => 'api_error', 'message' => 'Stripe is down']]), 500, []];
+        }
 
         return [json_encode([
             'id' => 'cs_test_checkout',
@@ -219,6 +237,59 @@ it('creates the Stripe session with success and cancel URLs on the frontend, and
         ->success_url->toBe('https://shop.test/success?session_id={CHECKOUT_SESSION_ID}')
         ->cancel_url->toBe("https://shop.test/cancel?order_id={$order->id}");
     expect(StripeOrderDetail::where('order_id', $order->id)->value('session_id'))->toBe('cs_test_checkout');
+});
+
+it('calls Stripe after the checkout transaction commits, so a slow Stripe holds no locks', function () {
+    Notification::fake();
+    Mail::fake();
+    config(['app.stripe_secret_key' => 'sk_test_fake']);
+    $outsideCheckout = DB::transactionLevel();
+    $levelWhenCalled = null;
+    ApiRequestor::setHttpClient(new FakeStripeHttpClient(function () use (&$levelWhenCalled) {
+        $levelWhenCalled = DB::transactionLevel();
+    }));
+
+    try {
+        [$buyer] = checkoutWithCartItem(PaymentMethodEnum::STRIPE->value);
+    } finally {
+        ApiRequestor::setHttpClient(null);
+    }
+
+    expect($levelWhenCalled)->toBe($outsideCheckout)
+        ->and(Order::where('user_id', $buyer->id)->sole()->payment_status)->toBe(OrderPaymentStatusEnum::PENDING->value);
+});
+
+it('fails the Order and gives the Buyer their cart back when Stripe errors', function () {
+    Notification::fake();
+    Mail::fake();
+    Exceptions::fake();
+    config(['app.stripe_secret_key' => 'sk_test_fake']);
+    PaymentMethod::firstOrCreate(['resource_key' => PaymentMethodEnum::STRIPE->value]);
+    [$buyer, $login] = loggedInBuyer();
+    $product = Product::factory()->create(['price' => 25]);
+    $add = simulateNextCheckoutRequest($login)
+        ->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 2])
+        ->assertOk();
+    $cartTotalBefore = Cart::where('user_id', $buyer->id)->sole()->total_price->cents();
+    ApiRequestor::setHttpClient(new FakeStripeHttpClient(fail: true));
+
+    try {
+        simulateNextCheckoutRequest($add)
+            ->postJson('/api/checkout', validCheckoutPayload(PaymentMethodEnum::STRIPE->value))
+            ->assertStatus(502);
+    } finally {
+        ApiRequestor::setHttpClient(null);
+    }
+
+    $order = Order::where('user_id', $buyer->id)->sole();
+    $cartItem = CartItem::whereRelation('cart', 'user_id', $buyer->id)->sole();
+    expect($order->payment_status)->toBe(OrderPaymentStatusEnum::FAILED->value)
+        ->and(StripeOrderDetail::where('order_id', $order->id)->exists())->toBeFalse()
+        ->and($cartItem->product_id)->toBe($product->id)
+        ->and($cartItem->quantity)->toBe(2)
+        ->and($cartItem->cart->total_price->cents())->toBe($cartTotalBefore);
+    Notification::assertNothingSent();
+    Mail::assertNothingQueued();
 });
 
 it('charges the exact price, cents included, on the Order', function () {
