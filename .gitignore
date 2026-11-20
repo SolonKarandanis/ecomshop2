@@ -2,3 +2,6 @@
 .vscode/
 .DS_Store
 *.log
+
+# Laravel Boost writes Junie MCP config with absolute local paths
+backend/.junie/mcp/
