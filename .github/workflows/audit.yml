@@ -1,0 +1,50 @@
+name: Dependency audit
+
+# Checks the lockfiles against known security advisories. Runs on PRs that
+# change dependencies, and weekly because new advisories are published against
+# code that hasn't changed. Kept apart from CI / Deploy so a newly published
+# advisory never blocks an unrelated deploy.
+on:
+  pull_request:
+    paths:
+      - 'backend/composer.json'
+      - 'backend/composer.lock'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
+  schedule:
+    - cron: '0 6 * * 1' # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  composer:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+      # --locked reads composer.lock alone, so nothing needs installing.
+      # Abandoned packages are reported but don't fail the job.
+      - run: composer audit --locked --abandoned=report
+
+  npm:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Reads package-lock.json alone. Fails on high and critical only: the
+      # remaining moderate advisories (glob, minimatch) need major versions
+      # their parent packages don't allow yet, and are build-time only.
+      - run: npm audit --omit=dev --audit-level=high

@@ -8,13 +8,16 @@ use Illuminate\Support\Collection;
 
 class CategoryRepository
 {
-
-    public function modelQuery(): Builder| Category{
+    /**
+     * @return Builder<Category>
+     */
+    public function modelQuery(): Builder
+    {
         return Category::query();
     }
 
     public function getActiveCategories(): Collection
     {
-        return $this->modelQuery()->with('media')->where('is_active','=',true)->get();
+        return $this->modelQuery()->with('media')->active()->get();
     }
 }

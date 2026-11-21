@@ -8,7 +8,10 @@ use Illuminate\Support\Collection;
 
 class PaymentMethodRepository
 {
-    public function modelQuery(): Builder|PaymentMethod
+    /**
+     * @return Builder<PaymentMethod>
+     */
+    public function modelQuery(): Builder
     {
         return PaymentMethod::query();
     }
@@ -25,6 +28,6 @@ class PaymentMethodRepository
 
     public function findActive(): Collection
     {
-        return $this->modelQuery()->where('is_active', true)->orderBy('id')->get();
+        return $this->modelQuery()->active()->orderBy('id')->get();
     }
 }

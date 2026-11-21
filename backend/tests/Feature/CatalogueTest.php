@@ -137,6 +137,16 @@ it('sorts products by price in both directions', function (string $sort, array $
     'high to low' => ['price_desc', [50.0, 30.0, 10.0]],
 ]);
 
+it('pages through equally priced products without repeating or skipping one', function () {
+    $products = Product::factory()->count(3)->create(['is_active' => true, 'price' => 25]);
+
+    $firstPage = $this->getJson('/api/products?sort=price_desc&per_page=2')->assertOk();
+    $secondPage = $this->getJson('/api/products?sort=price_desc&per_page=2&page=2')->assertOk();
+
+    $pagedIds = [...$firstPage->json('data.*.id'), ...$secondPage->json('data.*.id')];
+    expect($pagedIds)->toBe($products->pluck('id')->sortDesc()->values()->all());
+});
+
 it('embeds the first page of published reviews, newest first, in the product detail', function () {
     $product = Product::factory()->create(['is_active' => true]);
     $older = Review::factory()->create(['product_id' => $product->id, 'status' => ReviewStatusEnum::PUBLISHED->value, 'created_at' => now()->subDay()]);

@@ -26,6 +26,24 @@ it("lists only the authenticated User's own Notifications, seeded directly via f
     expect($response->json('data'))->toHaveCount(1);
 });
 
+it('pages through Notifications sent at the same moment without repeating or skipping one', function () {
+    $buyer = notificationsUser(RolesEnum::ROLE_BUYER);
+    $notifications = Notification::factory()->count(3)->create([
+        'notifiable_id' => $buyer->id,
+        'notifiable_type' => User::class,
+        'created_at' => now(),
+    ]);
+
+    $firstPage = $this->actingAs($buyer)->getJson('/api/notifications?per_page=2')->assertOk();
+    $secondPage = $this->actingAs($buyer)->getJson('/api/notifications?per_page=2&page=2')->assertOk();
+
+    // Ids are UUIDs, which MariaDB's native UUID type orders differently from a
+    // string sort, so the database gives the expected id-descending order.
+    $expectedIds = Notification::query()->whereKey($notifications->pluck('id'))->orderByDesc('id')->pluck('id')->all();
+    $pagedIds = [...$firstPage->json('data.*.id'), ...$secondPage->json('data.*.id')];
+    expect($pagedIds)->toBe($expectedIds);
+});
+
 it('lists Notifications for a Supplier and an Admin the same way', function () {
     $supplier = notificationsUser(RolesEnum::ROLE_SUPPLIER);
     $admin = notificationsUser(RolesEnum::ROLE_ADMIN);

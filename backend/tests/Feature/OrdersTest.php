@@ -68,6 +68,17 @@ it('rejects an invalid sortColumn on the order list', function () {
     $this->actingAs($buyer)->getJson('/api/orders?sortColumn=notacolumn')->assertUnprocessable();
 });
 
+it('pages through Orders with the same status without repeating or skipping one', function () {
+    $buyer = buyer();
+    $orders = Order::factory()->count(3)->create(['user_id' => $buyer->id, 'order_status' => OrderStatusEnum::Paid->value]);
+
+    $firstPage = $this->actingAs($buyer)->getJson('/api/orders?sortColumn=order_status&sortDirection=desc&perPage=2')->assertOk();
+    $secondPage = $this->actingAs($buyer)->getJson('/api/orders?sortColumn=order_status&sortDirection=desc&perPage=2&page=2')->assertOk();
+
+    $pagedIds = [...$firstPage->json('data.*.id'), ...$secondPage->json('data.*.id')];
+    expect($pagedIds)->toBe($orders->pluck('id')->sortDesc()->values()->all());
+});
+
 it("returns the owning Buyer's Order detail with items and address, without exposing the supplier id", function () {
     $buyer = buyer();
     $supplier = supplier();

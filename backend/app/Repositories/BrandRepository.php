@@ -8,13 +8,16 @@ use Illuminate\Database\Eloquent\Collection;
 
 class BrandRepository
 {
-
-    public function modelQuery(): Builder| Brand{
+    /**
+     * @return Builder<Brand>
+     */
+    public function modelQuery(): Builder
+    {
         return Brand::query();
     }
 
     public function getActiveBrands(): Collection
     {
-        return $this->modelQuery()->with('media')->where('is_active','=',true)->get();
+        return $this->modelQuery()->with('media')->active()->get();
     }
 }

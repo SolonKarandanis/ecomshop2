@@ -24,7 +24,7 @@ abstract class BaseProductSearchEngine implements ProductSearchEngineInterface
                     })->with(['media', 'attribute']);
                 },
             ])
-            ->where('is_active', true);
+            ->active();
 
         $productQuery->when($dto->getPriceFrom() !== null, function ($query) use ($dto) {
             $query->where('price', '>=', $dto->getPriceFrom());
@@ -55,7 +55,10 @@ abstract class BaseProductSearchEngine implements ProductSearchEngineInterface
             $this->applySearchTerm($query, $term);
         });
 
-        $productQuery->orderBy($dto->getSortColumn(), $dto->getSortDirection());
+        // id breaks ties (same price, same rating) so pages never repeat or skip a Product.
+        $productQuery
+            ->orderBy($dto->getSortColumn(), $dto->getSortDirection())
+            ->orderBy('id', $dto->getSortDirection());
 
         return $productQuery->paginate($dto->getPerPage());
     }

@@ -153,6 +153,7 @@ jobs:
             $PHP artisan config:cache
             $PHP artisan route:cache
             $PHP artisan view:cache
+            $PHP artisan event:cache
             # Hostinger's PHP disables symlink(), so link storage with ln instead
             # of `artisan storage:link`. public/storage is git-ignored, so the
             # reset above leaves an existing link in place.

@@ -9,7 +9,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class NotificationRepository
 {
-    public function modelQuery(): Builder|Notification
+    /**
+     * @return Builder<Notification>
+     */
+    public function modelQuery(): Builder
     {
         return Notification::query();
     }
@@ -19,6 +22,7 @@ class NotificationRepository
         return $this->modelQuery()
             ->forUser($userId)
             ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate($perPage);
     }
 
@@ -26,8 +30,9 @@ class NotificationRepository
     {
         return $this->modelQuery()
             ->forUser($userId)
-            ->where('read_at', null)
+            ->onlyUnread()
             ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->take(5)
             ->get();
     }
@@ -36,7 +41,7 @@ class NotificationRepository
     {
         return $this->modelQuery()
             ->forUser($userId)
-            ->where('read_at', null)
+            ->onlyUnread()
             ->count();
     }
 
@@ -45,7 +50,7 @@ class NotificationRepository
         $this->modelQuery()
             ->forUser($userId)
             ->whereIn('id', $notificationIds)
-            ->whereNull('read_at')
+            ->onlyUnread()
             ->update(['read_at' => now()]);
     }
 
@@ -53,7 +58,7 @@ class NotificationRepository
     {
         $this->modelQuery()
             ->forUser($userId)
-            ->whereNull('read_at')
+            ->onlyUnread()
             ->update(['read_at' => now()]);
     }
 }

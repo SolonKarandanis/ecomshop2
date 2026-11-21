@@ -13,7 +13,6 @@ use App\Repositories\UserRepository;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Container\Attributes\Singleton;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -87,11 +86,6 @@ class UserService
     {
         $user->status = UserStatusEnum::INACTIVE;
         $this->userRepository->saveUser($user);
-    }
-
-    public function getUsersWithOrderedItems(): Collection
-    {
-        return $this->userRepository->getUsersWithOrderedItems();
     }
 
     public function resetPassword(ResetPasswordDTO $dto): string
