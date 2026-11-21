@@ -37,8 +37,11 @@ it('pages through Notifications sent at the same moment without repeating or ski
     $firstPage = $this->actingAs($buyer)->getJson('/api/notifications?per_page=2')->assertOk();
     $secondPage = $this->actingAs($buyer)->getJson('/api/notifications?per_page=2&page=2')->assertOk();
 
+    // Ids are UUIDs, which MariaDB's native UUID type orders differently from a
+    // string sort, so the database gives the expected id-descending order.
+    $expectedIds = Notification::query()->whereKey($notifications->pluck('id'))->orderByDesc('id')->pluck('id')->all();
     $pagedIds = [...$firstPage->json('data.*.id'), ...$secondPage->json('data.*.id')];
-    expect($pagedIds)->toBe($notifications->pluck('id')->sortDesc()->values()->all());
+    expect($pagedIds)->toBe($expectedIds);
 });
 
 it('lists Notifications for a Supplier and an Admin the same way', function () {
