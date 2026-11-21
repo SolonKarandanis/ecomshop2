@@ -13,7 +13,10 @@ use Illuminate\Support\Collection;
 
 class ReviewRepository
 {
-    public function modelQuery(): Builder|Review
+    /**
+     * @return Builder<Review>
+     */
+    public function modelQuery(): Builder
     {
         return Review::query();
     }
@@ -72,6 +75,7 @@ class ReviewRepository
             ->where('product_id', $productId)
             ->published()
             ->selectRaw('AVG(rating) as average_rating, COUNT(*) as reviews_count')
+            ->toBase()
             ->first();
 
         return new ReviewRatingStatsDto(

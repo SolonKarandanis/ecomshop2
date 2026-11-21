@@ -11,7 +11,7 @@ class CategoryRepository
     /**
      * @return Builder<Category>
      */
-    public function modelQuery(): Builder|Category
+    public function modelQuery(): Builder
     {
         return Category::query();
     }

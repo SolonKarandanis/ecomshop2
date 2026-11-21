@@ -9,7 +9,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class NotificationRepository
 {
-    public function modelQuery(): Builder|Notification
+    /**
+     * @return Builder<Notification>
+     */
+    public function modelQuery(): Builder
     {
         return Notification::query();
     }

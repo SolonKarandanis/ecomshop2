@@ -11,7 +11,7 @@ class BrandRepository
     /**
      * @return Builder<Brand>
      */
-    public function modelQuery(): Builder|Brand
+    public function modelQuery(): Builder
     {
         return Brand::query();
     }

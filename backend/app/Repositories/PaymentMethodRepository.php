@@ -8,7 +8,10 @@ use Illuminate\Support\Collection;
 
 class PaymentMethodRepository
 {
-    public function modelQuery(): Builder|PaymentMethod
+    /**
+     * @return Builder<PaymentMethod>
+     */
+    public function modelQuery(): Builder
     {
         return PaymentMethod::query();
     }

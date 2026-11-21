@@ -229,12 +229,6 @@ parameters:
 			path: app/Repositories/OrderRepository.php
 
 		-
-			message: '#^Method App\\Repositories\\PaymentMethodRepository\:\:findByResourceKey\(\) should return App\\Models\\PaymentMethod but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Repositories/PaymentMethodRepository.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$productAttributeValues\.$#'
 			identifier: property.notFound
 			count: 1
@@ -263,30 +257,6 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: app/Repositories/ProductRepository.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:published\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: app/Repositories/ReviewRepository.php
-
-		-
-			message: '#^Method App\\Repositories\\ReviewRepository\:\:createReview\(\) should return App\\Models\\Review but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Repositories/ReviewRepository.php
-
-		-
-			message: '#^Method App\\Repositories\\ReviewRepository\:\:findByUserAndProduct\(\) should return App\\Models\\Review\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Repositories/ReviewRepository.php
-
-		-
-			message: '#^Method App\\Repositories\\ReviewRepository\:\:getReviewById\(\) should return App\\Models\\Review\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Repositories/ReviewRepository.php
 
 		-
 			message: '#^Method App\\Repositories\\RoleRepository\:\:getRoleById\(\) should return Spatie\\Permission\\Models\\Role but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
