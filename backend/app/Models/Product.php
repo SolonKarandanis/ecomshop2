@@ -7,6 +7,8 @@ use App\Models\Concerns\FallsBackPerAttribute;
 use App\ValueObjects\Money;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -239,5 +241,11 @@ class Product extends Model implements HasMedia, TranslatableContract
         return $colorValue?->hasMedia('product-attribute-images')
             ? $colorValue->getFirstMediaUrl('product-attribute-images', $conversion)
             : '';
+    }
+
+    #[Scope]
+    protected function active(Builder $query): void
+    {
+        $query->where('is_active', true);
     }
 }

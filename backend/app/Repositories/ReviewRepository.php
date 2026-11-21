@@ -63,7 +63,7 @@ class ReviewRepository
 
     public function getPublishedReviewsForProduct(int $productId, int $perPage = 5): LengthAwarePaginator|Collection
     {
-        return $this->modelQuery()->where('product_id', $productId)->published()->latest()->paginate($perPage);
+        return $this->modelQuery()->where('product_id', $productId)->published()->latest()->latest('id')->paginate($perPage);
     }
 
     public function getRatingStatsForProduct(int $productId): ReviewRatingStatsDto

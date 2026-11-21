@@ -149,6 +149,21 @@ it('lists only published Reviews for a Product, publicly and without authenticat
     expect($response->json('data.0.id'))->toBe($publishedReview->id);
 });
 
+it('pages through Reviews posted at the same moment without repeating or skipping one', function () {
+    $product = Product::factory()->create();
+    $reviews = Review::factory()->count(3)->create([
+        'product_id' => $product->id,
+        'status' => ReviewStatusEnum::PUBLISHED->value,
+        'created_at' => now(),
+    ]);
+
+    $firstPage = $this->getJson("/api/products/{$product->id}/reviews?per_page=2")->assertOk();
+    $secondPage = $this->getJson("/api/products/{$product->id}/reviews?per_page=2&page=2")->assertOk();
+
+    $pagedIds = [...$firstPage->json('data.*.id'), ...$secondPage->json('data.*.id')];
+    expect($pagedIds)->toBe($reviews->pluck('id')->sortDesc()->values()->all());
+});
+
 it('lets an Admin hide a Review, excluding it from public display and the Average Rating', function () {
     $admin = reviewsAdmin();
     $product = Product::factory()->create();

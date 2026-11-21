@@ -103,6 +103,7 @@ class OrderRepository
             ])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->first();
     }
 
@@ -115,12 +116,14 @@ class OrderRepository
         return $orderQuery
             ->with('paymentMethod')
             ->orderBy($dto->getSortColumn(), $dto->getSortDirection())
+            // id breaks ties (same status, same total) so pages never repeat or skip an Order.
+            ->orderBy('id', $dto->getSortDirection())
             ->paginate($dto->getPerPage());
     }
 
     public function getUsersOrdersForExport(OrderSearchRequestDTO $dto): Builder
     {
-        return $this->applySearchFilters($dto)->orderBy('created_at', 'desc');
+        return $this->applySearchFilters($dto)->orderBy('created_at', 'desc')->orderBy('id', 'desc');
     }
 
     public function countOrders(OrderSearchRequestDTO $dto): int

@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Models\Concerns\FallsBackPerAttribute;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -81,5 +83,11 @@ class Category extends Model implements HasMedia, TranslatableContract
     public function getSmallImage(): string
     {
         return $this->getFirstMediaUrl('category-images', 'small') ?: 'https://via.placeholder.com/100';
+    }
+
+    #[Scope]
+    protected function active(Builder $query): void
+    {
+        $query->where('is_active', true);
     }
 }
