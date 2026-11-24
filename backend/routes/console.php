@@ -1,12 +1,21 @@
 <?php
 
+use App\Providers\PrometheusServiceProvider;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+// Records that the hPanel cron reached the scheduler, so Prometheus can alert
+// when it stops (the scheduler_last_run_timestamp_seconds gauge). Registered
+// before the worker, which can hold the minute for up to 55 seconds.
+Schedule::call(fn () => Cache::forever(PrometheusServiceProvider::SCHEDULER_HEARTBEAT_KEY, now()->getTimestamp()))
+    ->name('prometheus-scheduler-heartbeat')
+    ->everyMinute();
 
 // Hostinger keeps no long-running processes alive, so instead of a permanent
 // `queue:work`, an hPanel cron runs `schedule:run` every minute and this starts

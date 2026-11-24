@@ -41,4 +41,18 @@ class UserRepository
             ->whereHas('roles', fn ($q) => $q->where('name', RolesEnum::ROLE_ADMIN->value))
             ->get();
     }
+
+    /**
+     * @return array<string, int> account status => number of users
+     */
+    public function countByStatus(): array
+    {
+        return $this->modelQuery()
+            ->selectRaw('status, COUNT(*) as users_count')
+            ->groupBy('status')
+            ->toBase()
+            ->pluck('users_count', 'status')
+            ->map(fn (mixed $count): int => (int) $count)
+            ->all();
+    }
 }
