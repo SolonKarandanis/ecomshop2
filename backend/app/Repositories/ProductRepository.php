@@ -185,4 +185,14 @@ class ProductRepository
         $product->productAttributeValues()->get()->each->delete();
         $product->delete();
     }
+
+    public function countActive(): int
+    {
+        return $this->modelQuery()->active()->count();
+    }
+
+    public function countActiveOutOfStock(): int
+    {
+        return $this->modelQuery()->active()->where('in_stock', false)->count();
+    }
 }

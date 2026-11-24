@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Dtos\CreateOrderDTO;
 use App\Dtos\OrderSearchRequestDTO;
+use App\Enums\OrderPaymentStatusEnum;
 use App\Enums\OrderStatusEnum;
 use App\Enums\PaymentMethodEnum;
 use App\Models\Order;
@@ -191,5 +192,52 @@ class OrderRepository
             ->where('order_status', OrderStatusEnum::Delivered->value)
             ->whereHas('items', fn ($q) => $q->where('product_id', $productId))
             ->exists();
+    }
+
+    /**
+     * @return array<string, int> order status => number of orders
+     */
+    public function countByOrderStatus(): array
+    {
+        return $this->modelQuery()
+            ->selectRaw('order_status, COUNT(*) as orders_count')
+            ->groupBy('order_status')
+            ->toBase()
+            ->pluck('orders_count', 'order_status')
+            ->map(fn (mixed $count): int => (int) $count)
+            ->all();
+    }
+
+    /**
+     * Orders that have no payment status yet are counted under ''.
+     *
+     * @return array<string, int> payment status => number of orders
+     */
+    public function countByPaymentStatus(): array
+    {
+        return $this->modelQuery()
+            ->selectRaw('payment_status, COUNT(*) as orders_count')
+            ->groupBy('payment_status')
+            ->toBase()
+            ->pluck('orders_count', 'payment_status')
+            ->map(fn (mixed $count): int => (int) $count)
+            ->all();
+    }
+
+    /**
+     * Orders without a currency are summed under ''.
+     *
+     * @return array<string, float> currency => sum of the grand totals of paid orders
+     */
+    public function sumPaidGrandTotalsByCurrency(): array
+    {
+        return $this->modelQuery()
+            ->where('payment_status', OrderPaymentStatusEnum::PAID->value)
+            ->selectRaw('currency, SUM(grand_total) as grand_total_sum')
+            ->groupBy('currency')
+            ->toBase()
+            ->pluck('grand_total_sum', 'currency')
+            ->map(fn (mixed $sum): float => (float) $sum)
+            ->all();
     }
 }
